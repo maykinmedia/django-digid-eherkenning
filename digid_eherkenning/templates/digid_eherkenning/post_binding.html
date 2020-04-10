@@ -1,0 +1,16 @@
+<html>
+    <head>
+        <title>Ga naar DigID</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            window.onload = function(){
+                document.login.submit();
+            };
+        </script>
+        <form method="post" action="{{ url }}" name="login">
+            {{ form.as_p }}
+            <input type="submit" value="Ga naar DigID" />
+        </form>
+    </body>
+</html>

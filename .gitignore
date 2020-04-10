@@ -1,0 +1,22 @@
+# Developers
+.hg
+.git
+.svn
+.idea/
+.sass-cache/
+*.db
+*.pyc
+__pycache__
+*~
+
+# Coverage reports
+/reports/
+/htmlcov/
+
+# Environment
+local.py
+/env/
+/mail/
+.env
+
+tests/db.sqlite3
