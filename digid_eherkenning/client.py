@@ -19,11 +19,6 @@ from saml2.xmldsig import DIGEST_SHA256, SIG_RSA_SHA256
 
 
 def create_saml_config():
-    """
-    A convience function to make the configuration a bit more sane. This should
-    probably be fixed in the djangosaml2 package at some point.
-    """
-
     config = {
         # TODO: I had to compile xmlsec myself. I noticed there are other
         # security backends, which use pyxmlsec, which would get rid this issue.
