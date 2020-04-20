@@ -1,0 +1,8 @@
+include *.rst
+include LICENSE
+recursive-include digid_eherkenning *.html
+recursive-include digid_eherkenning *.txt
+recursive-include digid_eherkenning *.po
+global-exclude __pycache__
+global-exclude *.py[co]
+
