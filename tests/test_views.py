@@ -13,6 +13,8 @@ from lxml import etree
 from saml2.entity import create_artifact
 from saml2.s_utils import rndbytes
 
+from .project.models import User
+
 
 def create_example_artifact(message):
     message_handle = sha1(str(message).encode("utf-8"))
@@ -196,59 +198,63 @@ class AssertionConsumerServiceViewTests(TestCase):
 
     """
 
-    # @responses.activate
-    # @patch("digid_eherkenning.client.instant")
-    # @patch("digid_eherkenning.client.sid")
-    # @freeze_time("2020-04-09T08:31:46Z")
-    # def test_status_failed(self, sid_mock, instant_mock):
-    #     sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
-    #     instant_mock.return_value = "2020-04-09T08:31:46Z"
+    @responses.activate
+    @patch("digid_eherkenning.client.instant")
+    @patch("digid_eherkenning.client.sid")
+    @freeze_time("2020-04-09T08:31:46Z")
+    def test_status_failed(self, sid_mock, instant_mock):
+        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
+        instant_mock.return_value = "2020-04-09T08:31:46Z"
 
-    #     #
-    #     # I'm not sure if ArtifactResponse should also have the same StatusCode
-    #     #
+        #
+        # I'm not sure if ArtifactResponse should also have the same StatusCode
+        #
 
-    #     artifact_response = (
-    #         "<samlp:ArtifactResponse"
-    #         ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
-    #         ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
-    #         ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
-    #         ' xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"'
-    #         ' ID="_1330416516" Version="2.0" IssueInstant="2020-04-15T17:50:27Z"'
-    #         ' InResponseTo="_1330416516">'
-    #         "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
-    #         "<samlp:Status>"
-    #         '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
-    #         "</samlp:Status>"
-    #         '<samlp:Response InResponseTo="_7afa5ce49" Version="2.0" ID="_1072ee96"'
-    #         ' IssueInstant="2020-04-15T17:50:27Z">'
-    #         "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
-    #         '<samlp:Status Value="urn:oasis:names:tc:SAML:2.0:status:Responder">'
-    #         '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:AuthnFailed"/>'
-    #         "</samlp:Status>"
-    #         "</samlp:Response>"
-    #         "</samlp:ArtifactResponse>"
-    #     )
+        artifact_response = (
+            "<samlp:ArtifactResponse"
+            ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
+            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
+            ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
+            ' xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"'
+            ' ID="_1330416516" Version="2.0" IssueInstant="2020-04-09T08:31:46Z"'
+            ' InResponseTo="_1330416516">'
+            "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
+            "<samlp:Status>"
+            '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
+            "</samlp:Status>"
+            '<samlp:Response InResponseTo="_7afa5ce49" Version="2.0" ID="_1072ee96"'
+            ' IssueInstant="2020-04-09T08:31:46Z">'
+            "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
+            '<samlp:Status Value="urn:oasis:names:tc:SAML:2.0:status:Responder">'
+            '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:AuthnFailed"/>'
+            "</samlp:Status>"
+            "</samlp:Response>"
+            "</samlp:ArtifactResponse>"
+        )
 
-    #     artifact_response_soap = (
-    #         '<?xml version="1.0" encoding="UTF-8"?>'
-    #         "<soapenv:Envelope"
-    #         ' xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'
-    #         ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
-    #         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-    #         "<soapenv:Body>" + str(artifact_response) + "</soapenv:Body>"
-    #         "</soapenv:Envelope>"
-    #     )
-    #     responses.add(
-    #         responses.POST,
-    #         "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
-    #         body=artifact_response_soap,
-    #         status=200,
-    #     )
+        artifact_response_soap = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            "<soapenv:Envelope"
+            ' xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'
+            ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
+            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+            "<soapenv:Body>" + str(artifact_response) + "</soapenv:Body>"
+            "</soapenv:Envelope>"
+        )
+        responses.add(
+            responses.POST,
+            "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
+            body=artifact_response_soap,
+            status=200,
+        )
 
-    #     artifact = create_example_artifact("xxx")
-    #     url = reverse("saml2-acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
-    #     response = self.client.get(url)
+        artifact = create_example_artifact("xxx")
+        url = reverse("saml2-acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        response = self.client.get(url)
+
+        # Make sure no user is created.
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
     @patch("digid_eherkenning.client.instant")
