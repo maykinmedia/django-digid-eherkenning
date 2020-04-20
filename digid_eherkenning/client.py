@@ -18,18 +18,26 @@ from saml2.time_util import instant
 from saml2.xmldsig import DIGEST_SHA256, SIG_RSA_SHA256
 
 
-def create_saml_config():
+def create_saml_config(name_id_format="None"):
+    """
+    :param name_id_format
+
+    There appears to be a bug in the PySAML2 code which
+    requries name_id_format to be set to 'None' if called
+    from create_authn_request and set to None when generating
+    a metadata file.
+    """
     config = {
         # TODO: I had to compile xmlsec myself. I noticed there are other
         # security backends, which use pyxmlsec, which would get rid this issue.
-        # "xmlsec_binary": "/home/alexander/xmlsec/apps/xmlsec1",
+        "xmlsec_binary": "/home/alexander/xmlsec/apps/xmlsec1",
         "entityid": settings.DIGID_URL_PREFIX,
         "key_file": settings.DIGID_KEY_FILE,
         "cert_file": settings.DIGID_CERT_FILE,
         "service": {
             "sp": {
                 "name": settings.DIGID_SP_NAME,
-                "name_id_format": "None",
+                "name_id_format": name_id_format,
                 "endpoints": {
                     "assertion_consumer_service": [
                         (
@@ -42,7 +50,6 @@ def create_saml_config():
         },
         "metadata": {"local": [settings.DIGID_METADATA_FILE,],},
         "debug": 1 if settings.DEBUG else 0,
-        "valid_for": 24,  # how long is our metadata valid
     }
     conf = SPConfig()
     conf.load(copy.deepcopy(config))
