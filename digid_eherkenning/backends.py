@@ -62,6 +62,9 @@ class DigiDBackend(ModelBackend):
         authn_statement = assertion.authn_statement[0]
 
         # Make sure the IP-address we get back for the 'subject' matches the IP-address of the user.
+        #
+        # This is not a requirement, but is a good idea. See DigiD - 5.1 Controle op IP adressen
+        #
         if get_client_ip(request) != authn_statement.subject_locality.address:
             return
 
