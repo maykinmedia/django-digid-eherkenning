@@ -1,8 +1,8 @@
-from django.urls import path
+from django.conf.urls import url
 
 from . import views
 
 urlpatterns = [
-    path("login/", views.LoginView.as_view(), name="saml2-login"),
-    path("acs/", views.AssertionConsumerServiceView.as_view(), name="saml2-acs"),
+    url(r"login/", views.LoginView.as_view(), name="saml2-login"),
+    url(r"acs/", views.AssertionConsumerServiceView.as_view(), name="saml2-acs"),
 ]
