@@ -14,6 +14,7 @@ from saml2.entity import create_artifact
 from saml2.s_utils import rndbytes
 
 from .project.models import User
+from .utils import get_saml_element
 
 
 def create_example_artifact(message):
@@ -38,7 +39,7 @@ class LoginViewTests(TestCase):
         """
         sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
         instant_mock.return_value = "2020-04-09T08:31:46Z"
-        response = self.client.get(reverse("saml2-login"))
+        response = self.client.get(reverse("digid:login"))
 
         saml_request = b64decode(
             response.context["form"].initial["SAMLRequest"].encode("utf-8")
@@ -198,19 +199,10 @@ class AssertionConsumerServiceViewTests(TestCase):
 
     """
 
-    @responses.activate
-    @patch("digid_eherkenning.client.instant")
-    @patch("digid_eherkenning.client.sid")
-    @freeze_time("2020-04-09T08:31:46Z")
-    def test_status_failed(self, sid_mock, instant_mock):
-        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
-        instant_mock.return_value = "2020-04-09T08:31:46Z"
+    def setUp(self):
+        super().setUp()
 
-        #
-        # I'm not sure if ArtifactResponse should also have the same StatusCode
-        #
-
-        artifact_response = (
+        self.artifact_response = (
             "<samlp:ArtifactResponse"
             ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
             ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
@@ -225,31 +217,130 @@ class AssertionConsumerServiceViewTests(TestCase):
             '<samlp:Response InResponseTo="_7afa5ce49" Version="2.0" ID="_1072ee96"'
             ' IssueInstant="2020-04-09T08:31:46Z">'
             "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
-            '<samlp:Status Value="urn:oasis:names:tc:SAML:2.0:status:Responder">'
-            '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:AuthnFailed"/>'
+            "<samlp:Status>"
+            '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
             "</samlp:Status>"
+            '<saml:Assertion Version="2.0" ID="_dc9f70e61c" IssueInstant="2020-04-09T08:31:46Z">'
+            "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
+            "<saml:Subject>"
+            "<saml:NameID>s00000000:12345678</saml:NameID>"
+            '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
+            '<saml:SubjectConfirmationData InResponseTo="_7afa5ce49"'
+            ' Recipient="http://example.com/artifact_url" NotOnOrAfter="2020-04-10T08:31:46Z"/>'
+            "</saml:SubjectConfirmation>"
+            "</saml:Subject>"
+            '<saml:Conditions NotBefore="2012-12-20T18:48:27Z" NotOnOrAfter="2020-04-10T08:31:46Z">'
+            "<saml:AudienceRestriction>"
+            "<saml:Audience>http://sp.example.nl</saml:Audience>"
+            "</saml:AudienceRestriction>"
+            "</saml:Conditions>"
+            '<saml:AuthnStatement SessionIndex="17" AuthnInstant="2020-04-09T08:31:46Z">'
+            '<saml:SubjectLocality Address="127.0.0.1"/>'
+            '<saml:AuthnContext Comparison="minimum">'
+            "<saml:AuthnContextClassRef>"
+            " urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
+            "</saml:AuthnContextClassRef>"
+            "</saml:AuthnContext>"
+            "</saml:AuthnStatement>"
+            "</saml:Assertion>"
             "</samlp:Response>"
             "</samlp:ArtifactResponse>"
         )
 
-        artifact_response_soap = (
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            "<soapenv:Envelope"
-            ' xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'
-            ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
-            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-            "<soapenv:Body>" + str(artifact_response) + "</soapenv:Body>"
-            "</soapenv:Envelope>"
+        self.artifact_response_soap = (
+            b'<?xml version="1.0" encoding="UTF-8"?>'
+            b"<soapenv:Envelope"
+            b' xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'
+            b' xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
+            b' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+            b"<soapenv:Body>"
+            + str(self.artifact_response).encode("utf-8")
+            + b"</soapenv:Body>"
+            b"</soapenv:Envelope>"
         )
+
+    @responses.activate
+    @patch("digid_eherkenning.client.instant")
+    @patch("digid_eherkenning.client.sid")
+    @freeze_time("2020-04-09T08:31:46Z")
+    def test_response_status_code_authnfailed(self, sid_mock, instant_mock):
+        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
+        instant_mock.return_value = "2020-04-09T08:31:46Z"
+
+        root_element = etree.fromstring(self.artifact_response_soap)
+        status_code = get_saml_element(
+            root_element, "//samlp:Response/samlp:Status/samlp:StatusCode"
+        )
+        status_code.set("Value", "urn:oasis:names:tc:SAML:2.0:status:AuthnFailed")
+
         responses.add(
             responses.POST,
             "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
-            body=artifact_response_soap,
+            body=etree.tostring(root_element),
             status=200,
         )
 
         artifact = create_example_artifact("xxx")
-        url = reverse("saml2-acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        response = self.client.get(url)
+
+        # Make sure no user is created.
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(User.objects.count(), 0)
+
+    @responses.activate
+    @patch("digid_eherkenning.client.instant")
+    @patch("digid_eherkenning.client.sid")
+    @freeze_time("2020-04-09T08:31:46Z")
+    def test_artifact_response_status_code_authnfailed(self, sid_mock, instant_mock):
+        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
+        instant_mock.return_value = "2020-04-09T08:31:46Z"
+
+        root_element = etree.fromstring(self.artifact_response_soap)
+        status_code = get_saml_element(
+            root_element, "//samlp:ArtifactResponse/samlp:Status/samlp:StatusCode"
+        )
+        status_code.set("Value", "urn:oasis:names:tc:SAML:2.0:status:AuthnFailed")
+
+        responses.add(
+            responses.POST,
+            "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
+            body=etree.tostring(root_element),
+            status=200,
+        )
+
+        artifact = create_example_artifact("xxx")
+        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        response = self.client.get(url)
+
+        # Make sure no user is created.
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(User.objects.count(), 0)
+
+    @responses.activate
+    @patch("digid_eherkenning.client.instant")
+    @patch("digid_eherkenning.client.sid")
+    @freeze_time("2020-04-09T08:31:46Z")
+    def test_invalid_subject_ip_address(self, sid_mock, instant_mock):
+        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
+        instant_mock.return_value = "2020-04-09T08:31:46Z"
+
+        root_element = etree.fromstring(self.artifact_response_soap)
+        status_code = get_saml_element(
+            root_element, "//saml:AuthnStatement/saml:SubjectLocality"
+        )
+        # We do the request with 127.0.0.1
+        status_code.set("Address", "127.0.0.2")
+
+        responses.add(
+            responses.POST,
+            "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
+            body=etree.tostring(root_element),
+            status=200,
+        )
+
+        artifact = create_example_artifact("xxx")
+        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
         response = self.client.get(url)
 
         # Make sure no user is created.
@@ -377,7 +468,7 @@ class AssertionConsumerServiceViewTests(TestCase):
 
         artifact = create_example_artifact("xxx")
         url = (
-            reverse("saml2-acs")
+            reverse("digid:acs")
             + "?"
             + urllib.parse.urlencode({"SAMLart": artifact, "RelayState": "/home/"})
         )
