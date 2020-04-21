@@ -41,7 +41,7 @@ def create_saml_config(name_id_format="None"):
                 "endpoints": {
                     "assertion_consumer_service": [
                         (
-                            settings.DIGID_URL_PREFIX + reverse("saml2-acs"),
+                            settings.DIGID_URL_PREFIX + reverse("digid:acs"),
                             BINDING_HTTP_ARTIFACT,
                         ),
                     ],
