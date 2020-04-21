@@ -6,12 +6,6 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 
-# Django 1.11 compatibility
-try:
-    from django.utils.http import url_has_allowed_host_and_scheme
-except ImportError:
-    from django.utils.http import is_safe_url as url_has_allowed_host_and_scheme
-
 from django.views.generic.base import TemplateView, View
 
 from saml2 import BINDING_HTTP_ARTIFACT, BINDING_HTTP_POST
@@ -19,26 +13,12 @@ from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT, requested_authn_cont
 from saml2.client_base import IdpUnspecified
 from saml2.xmldsig import DIGEST_SHA256, SIG_RSA_SHA256
 
-from .client import Saml2Client
-from .forms import SAML2Form
+from ..client import Saml2Client
+from ..forms import SAML2Form
+from .base import get_redirect_url
 
 
-def get_redirect_url(request, redirect_to):
-    """
-    Make sure the URL we redirect to is safe. HTTPs
-    is always required.
-    """
-
-    url_is_safe = url_has_allowed_host_and_scheme(
-        url=redirect_to, allowed_hosts=[request.get_host(),], require_https=True,
-    )
-    if url_is_safe:
-        return redirect_to
-
-    return ""
-
-
-class LoginView(TemplateView):
+class DigiDLoginView(TemplateView):
     """
     DigiD - 3.3.2 - Stap 2 Authenticatievraag
     """
@@ -98,7 +78,7 @@ class LoginView(TemplateView):
         return context_data
 
 
-class AssertionConsumerServiceView(View):
+class DigiDAssertionConsumerServiceView(View):
     """
     DigiD - 3.3.3 Stap 5 Artifact
     """
