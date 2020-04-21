@@ -4,6 +4,26 @@ An example of a metadata file of the digid idp which I found.
 https://was-preprod1.digid.nl/saml/idp/metadata
 
 
+Usage
+=====
+
+Add digid_eherkenning to the INSTALLED_APPS in your Django project's settings.py.
+
+    INSTALLED_APPS = (
+        "digid_eherkenning",
+    )
+
+Add digid_eherkenning.backends.DigiDBackend to the AUTHENTICATION_BACKENDS in your Django project's settings.py.
+
+    AUTHENTICATION_BACKENDS = (
+        "digid_eherkenning.backends.DigiDBackend"
+    )
+
+Add to the digid url patterns to urls.py
+
+    url(r'^digid/', include("digid_eherkenning.digid_urls")),
+
+
 Other SAML2 implementations
 ===========================
 
