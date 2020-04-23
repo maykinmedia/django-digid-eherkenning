@@ -124,6 +124,24 @@ DIGID_METADATA_FILE = os.path.join(BASE_DIR, "files", "digid", "metadata")
 DIGID_KEY_FILE = os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key")
 DIGID_CERT_FILE = os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem")
 
+#
+# eHerkenning settings
+#
+
+EHERKENNING = {
+    'oin': '00000000000000000000',
+    'organisation_name': 'Example',
+    'service_uuid': '',
+    'service_name': 'Example',
+    'service_loa': 'urn:etoegang:core:assurance-class:3',
+    'service_index': '1',
+    'service_instance_uuid': '',
+    'service_url': '',
+    'privacy_policy_url': '',
+    'herkenningsmakelaars_id': '00000000000000000000',
+}
+
+
 AUTHENTICATION_BACKENDS = ["digid_eherkenning.backends.DigiDBackend"]
 
 AUTH_USER_MODEL = "project.User"
