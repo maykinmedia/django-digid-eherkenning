@@ -5,7 +5,6 @@ from django.contrib import auth
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
-
 from django.views.generic.base import TemplateView, View
 
 from saml2 import BINDING_HTTP_ARTIFACT, BINDING_HTTP_POST
