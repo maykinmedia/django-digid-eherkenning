@@ -12,7 +12,7 @@ from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT, requested_authn_cont
 from saml2.client_base import IdpUnspecified
 from saml2.xmldsig import DIGEST_SHA256, SIG_RSA_SHA256
 
-from ..client import Saml2Client
+from ..saml2.digid import DigiDClient
 from ..forms import SAML2Form
 from .base import get_redirect_url
 
@@ -35,7 +35,7 @@ class DigiDLoginView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        client = Saml2Client()
+        client = DigiDClient()
 
         response_binding = BINDING_HTTP_ARTIFACT
 

@@ -56,7 +56,7 @@ def create_saml_config(name_id_format="None"):
     return conf
 
 
-class Saml2Client(OrigSaml2Client):
+class DigiDClient(OrigSaml2Client):
     def __init__(self):
         config = create_saml_config()
         super().__init__(config)

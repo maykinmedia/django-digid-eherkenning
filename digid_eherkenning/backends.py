@@ -5,7 +5,7 @@ from saml2.response import StatusError
 from saml2.samlp import STATUS_SUCCESS
 
 from .choices import SectorType
-from .client import Saml2Client
+from .saml2.digid import DigiDClient
 from .utils import get_client_ip
 
 UserModel = get_user_model()
@@ -18,7 +18,7 @@ class DigiDBackend(ModelBackend):
 
         # Digid Stap 6 / 7 Artifact Resolution
 
-        client = Saml2Client()
+        client = DigiDClient()
 
         #
         # SAMLBind - See 3.6.4 Artifact Format, for SAMLart format.

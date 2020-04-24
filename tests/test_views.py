@@ -27,7 +27,7 @@ def create_example_artifact(message):
 class LoginViewTests(TestCase):
     maxDiff = None
 
-    @patch("digid_eherkenning.client.instant")
+    @patch("digid_eherkenning.saml2.digid.instant")
     @patch("saml2.entity.sid")
     def test_login(self, sid_mock, instant_mock):
         """
@@ -156,9 +156,9 @@ class AssertionConsumerServiceViewTests(TestCase):
     I tried a bunch of things to sign the ArtifactResponse response. But I haven't figured out how to
     do this properly yet.
 
-    from digid_eherkenning.client import Saml2Client
+    from digid_eherkenning.digid import DigiDClient
     # Sign the response.
-    client = Saml2Client()
+    client = DigiDClient()
 
     First filling in the Signature section of the ArtifactResponse manually, and then signing it, using:
 
@@ -260,8 +260,8 @@ class AssertionConsumerServiceViewTests(TestCase):
         )
 
     @responses.activate
-    @patch("digid_eherkenning.client.instant")
-    @patch("digid_eherkenning.client.sid")
+    @patch("digid_eherkenning.saml2.digid.instant")
+    @patch("digid_eherkenning.saml2.digid.sid")
     @freeze_time("2020-04-09T08:31:46Z")
     def test_response_status_code_authnfailed(self, sid_mock, instant_mock):
         sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
@@ -289,8 +289,8 @@ class AssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch("digid_eherkenning.client.instant")
-    @patch("digid_eherkenning.client.sid")
+    @patch("digid_eherkenning.saml2.digid.instant")
+    @patch("digid_eherkenning.saml2.digid.sid")
     @freeze_time("2020-04-09T08:31:46Z")
     def test_artifact_response_status_code_authnfailed(self, sid_mock, instant_mock):
         sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
@@ -318,8 +318,8 @@ class AssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch("digid_eherkenning.client.instant")
-    @patch("digid_eherkenning.client.sid")
+    @patch("digid_eherkenning.saml2.digid.instant")
+    @patch("digid_eherkenning.saml2.digid.sid")
     @freeze_time("2020-04-09T08:31:46Z")
     def test_invalid_subject_ip_address(self, sid_mock, instant_mock):
         sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
@@ -348,8 +348,8 @@ class AssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch("digid_eherkenning.client.instant")
-    @patch("digid_eherkenning.client.sid")
+    @patch("digid_eherkenning.saml2.digid.instant")
+    @patch("digid_eherkenning.saml2.digid.sid")
     @freeze_time("2020-04-09T08:31:46Z")
     def test_get(self, sid_mock, instant_mock):
         sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
