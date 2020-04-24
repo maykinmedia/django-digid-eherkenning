@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+    xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion"
+    xmlns:esc="urn:etoegang:1.13:service-catalog"
+    targetNamespace="urn:etoegang:1.13:service-catalog"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified">
+ 
+    <!--
+    <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="http://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd"/>
+    -->
+    <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+    <!-- <xs:import namespace="urn:oasis:names:tc:SAML:2.0:assertion" schemaLocation="http://docs.oasis-open.org/security/saml/v2.0/saml-schema-assertion-2.0.xsd"/> -->
+    <xs:import namespace="urn:oasis:names:tc:SAML:2.0:assertion" schemaLocation="saml-schema-assertion-2.0.xsd"/>
+    <!-- <xs:import namespace="urn:oasis:names:tc:SAML:2.0:metadata" schemaLocation="http://docs.oasis-open.org/security/saml/v2.0/saml-schema-metadata-2.0.xsd"/> -->
+    <xs:import namespace="urn:oasis:names:tc:SAML:2.0:metadata" schemaLocation="saml-schema-metadata-2.0.xsd"/>
+ 
+    <!--Elements-->
+    <xs:element name="ServiceDefinition" type="esc:ServiceDefinitionType" />
+    <xs:complexType name="ServiceDefinitionType">
+        <xs:sequence>
+            <xs:element ref="esc:ServiceUUID" />
+            <xs:element ref="esc:ServiceName" maxOccurs="unbounded"/>
+            <xs:element ref="esc:ServiceDescription" maxOccurs="unbounded"/>
+            <xs:element ref="esc:ServiceDescriptionURL" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="saml2:AuthnContextClassRef"/>
+            <xs:element ref="esc:HerkenningsmakelaarId"/>
+            <xs:element ref="esc:EntityConcernedTypesAllowed" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element ref="esc:ServiceRestrictionsAllowed" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="esc:RequestedAttribute" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute ref="esc:IsPublic" use="required"/>
+    </xs:complexType>
+    <xs:element name="ServiceInstance" type="esc:ServiceInstanceType" />
+    <xs:complexType name="ServiceInstanceType">
+        <xs:sequence>
+            <xs:element ref="esc:ServiceID" minOccurs="1"/>
+            <xs:element ref="esc:ServiceUUID" />
+            <xs:choice>
+                <xs:element ref="esc:InstanceOfService" />
+                <xs:element ref="esc:IntermediatedService"/>
+            </xs:choice>
+            <xs:element ref="esc:ServiceURL" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="esc:PrivacyPolicyURL" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="esc:HerkenningsmakelaarId"/>
+            <xs:element ref="esc:AdditionalHerkenningsmakelaarId" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="SSOSupport" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+            <xs:element ref="esc:EntityConcernedTypesAllowed" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="esc:ServiceCertificate" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="esc:ServiceIntermediation" minOccurs="0" />
+            <xs:element ref="esc:Classifiers" minOccurs="0" />
+        </xs:sequence>
+        <xs:attribute ref="esc:IsPublic" use="required"/>
+    </xs:complexType>
+ 
+    <xs:element name="ServiceCatalogue">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="ds:Signature"/>
+                <xs:element ref="esc:ServiceProvider" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute ref="esc:IssueInstant" use="required"/>
+            <xs:attribute ref="esc:Version" use="required"/>
+            <xs:attribute name="ID" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="EntityConcernedTypesAllowed">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:anyURI">
+                    <xs:attribute name="setNumber" type="xs:nonNegativeInteger" use="optional"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ServiceRestrictionsAllowed">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:anyURI"/>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ServiceDescription">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:restriction base="md:localizedNameType">
+                    <xs:maxLength value="1024"/>
+                </xs:restriction>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ServiceDescriptionURL">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:restriction base="md:localizedURIType">
+                    <xs:maxLength value="512"/>
+                </xs:restriction>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ServiceURL">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:restriction base="md:localizedURIType">
+                    <xs:maxLength value="512"/>
+                </xs:restriction>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="PrivacyPolicyURL">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:restriction base="md:localizedURIType">
+                    <xs:maxLength value="512"/>
+                </xs:restriction>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ServiceID" type="xs:anyURI"/>
+    <xs:element name="ServiceUUID" type="xs:string"/>
+    <xs:element name="ServiceName">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:restriction base="md:localizedNameType">
+                    <xs:maxLength value="64"/>
+                </xs:restriction>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ServiceProvider">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="esc:ServiceProviderID"/>
+                <xs:element ref="esc:OrganizationDisplayName" maxOccurs="unbounded"/>
+                <xs:element ref="esc:ServiceDefinition" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="esc:ServiceInstance" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute ref="esc:IsPublic" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ServiceProviderID" type="esc:OINType"/>
+    <xs:element name="RequestedAttribute" type="esc:RequestedAttributeType" />
+    <xs:complexType name="RequestedAttributeType">
+        <xs:complexContent>
+            <xs:extension base="md:RequestedAttributeType">
+                <xs:sequence>
+                    <xs:element ref="esc:PurposeStatement" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="PurposeStatement" type="esc:PurposeStatementType"/>
+    <xs:complexType name="PurposeStatementType">
+        <xs:simpleContent>
+            <xs:restriction base="md:localizedNameType">
+                <xs:maxLength value="1024" />
+            </xs:restriction>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:element name="ServiceCertificate">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="md:KeyDescriptor"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="HerkenningsmakelaarId" type="esc:OINType"/>
+    <xs:element name="AdditionalHerkenningsmakelaarId" type="esc:OINType"/>
+    <xs:element name="OrganizationDisplayName">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:restriction base="md:localizedNameType">
+                    <xs:maxLength value="64"/>
+                </xs:restriction>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="InstanceOfService" type="xs:string"/>
+    <xs:element name="IntermediatedService" type="xs:string"/>
+    <xs:element name="ServiceIntermediation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="esc:ServiceIntermediationAllowed" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="intermediationAllowed" type="esc:IntermediationAllowedType" default="noIntermediation"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:simpleType name="IntermediationAllowedType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="noIntermediation"/>
+            <xs:enumeration value="generalAvailable"/>
+            <xs:enumeration value="serviceProviderOnly"/>
+            <xs:enumeration value="requiresApproval"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:element name="ServiceIntermediationAllowed" type="esc:OINType"/>
+    <xs:simpleType name="OINType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{20}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:element name="Classifiers" type="esc:ClassifiersType" />
+    <xs:complexType name="ClassifiersType">
+        <xs:sequence>
+            <xs:element name="Classifier" type="xs:string" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+ 
+    <!--Attributes-->
+    <xs:attribute name="IssueInstant" type="xs:dateTime"/>
+    <xs:attribute name="IsPublic" type="xs:boolean"/>
+    <xs:attribute name="Version" type="xs:anyURI"/>
+ 
+</xs:schema>

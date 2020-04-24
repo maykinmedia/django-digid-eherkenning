@@ -39,6 +39,8 @@ https://github.com/onelogin/python3-saml
 References
 ==========
 
+eHerkenning: https://afsprakenstelsel.etoegang.nl/display/as/Interface+specifications+DV-HM
+eHerkenningDC: https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
 DigiD: https://www.logius.nl/sites/default/files/public/bestanden/diensten/DigiD/Koppelvlakspecificatie-SAML-DigiD.pdf
 SAML: http://www.oasis-open.org/committees/download.php/56776/sstc-saml-core-errata-2.0-wd-07.pdf
 SAMLBind: https://www.oasis-open.org/committees/download.php/56779/sstc-saml-bindings-errata-2.0-wd-06.pdf
