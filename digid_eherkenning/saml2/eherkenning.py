@@ -255,12 +255,12 @@ def create_eherkenning_config(conf, name_id_format="None"):
     config = {
         # TODO: I had to compile xmlsec myself. I noticed there are other
         # security backends, which use pyxmlsec, which would get rid this issue.
-        "xmlsec_binary": "/home/alexander/xmlsec/apps/xmlsec1",
+        # "xmlsec_binary": "/home/alexander/xmlsec/apps/xmlsec1",
         "entityid": 'urn:etoegang:DV:00000002003214394001:entities:5000',
         # "entityid": conf['url_prefix'],
         "key_file": conf["key_file"],
         "cert_file": conf["cert_file"],
-        "attribute_map_dir": '/home/alexander/belastingdienst-gegevensstromen/env/src/django-digid-eherkenning/digid_eherkenning/saml2/eherkenning_mapping',
+        # "attribute_map_dir": '/home/alexander/belastingdienst-gegevensstromen/env/src/django-digid-eherkenning/digid_eherkenning/saml2/eherkenning_mapping',
         "service": {
             "sp": {
                 "name": conf["service_name"],
