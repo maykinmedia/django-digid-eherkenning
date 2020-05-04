@@ -12,16 +12,12 @@ from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT, requested_authn_cont
 from saml2.client_base import IdpUnspecified
 from saml2.xmldsig import DIGEST_SHA256, SIG_RSA_SHA256
 
-from ..saml2.digid import DigiDClient
+from ..saml2.eherkenning import eHerkenningClient
 from ..forms import SAML2Form
 from .base import get_redirect_url
 
 
-class DigiDLoginView(TemplateView):
-    """
-    DigiD - 3.3.2 - Stap 2 Authenticatievraag
-    """
-
+class eHerkenningLoginView(TemplateView):
     template_name = "digid_eherkenning/post_binding.html"
 
     def get_relay_state(self):
@@ -35,14 +31,14 @@ class DigiDLoginView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        client = DigiDClient()
+        client = eHerkenningClient()
 
         response_binding = BINDING_HTTP_ARTIFACT
 
         # Retrieve the right HTTP POST location from the metadata file.
         try:
             location = client.sso_location(
-                "https://was-preprod1.digid.nl/saml/idp/metadata", BINDING_HTTP_POST
+                settings.EHERKENNING['service_entity_id'], BINDING_HTTP_POST
             )
         except IdpUnspecified:
             return HttpResponseServerError()
@@ -52,16 +48,18 @@ class DigiDLoginView(TemplateView):
         #
         session_id, request_xml = client.create_authn_request(
             location,
+            force_authn=True,
+            is_passive="false",
             binding=response_binding,
             nameid_format="",
             sign=True,
             sign_prepare=False,
             sign_alg=SIG_RSA_SHA256,
             digest_alg=DIGEST_SHA256,
-            requested_authn_context=requested_authn_context(PASSWORDPROTECTEDTRANSPORT),
+            attribute_consuming_service_index=settings.EHERKENNING['attribute_consuming_service_index'],
+            requested_authn_context=requested_authn_context(settings.EHERKENNING['service_loa']),
         )
         saml_request = b64encode(str(request_xml).encode("utf-8")).decode("utf-8")
-
         context_data.update(
             {
                 "url": location,
@@ -77,11 +75,7 @@ class DigiDLoginView(TemplateView):
         return context_data
 
 
-class DigiDAssertionConsumerServiceView(View):
-    """
-    DigiD - 3.3.3 Stap 5 Artifact
-    """
-
+class eHerkenningAssertionConsumerServiceView(View):
     def get_success_url(self):
         url = self.get_redirect_url()
         return url or resolve_url(settings.LOGIN_REDIRECT_URL)
@@ -91,7 +85,7 @@ class DigiDAssertionConsumerServiceView(View):
         return get_redirect_url(self.request, redirect_to)
 
     def get(self, request):
-        user = auth.authenticate(request=request, digid=True, saml_art=request.GET.get("SAMLart"))
+        user = auth.authenticate(request=request, eherkenning=True, saml_art=request.GET.get("SAMLart"))
         if user is None:
             raise PermissionDenied("Forbidden")
 

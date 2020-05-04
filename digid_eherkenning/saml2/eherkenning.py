@@ -204,7 +204,7 @@ def create_service_catalogus(conf):
     service_loa = conf["service_loa"]
     # https://afsprakenstelsel.etoegang.nl/display/as/ServiceID
     service_id = "urn:etoegang:DV:{}:services:{}".format(
-        conf["oin"], conf["service_index"]
+        conf["oin"], conf["attribute_consuming_service_index"]
     )
     service_instance_uuid = conf["service_instance_uuid"]
 
@@ -256,25 +256,28 @@ def create_eherkenning_config(conf, name_id_format="None"):
         # TODO: I had to compile xmlsec myself. I noticed there are other
         # security backends, which use pyxmlsec, which would get rid this issue.
         "xmlsec_binary": "/home/alexander/xmlsec/apps/xmlsec1",
-        "entityid": conf["url_prefix"],
+        "entityid": 'urn:etoegang:DV:00000002003214394001:entities:5000',
+        # "entityid": conf['url_prefix'],
         "key_file": conf["key_file"],
         "cert_file": conf["cert_file"],
+        "attribute_map_dir": '/home/alexander/belastingdienst-gegevensstromen/env/src/django-digid-eherkenning/digid_eherkenning/saml2/eherkenning_mapping',
         "service": {
             "sp": {
                 "name": conf["service_name"],
                 "name_id_format": name_id_format,
+                "authn_requests_signed": True,
+                "want_assertions_signed": False,
                 "endpoints": {
-                    # TODO
-                    # "assertion_consumer_service": [
-                    #     (
-                    #         conf["url_prefix"] + reverse("eherkenning:acs"),
-                    #         BINDING_HTTP_ARTIFACT,
-                    #     ),
-                    # ],
+                    "assertion_consumer_service": [
+                        (
+                            conf["url_prefix"] + reverse("eherkenning:acs"),
+                            BINDING_HTTP_ARTIFACT,
+                        ),
+                    ],
                 },
             },
         },
-        # "metadata": {"local": [conf["metadata_file"],],},
+        "metadata": {"local": [conf["metadata_file"],],},
         "debug": 1 if settings.DEBUG else 0,
     }
     conf = SPConfig()
@@ -284,7 +287,7 @@ def create_eherkenning_config(conf, name_id_format="None"):
 
 class eHerkenningClient(OrigSaml2Client):
     def __init__(self):
-        config = create_saml_config(conf=settings.EHERKENNING)
+        config = create_eherkenning_config(conf=settings.EHERKENNING)
         super().__init__(config)
 
     def message_args(self, message_id=0):

@@ -142,6 +142,9 @@ EHERKENNING = {
 }
 
 
-AUTHENTICATION_BACKENDS = ["digid_eherkenning.backends.DigiDBackend"]
+AUTHENTICATION_BACKENDS = [
+    "digid_eherkenning.backends.DigiDBackend",
+    "digid_eherkenning.backends.eHerkenningBackend",
+]
 
 AUTH_USER_MODEL = "project.User"

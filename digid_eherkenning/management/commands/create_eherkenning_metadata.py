@@ -9,7 +9,8 @@ from saml2.metadata import (
 from saml2.sigver import security_context
 from saml2.validate import valid_instance
 
-from ...client import create_saml_config
+from ...saml2.eherkenning import create_eherkenning_config
+from django.conf import settings
 
 
 class Command(BaseCommand):
@@ -27,7 +28,7 @@ class Command(BaseCommand):
             "ds": "http://www.w3.org/2000/09/xmldsig#",
             "ec": "http://www.w3.org/2001/10/xml-exc-c14n#",
         }
-        config = create_saml_config(name_id_format=None)
+        config = create_eherkenning_config(conf=settings.EHERKENNING, name_id_format=None)
         sec_ctx = security_context(config)
         eid = entity_descriptor(config)
 

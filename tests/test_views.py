@@ -17,14 +17,14 @@ from .project.models import User
 from .utils import get_saml_element
 
 
-def create_example_artifact(message):
+def create_example_artifact(metadata_url, message):
     message_handle = sha1(str(message).encode("utf-8"))
     message_handle.update(rndbytes())
     mhd = message_handle.digest()
-    return create_artifact("https://was-preprod1.digid.nl/saml/idp/metadata", mhd)
+    return create_artifact(metadata_url, mhd)
 
 
-class LoginViewTests(TestCase):
+class DigidLoginViewTests(TestCase):
     maxDiff = None
 
     @patch("digid_eherkenning.saml2.digid.instant")
@@ -149,7 +149,7 @@ class LoginViewTests(TestCase):
         )
 
 
-class AssertionConsumerServiceViewTests(TestCase):
+class DigidAssertionConsumerServiceViewTests(TestCase):
     maxDiff = None
 
     """
@@ -202,18 +202,7 @@ class AssertionConsumerServiceViewTests(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.artifact_response = (
-            "<samlp:ArtifactResponse"
-            ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
-            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
-            ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
-            ' xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"'
-            ' ID="_1330416516" Version="2.0" IssueInstant="2020-04-09T08:31:46Z"'
-            ' InResponseTo="_1330416516">'
-            "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
-            "<samlp:Status>"
-            '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
-            "</samlp:Status>"
+        self.response = (
             '<samlp:Response InResponseTo="_7afa5ce49" Version="2.0" ID="_1072ee96"'
             ' IssueInstant="2020-04-09T08:31:46Z">'
             "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
@@ -244,6 +233,21 @@ class AssertionConsumerServiceViewTests(TestCase):
             "</saml:AuthnStatement>"
             "</saml:Assertion>"
             "</samlp:Response>"
+        )
+
+        self.artifact_response = (
+            "<samlp:ArtifactResponse"
+            ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
+            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
+            ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
+            ' xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"'
+            ' ID="_1330416516" Version="2.0" IssueInstant="2020-04-09T08:31:46Z"'
+            ' InResponseTo="_1330416516">'
+            "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
+            "<samlp:Status>"
+            '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
+            "</samlp:Status>" +
+            self.response +
             "</samlp:ArtifactResponse>"
         )
 
@@ -280,7 +284,7 @@ class AssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact("xxx")
+        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata", "xxx")
         url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
         response = self.client.get(url)
 
@@ -309,7 +313,7 @@ class AssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact("xxx")
+        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata", "xxx")
         url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
         response = self.client.get(url)
 
@@ -339,7 +343,7 @@ class AssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact("xxx")
+        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata", "xxx")
         url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
         response = self.client.get(url)
 
@@ -466,7 +470,7 @@ class AssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact("xxx")
+        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata", "xxx")
         url = (
             reverse("digid:acs")
             + "?"
@@ -577,3 +581,186 @@ class AssertionConsumerServiceViewTests(TestCase):
                 etree.fromstring(expected_request), pretty_print=True
             ).decode("utf-8"),
         )
+
+
+class eHerkenningAssertionConsumerServiceViewTests(TestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.attribute_statement = (
+            '<saml:AttributeStatement>'
+            '<saml:Attribute Name="urn:etoegang:core:ServiceID">'
+            '<saml:AttributeValue xsi:type="xs:string">urn:etoegang:DV:...:services:...</saml:AttributeValue>'
+            '</saml:Attribute>'
+            '<saml:Attribute Name="urn:etoegang:core:ServiceUUID">'
+            '<saml:AttributeValue xsi:type="xs:string">dd4dae83-0f35-4695-b24a-29d470a63ea7</saml:AttributeValue>'
+            '</saml:Attribute>'
+            '<saml:Attribute Name="urn:etoegang:1.9:EntityConcernedID:KvKnr">'
+            '<saml:AttributeValue xsi:type="xs:string">12345678</saml:AttributeValue>'
+            '</saml:Attribute>'
+            '<saml:Attribute Name="urn:etoegang:1.9:ServiceRestriction:Vestigingsnr">'
+            '<saml:AttributeValue xsi:type="xs:string">123456789012</saml:AttributeValue>'
+            '</saml:Attribute>'
+            '</saml:AttributeStatement>'
+        )
+        # self.attribute_statement = (
+        #     '<saml:AttributeStatement>'
+        #     '<saml:Attribute Name="uid" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">'
+        #     '<saml:AttributeValue xsi:type="xs:string">test.</saml:AttributeValue>'
+        #     '</saml:Attribute>'
+        #     '</saml:AttributeStatement>'
+        # )
+
+        self.assertion = (
+            '<saml:Assertion Version="2.0"'
+            ' ID="_535162e2-de06-11e4-98a2-080027a35b78"'
+            ' IssueInstant="2015-04-08T16:30:05Z">'
+            '<saml:Issuer>urn:etoegang:HM:...</saml:Issuer>'
+            '<saml:Subject>       '
+            '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
+            '<saml:SubjectConfirmationData Recipient="https://..." NotOnOrAfter="2015-04-08T16:40:03Z" InResponseTo="_6984066c-de03-11e4-a571-080027a35b78"/>'
+            '</saml:SubjectConfirmation>'
+            '</saml:Subject>'
+            '<saml:Conditions NotBefore="2015-04-08T16:29:04Z" NotOnOrAfter="2015-04-08T17:00:04Z">'
+            '<saml:AudienceRestriction>'
+            '<saml:Audience>urn:etoegang:DV:...</saml:Audience>'
+            '</saml:AudienceRestriction>'
+            '</saml:Conditions>'
+            '<saml:Advice>'
+            '<saml:Assertion IssueInstant="2015-04-08T16:30:04Z" ID="_8a792d9e-de07-11e4-9db2-080027a35b78" Version="2.0">'
+            '<saml:Issuer>urn:etoegang:AD:...</saml:Issuer>'
+            '<!-- Verbatim copy of AD declaration of identity contents -->'
+            '</saml:Assertion>'
+            '</saml:Advice>'
+            '<saml:AuthnStatement AuthnInstant="2015-04-08T16:30:04Z">'
+            '<saml:AuthnContext>'
+            '<saml:AuthnContextClassRef>urn:etoegang:core:assurance-class:loa4</saml:AuthnContextClassRef>'
+            '</saml:AuthnContext>'
+            '</saml:AuthnStatement>'
+            '<saml:AttributeStatement>' +
+            self.attribute_statement +
+            '</saml:AttributeStatement>'
+            '</saml:Assertion>'
+        )
+
+        self.response = (
+            '<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
+            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
+            ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
+            ' xmlns:xs="http://www.w3.org/2001/XMLSchema"'
+            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+            ' ID="_5e702d5c-de06-11e4-a5a1-080027a35b78"'
+            ' InResponseTo="6984066c-de03-11e4-a571-080027a35b78"'
+            ' Version="2.0"'
+            ' Destination="https://..."'
+            ' IssueInstant="2015-04-08T16:30:06Z">'
+            '<saml:Issuer>urn:etoegang:HM:...</saml:Issuer>'
+            '<ds:Signature>'
+            '<ds:SignedInfo>'
+            '<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
+            '<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>'
+            '<ds:Reference URI="#_5e702d5c-de06-11e4-a5a1-080027a35b78">'
+            '<ds:Transforms>'
+            '<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>'
+            '<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
+            '</ds:Transforms>'
+            '<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>'
+            '<ds:DigestValue>...</ds:DigestValue>'
+            '</ds:Reference>'
+            '</ds:SignedInfo>'
+            '<ds:SignatureValue>...</ds:SignatureValue>'
+            '<ds:KeyInfo>'
+            '<ds:KeyName>...</ds:KeyName>'
+            '</ds:KeyInfo>'
+            '</ds:Signature>'
+            '<samlp:Status>'
+            '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />'
+            '</samlp:Status>' +
+            self.assertion +
+            '</samlp:Response>'
+        )
+        # self.response = (
+        #     '<samlp:Response InResponseTo="_7afa5ce49" Version="2.0" ID="_1072ee96"'
+        #     ' IssueInstant="2020-04-09T08:31:46Z">'
+        #     "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
+        #     "<samlp:Status>"
+        #     '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
+        #     "</samlp:Status>"
+        #     '<saml:Assertion Version="2.0" ID="_dc9f70e61c" IssueInstant="2020-04-09T08:31:46Z">'
+        #     "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
+        #     "<saml:Subject>"
+        #     "<saml:NameID>s00000000:12345678</saml:NameID>"
+        #     '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
+        #     '<saml:SubjectConfirmationData InResponseTo="_7afa5ce49"'
+        #     ' Recipient="http://example.com/artifact_url" NotOnOrAfter="2020-04-10T08:31:46Z"/>'
+        #     "</saml:SubjectConfirmation>"
+        #     "</saml:Subject>"
+        #     '<saml:Conditions NotBefore="2012-12-20T18:48:27Z" NotOnOrAfter="2020-04-10T08:31:46Z">'
+        #     "<saml:AudienceRestriction>"
+        #     "<saml:Audience>http://sp.example.nl</saml:Audience>"
+        #     "</saml:AudienceRestriction>"
+        #     "</saml:Conditions>"
+        #     '<saml:AuthnStatement SessionIndex="17" AuthnInstant="2020-04-09T08:31:46Z">'
+        #     '<saml:SubjectLocality Address="127.0.0.1"/>'
+        #     '<saml:AuthnContext Comparison="minimum">'
+        #     "<saml:AuthnContextClassRef>"
+        #     " urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
+        #     "</saml:AuthnContextClassRef>"
+        #     "</saml:AuthnContext>"
+        #     "</saml:AuthnStatement>"
+        #     "</saml:Assertion>"
+        #     "</samlp:Response>"
+        # )
+
+        self.artifact_response = (
+            "<samlp:ArtifactResponse"
+            ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
+            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
+            ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
+            ' xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"'
+            ' ID="_1330416516" Version="2.0" IssueInstant="2020-04-09T08:31:46Z"'
+            ' InResponseTo="_1330416516">'
+            "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
+            "<samlp:Status>"
+            '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
+            "</samlp:Status>" +
+            self.response +
+            "</samlp:ArtifactResponse>"
+        )
+
+        self.artifact_response_soap = (
+            b'<?xml version="1.0" encoding="UTF-8"?>'
+            b"<soapenv:Envelope"
+            b' xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'
+            b' xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
+            b' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+            b"<soapenv:Body>"
+            + str(self.artifact_response).encode("utf-8")
+            + b"</soapenv:Body>"
+            b"</soapenv:Envelope>"
+        )
+
+    @responses.activate
+    @patch("digid_eherkenning.saml2.eherkenning.instant")
+    @patch("digid_eherkenning.saml2.eherkenning.sid")
+    @freeze_time("2020-04-09T08:31:46Z")
+    def test_get(self, sid_mock, instant_mock):
+        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
+        instant_mock.return_value = "2020-04-09T08:31:46Z"
+
+        responses.add(
+            responses.POST,
+            "https://eh02.staging.iwelcome.nl/broker/ars/1.13",
+            body=self.artifact_response_soap,
+            status=200,
+        )
+        artifact = create_example_artifact("urn:etoegang:HM:00000003520354760000:entities:9632", "xxx")
+        url = (
+            reverse("eherkenning:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": artifact, "RelayState": "/home/"})
+        )
+        response = self.client.get(url)
+
+        # Make sure we're redirect the the right place.
+        self.assertEqual(response.url, "/home/")
