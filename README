@@ -39,6 +39,7 @@ https://github.com/onelogin/python3-saml
 References
 ==========
 
+eHerkenningMetadata: https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
 eHerkenning: https://afsprakenstelsel.etoegang.nl/display/as/Interface+specifications+DV-HM
 eHerkenningDC: https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
 DigiD: https://www.logius.nl/sites/default/files/public/bestanden/diensten/DigiD/Koppelvlakspecificatie-SAML-DigiD.pdf
