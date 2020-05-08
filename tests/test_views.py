@@ -583,6 +583,85 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         )
 
 
+class eHerkenningLoginViewTests(TestCase):
+    maxDiff = None
+
+    @patch("digid_eherkenning.saml2.eherkenning.instant")
+    @patch("saml2.entity.sid")
+    def test_login(self, sid_mock, instant_mock):
+        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
+        instant_mock.return_value = "2020-04-09T08:31:46Z"
+        response = self.client.get(reverse("eherkenning:login"))
+
+        saml_request = b64decode(
+            response.context["form"].initial["SAMLRequest"].encode("utf-8")
+        )
+
+        expected = (
+            '<ns0:AuthnRequest '
+            'xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol" '
+            'xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion" '
+            'xmlns:ns2="http://www.w3.org/2000/09/xmldsig#" '
+            'AssertionConsumerServiceURL="https://dac6.acc.gegevensportaal.net/eherkenningacs/" '
+            'AttributeConsumingServiceIndex="1" '
+            'Destination="https://eh01.staging.iwelcome.nl/broker/sso/1.13" '
+            'ForceAuthn="true" '
+            'ID="id-pbQxNa0H9jce5a75n" '
+            'IsPassive="false" '
+            'IssueInstant="2020-04-09T08:31:46Z" '
+            'ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact" Version="2.0">'
+            '<ns1:Issuer>urn:etoegang:DV:00000002003214394001:entities:5000</ns1:Issuer>'
+            '<ns2:Signature Id="Signature1">'
+            "<ns2:SignedInfo>"
+            '<ns2:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />'
+            '<ns2:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" />'
+            '<ns2:Reference URI="#id-pbQxNa0H9jce5a75n">'
+            "<ns2:Transforms>"
+            '<ns2:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />'
+            '<ns2:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />'
+            "</ns2:Transforms>"
+            '<ns2:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />'
+            "<ns2:DigestValue />"
+            "</ns2:Reference>"
+            "</ns2:SignedInfo>"
+            "<ns2:SignatureValue />"
+            "<ns2:KeyInfo><ns2:X509Data><ns2:X509Certificate></ns2:X509Certificate></ns2:X509Data></ns2:KeyInfo>"
+            "</ns2:Signature>"
+            '<ns0:RequestedAuthnContext Comparison="minimum">'
+            "<ns1:AuthnContextClassRef>"
+            "urn:etoegang:core:assurance-class:loa3"
+            "</ns1:AuthnContextClassRef>"
+            "</ns0:RequestedAuthnContext>"
+            "</ns0:AuthnRequest>"
+        )
+
+        tree = etree.fromstring(saml_request)
+        elements = tree.xpath(
+            "//xmldsig:SignatureValue",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        elements = tree.xpath(
+            "//xmldsig:DigestValue",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        elements = tree.xpath(
+            "//xmldsig:X509Certificate",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        self.assertXMLEqual(
+            etree.tostring(tree, pretty_print=True).decode("utf-8"),
+            etree.tostring(etree.fromstring(expected), pretty_print=True).decode(
+                "utf-8"
+            ),
+        )
+
+
 class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     def setUp(self):
         super().setUp()
