@@ -11,26 +11,6 @@ from django.utils import timezone
 from lxml import etree
 from lxml.builder import ElementMaker
 from OpenSSL import crypto
-from saml2 import (
-    BINDING_HTTP_ARTIFACT,
-    BINDING_HTTP_POST,
-    BINDING_HTTP_REDIRECT,
-    VERSION,
-    SAMLError,
-)
-from saml2.client import Saml2Client as OrigSaml2Client
-from saml2.config import SPConfig
-from saml2.metadata import (
-    entity_descriptor,
-    metadata_tostring_fix,
-    sign_entity_descriptor,
-)
-from saml2.s_utils import sid
-from saml2.saml import Issuer
-from saml2.sigver import security_context
-from saml2.time_util import instant
-from saml2.validate import valid_instance
-from saml2.xmldsig import DIGEST_SHA256, SIG_RSA_SHA256
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 
 from ..settings import EHERKENNING_DS_XSD
