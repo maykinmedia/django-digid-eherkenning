@@ -133,12 +133,21 @@ EHERKENNING = {
     'organisation_name': 'Example',
     'service_uuid': '',
     'service_name': 'Example',
-    'service_loa': 'urn:etoegang:core:assurance-class:3',
+    'service_loa': 'urn:etoegang:core:assurance-class:loa3',
     'service_index': '1',
     'service_instance_uuid': '',
     'service_url': '',
     'privacy_policy_url': '',
     'herkenningsmakelaars_id': '00000000000000000000',
+    'key_file': os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key"),
+    'cert_file': os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem"),
+    # Also used as entity ID
+    'url_prefix': 'https://example.com',
+    'metadata_file': os.path.join(BASE_DIR, "files", "eherkenning", "metadata"),
+    'service_entity_id': 'urn:etoegang:HM:0000000000000000001:entities:0001',
+    'entity_id': 'urn:etoegang:DV:0000000000000000001:entities:0002',
+    'attribute_consuming_service_index': '1',
+    'entity_concerned_types_allowed': []
 }
 
 

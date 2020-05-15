@@ -31,6 +31,7 @@ from saml2.sigver import security_context
 from saml2.time_util import instant
 from saml2.validate import valid_instance
 from saml2.xmldsig import DIGEST_SHA256, SIG_RSA_SHA256
+from onelogin.saml2.auth import OneLogin_Saml2_Auth
 
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
@@ -118,7 +119,7 @@ def create_service_provider(
     return ESC("ServiceProvider", *args, **kwargs)
 
 
-def create_service_definition(service_uuid, service_name, service_description, loa):
+def create_service_definition(service_uuid, service_name, service_description, loa, entity_concerned_types_allowed):
     ns = namespaces["esc"]
     args = [
         ESC("ServiceUUID", service_uuid),
@@ -126,8 +127,13 @@ def create_service_definition(service_uuid, service_name, service_description, l
         ESC("ServiceDescription", service_description, **xml_nl_lang),
         SAML("AuthnContextClassRef", loa),
         ESC("HerkenningsmakelaarId", "00000003244440010000"),
-        ESC("EntityConcernedTypesAllowed", "urn:etoegang:1.9:EntityConcernedID:Pseudo"),
     ]
+
+    for entity in entity_concerned_types_allowed:
+        args.append(
+            ESC("EntityConcernedTypesAllowed", entity),
+        )
+
     kwargs = {f"{{{ns}}}IsPublic": "true"}
     return ESC("ServiceDefinition", *args, **kwargs)
 
@@ -185,13 +191,7 @@ def create_service_catalogus(conf):
     """
     https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
     """
-    config = create_eherkenning_config(conf, name_id_format=None)
-    sec_ctx = security_context(config)
-
-    if sec_ctx.cert_type != "pem" or sec_ctx.cert_file is None:
-        raise ValueError("Make sure you have a certificate configured for eHerkenning.")
-
-    x509_certificate_content = open(sec_ctx.cert_file, "rb").read()
+    x509_certificate_content = open(conf['cert_file'], "rb").read()
 
     sc_id = str(uuid4())
     service_provider_id = conf["oin"]
@@ -211,13 +211,14 @@ def create_service_catalogus(conf):
     service_url = conf.get("service_url",)
     privacy_policy_url = conf.get("privacy_policy_url",)
     herkenningsmakelaars_id = conf.get("herkenningsmakelaars_id",)
+    entity_concerned_types_allowed = conf.get('entity_concerned_types_allowed')
 
     signature = create_signature(sc_id)
     key_descriptor = create_key_descriptor(x509_certificate_content)
     service_provider = create_service_provider(
         service_provider_id,
         organization_display_name,
-        create_service_definition(service_uuid, service_name, service_description, service_loa),
+        create_service_definition(service_uuid, service_name, service_description, service_loa, entity_concerned_types_allowed),
         create_service_instance(
             service_id,
             service_instance_uuid,
@@ -230,98 +231,213 @@ def create_service_catalogus(conf):
     )
     xml = create_service_catalogue(sc_id, timezone.now(), signature, service_provider)
 
-    signed_catalogus = sec_ctx.sign_statement(
-        statement=etree.tostring(
-            xml, pretty_print=True, xml_declaration=True, encoding="utf-8"
-        ),
-        node_name="urn:etoegang:1.13:service-catalog:ServiceCatalogue",
+    catalogus = etree.tostring(
+        xml, pretty_print=True, xml_declaration=True, encoding="utf-8"
     )
     errors = validate_xml(
-        BytesIO(signed_catalogus.encode("utf-8")), EHERKENNING_DS_XSD
+        BytesIO(catalogus), EHERKENNING_DS_XSD
     )
     assert errors is None, errors
-    return signed_catalogus.encode("utf-8")
+    return catalogus
 
 
-def create_eherkenning_config(conf, name_id_format="None"):
-    """
-    :param name_id_format
+def create_eherkenning_config(conf):
+    return {
+        # If strict is True, then the Python Toolkit will reject unsigned
+        # or unencrypted messages if it expects them to be signed or encrypted.
+        # Also it will reject the messages if the SAML standard is not strictly
+        # followed. Destination, NameId, Conditions ... are validated too.
+        "strict": True,
 
-    There appears to be a bug in the PySAML2 code which
-    requries name_id_format to be set to 'None' if called
-    from create_authn_request and set to None when generating
-    a metadata file.
-    """
-    config = {
-        # TODO: I had to compile xmlsec myself. I noticed there are other
-        # security backends, which use pyxmlsec, which would get rid this issue.
-        # "xmlsec_binary": "/home/alexander/xmlsec/apps/xmlsec1",
-        "entityid": 'urn:etoegang:DV:00000002003214394001:entities:5000',
-        # "entityid": conf['url_prefix'],
-        "key_file": conf["key_file"],
-        "cert_file": conf["cert_file"],
-        # "attribute_map_dir": '/home/alexander/belastingdienst-gegevensstromen/env/src/django-digid-eherkenning/digid_eherkenning/saml2/eherkenning_mapping',
-        "service": {
-            "sp": {
-                "name": conf["service_name"],
-                "name_id_format": name_id_format,
-                "authn_requests_signed": True,
-                "want_assertions_signed": False,
-                "endpoints": {
-                    "assertion_consumer_service": [
-                        (
-                            conf["url_prefix"] + reverse("eherkenning:acs"),
-                            BINDING_HTTP_ARTIFACT,
-                        ),
-                    ],
-                },
-            },
+        "security": {
+            "authnRequestsSigned": True,
+            "requestedAuthnContextComparison": "minimum",
+            "requestedAuthnContext": ["urn:etoegang:core:assurance-class:loa3", ],
+
+            # Disabled for now, not really needed because we use the artifact-binding
+            # with mutual TLS.
+            # "wantAssertionsSigned": False,
+            # "wantMessagesSigned": False,
+            'metadataValidUntil': '',
+            'metadataCacheDuration': '',
         },
-        "metadata": {"local": [conf["metadata_file"],],},
-        "debug": 1 if settings.DEBUG else 0,
+
+        # Enable debug mode (outputs errors).
+        "debug": True,
+
+        # Service Provider Data that we are deploying.
+        "sp": {
+            # Identifier of the SP entity  (must be a URI)
+            "entityId": conf['entity_id'],
+            # Specifies info about where and how the <AuthnResponse> message MUST be
+            # returned to the requester, in this case our SP.
+            "assertionConsumerService": {
+                # URL Location where the <Response> from the IdP will be returned
+                "url": conf["url_prefix"] + reverse("eherkenning:acs"),
+                # SAML protocol binding to be used when returning the <Response>
+                # message. OneLogin Toolkit supports this endpoint for the
+                # HTTP-POST binding only.
+                "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"
+            },
+            # If you need to specify requested attributes, set a
+            # attributeConsumingService. nameFormat, attributeValue and
+            # friendlyName can be ommited
+            "attributeConsumingService": {
+                "index": conf['attribute_consuming_service_index'],
+                "serviceName": conf["service_name"],
+                "serviceDescription": "",
+                "requestedAttributes": [
+                    {
+                        "name": attr,
+                        "isRequired": True,
+                    } for attr in conf.get('entity_concerned_types_allowed')
+                ]
+            },
+            # Specifies the constraints on the name identifier to be used to
+            # represent the requested subject.
+            # Take a look on src/onelogin/saml2/constants.py to see the NameIdFormat that are supported.
+            "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+            # Usually X.509 cert and privateKey of the SP are provided by files placed at
+            # the certs folder. But we can also provide them with the following parameters
+            "x509cert": open(conf["cert_file"], 'r').read().replace('-----BEGIN CERTIFICATE-----\n', '').replace('\n-----END CERTIFICATE-----\n', '').replace('\n', ''),
+            "privateKey": open(conf["key_file"], 'r').read().replace('-----BEGIN CERTIFICATE-----\n', '').replace('\n-----END CERTIFICATE-----\n', '').replace('\n', ''),
+            # "x509cert": 'x',
+            # "privateKey": 'x',
+
+             # Key rollover
+             # If you plan to update the SP X.509cert and privateKey
+             # you can define here the new X.509cert and it will be
+             # published on the SP metadata so Identity Providers can
+             # read them and get ready for rollover.
+             # 'x509certNew': '',
+        },
+
+        # Identity Provider Data that we want connected with our SP.
+        "idp": {
+            # Identifier of the IdP entity  (must be a URI)
+            "entityId": "urn:etoegang:HM:00000003520354760000:entities:9632",
+            # SSO endpoint info of the IdP. (Authentication Request protocol)
+            "singleSignOnService": {
+                # URL Target of the IdP where the Authentication Request Message
+                # will be sent.
+                "url": "https://eh01.staging.iwelcome.nl/broker/sso/1.13",
+                # SAML protocol binding to be used when returning the <Response>
+                # message. OneLogin Toolkit supports the HTTP-Redirect binding
+                # only for this endpoint.
+                "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+            },
+            # SLO endpoint info of the IdP.
+            "singleLogoutService": {
+                # URL Location of the IdP where SLO Request will be sent.
+                "url": "https://eh01.staging.iwelcome.nl/broker/slo/1.13",
+                # SAML protocol binding to be used when returning the <Response>
+                # message. OneLogin Toolkit supports the HTTP-Redirect binding
+                # only for this endpoint.
+                "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+            },
+            "assertionConsumerService": {
+                "index": "0",
+                "url": "https://eh02.staging.iwelcome.nl/broker/ars/1.13",
+                "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+                # The client key/cert used when doing a HTTP Artifact request.
+                "clientKey": conf["key_file"],
+                "clientCert": conf["cert_file"],
+            },
+            # Public X.509 certificate of the IdP
+            "x509cert": "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"
+            #
+            #  Instead of using the whole X.509cert you can use a fingerprint in order to
+            #  validate a SAMLResponse (but you still need the X.509cert to validate LogoutRequest and LogoutResponse using the HTTP-Redirect binding).
+            #  But take in mind that the fingerprint, is a hash, so at the end is open to a collision attack that can end on a signature validation bypass,
+            #  that why we don't recommend it use for production environments.
+            #
+            #  (openssl x509 -noout -fingerprint -in "idp.crt" to generate it,
+            #  or add for example the -sha256 , -sha384 or -sha512 parameter)
+            #
+            #  If a fingerprint is provided, then the certFingerprintAlgorithm is required in order to
+            #  let the toolkit know which algorithm was used.
+            #  Possible values: sha1, sha256, sha384 or sha512
+            #  'sha1' is the default value.
+            #
+            #  Notice that if you want to validate any SAML Message sent by the HTTP-Redirect binding, you
+            #  will need to provide the whole X.509cert.
+            #
+            # "certFingerprint": "",
+            # "certFingerprintAlgorithm": "sha1",
+
+            # In some scenarios the IdP uses different certificates for
+            # signing/encryption, or is under key rollover phase and
+            # more than one certificate is published on IdP metadata.
+            # In order to handle that the toolkit offers that parameter.
+            # (when used, 'X.509cert' and 'certFingerprint' values are
+            # ignored).
+            #
+            # 'x509certMulti': {
+            #      'signing': [
+            #          '<cert1-string>'
+            #      ],
+            #      'encryption': [
+            #          '<cert2-string>'
+            #      ]
+            # }
+        }
     }
-    conf = SPConfig()
-    conf.load(copy.deepcopy(config))
-    return conf
 
 
-class eHerkenningClient(OrigSaml2Client):
+class eHerkenningClient:
     def __init__(self):
-        config = create_eherkenning_config(conf=settings.EHERKENNING)
-        super().__init__(config)
+        from onelogin.saml2.settings import OneLogin_Saml2_Settings
+        self.saml2_settings = OneLogin_Saml2_Settings(
+            create_eherkenning_config(conf=settings.EHERKENNING),
+            custom_base_path=None
+        )
 
-    def message_args(self, message_id=0):
-        if not message_id:
-            message_id = sid()
+    def create_metadata(self):
+        return self.saml2_settings.get_sp_metadata()
 
+    def create_saml2_auth_request(self, request):
+        # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
         return {
-            "id": message_id,
-            "version": VERSION,
-            "issue_instant": instant(),
-            "issuer": Issuer(text=self.config.entityid),
+            'https': 'on' if request.is_secure() else 'off',
+            # FIXME
+            'http_host': request.META['SERVER_NAME'],
+            # 'http_host': 'FIXME',
+            'script_name': request.META['PATH_INFO'],
+            'server_port': request.META['SERVER_PORT'],
+            'get_data': request.GET.copy(),
+            'post_data': request.POST.copy(),
+            # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
+            # 'lowercase_urlencoding': True,
+            'query_string': request.META['QUERY_STRING']
         }
 
-    def artifact2message(self, artifact, descriptor):
-        """
-        According to the example message in digid 1.5 (Voorbeeldbericht bij Stap 6 : Artifact Resolve (SOAP))
-
-        This needs to be signed.
-
-        pysaml2 did not support this by default, so implement it here.
-        """
-
-        destination = self.artifact2destination(artifact, descriptor)
-
-        if not destination:
-            raise SAMLError("Missing endpoint location")
-
-        _sid = sid()
-        mid, msg = self.create_artifact_resolve(
-            artifact,
-            destination,
-            _sid,
-            sign=True,
-            sign_alg=SIG_RSA_SHA256,
-            digest_alg=DIGEST_SHA256,
+    def create_authn_request(self, request, return_to=None):
+        saml2_auth_request = self.create_saml2_auth_request(request)
+        saml2_auth = OneLogin_Saml2_Auth(
+            saml2_auth_request,
+            old_settings=self.saml2_settings,
+            custom_base_path=None
         )
-        return self.send_using_soap(msg, destination)
+        return saml2_auth.login(
+            return_to=return_to, force_authn=True, is_passive=False,
+            set_nameid_policy=False, name_id_value_req=None
+        )
+
+    def artifact_resolve(self, request, saml_art):
+        saml2_auth_request = self.create_saml2_auth_request(request)
+        saml2_auth = OneLogin_Saml2_Auth(
+            saml2_auth_request,
+            old_settings=self.saml2_settings,
+            custom_base_path=None
+        )
+        return saml2_auth.artifact_resolve(saml_art)
+
+    def get_sso_url(self):
+        """
+        Gets the SSO URL.
+
+        :returns: An URL, the SSO endpoint of the IdP
+        :rtype: string
+        """
+        idp_data = self.__settings.get_idp_data()
+        return idp_data['singleSignOnService']['url']

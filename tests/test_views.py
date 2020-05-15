@@ -1,5 +1,5 @@
 import urllib
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from hashlib import sha1
 from unittest.mock import patch
 
@@ -16,12 +16,16 @@ from saml2.s_utils import rndbytes
 from .project.models import User
 from .utils import get_saml_element
 
+from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
-def create_example_artifact(metadata_url, message):
-    message_handle = sha1(str(message).encode("utf-8"))
-    message_handle.update(rndbytes())
-    mhd = message_handle.digest()
-    return create_artifact(metadata_url, mhd)
+
+def create_example_artifact(endpoint_url):
+    type_code = b'\x00\x04'
+    endpoint_index = b'\x00\x00'
+    source_id = sha1(endpoint_url.encode('utf-8')).digest()
+    message_handle = b'01234567890123456789'  # something random
+
+    return b64encode(type_code + endpoint_index + source_id + message_handle)
 
 
 class DigidLoginViewTests(TestCase):
@@ -284,7 +288,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata", "xxx")
+        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata")
         url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
         response = self.client.get(url)
 
@@ -313,7 +317,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata", "xxx")
+        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata")
         url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
         response = self.client.get(url)
 
@@ -343,7 +347,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata", "xxx")
+        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata")
         url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
         response = self.client.get(url)
 
@@ -470,7 +474,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata", "xxx")
+        artifact = create_example_artifact("https://was-preprod1.digid.nl/saml/idp/metadata")
         url = (
             reverse("digid:acs")
             + "?"
@@ -586,211 +590,122 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
 class eHerkenningLoginViewTests(TestCase):
     maxDiff = None
 
-    @patch("digid_eherkenning.saml2.eherkenning.instant")
-    @patch("saml2.entity.sid")
-    def test_login(self, sid_mock, instant_mock):
-        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
-        instant_mock.return_value = "2020-04-09T08:31:46Z"
+    @freeze_time("2020-04-09T08:31:46Z")
+    @patch("onelogin.saml2.utils.uuid4")
+    def test_login(self, uuid_mock):
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
         response = self.client.get(reverse("eherkenning:login"))
 
-        saml_request = b64decode(
-            response.context["form"].initial["SAMLRequest"].encode("utf-8")
+        saml_request = OneLogin_Saml2_Utils.decode_base64_and_inflate(
+            urllib.parse.parse_qs(
+                urllib.parse.urlparse(response.url).query
+            )['SAMLRequest'][0]
         )
 
         expected = (
-            '<ns0:AuthnRequest '
-            'xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol" '
-            'xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion" '
-            'xmlns:ns2="http://www.w3.org/2000/09/xmldsig#" '
-            'AssertionConsumerServiceURL="https://dac6.acc.gegevensportaal.net/eherkenningacs/" '
+            '<samlp:AuthnRequest '
+            'xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" '
+            'xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" '
+            'AssertionConsumerServiceURL="https://testserver/eherkenningacs/" '
             'AttributeConsumingServiceIndex="1" '
             'Destination="https://eh01.staging.iwelcome.nl/broker/sso/1.13" '
             'ForceAuthn="true" '
-            'ID="id-pbQxNa0H9jce5a75n" '
-            'IsPassive="false" '
+            'ID="ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f" '
             'IssueInstant="2020-04-09T08:31:46Z" '
             'ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact" Version="2.0">'
-            '<ns1:Issuer>urn:etoegang:DV:00000002003214394001:entities:5000</ns1:Issuer>'
-            '<ns2:Signature Id="Signature1">'
-            "<ns2:SignedInfo>"
-            '<ns2:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />'
-            '<ns2:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" />'
-            '<ns2:Reference URI="#id-pbQxNa0H9jce5a75n">'
-            "<ns2:Transforms>"
-            '<ns2:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />'
-            '<ns2:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />'
-            "</ns2:Transforms>"
-            '<ns2:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />'
-            "<ns2:DigestValue />"
-            "</ns2:Reference>"
-            "</ns2:SignedInfo>"
-            "<ns2:SignatureValue />"
-            "<ns2:KeyInfo><ns2:X509Data><ns2:X509Certificate></ns2:X509Certificate></ns2:X509Data></ns2:KeyInfo>"
-            "</ns2:Signature>"
-            '<ns0:RequestedAuthnContext Comparison="minimum">'
-            "<ns1:AuthnContextClassRef>"
+            '<saml:Issuer>urn:etoegang:DV:00000002003214394001:entities:5000</saml:Issuer>'
+            '<samlp:RequestedAuthnContext Comparison="minimum">'
+            "<saml:AuthnContextClassRef>"
             "urn:etoegang:core:assurance-class:loa3"
-            "</ns1:AuthnContextClassRef>"
-            "</ns0:RequestedAuthnContext>"
-            "</ns0:AuthnRequest>"
+            "</saml:AuthnContextClassRef>"
+            "</samlp:RequestedAuthnContext>"
+            "</samlp:AuthnRequest>"
         )
 
         tree = etree.fromstring(saml_request)
-        elements = tree.xpath(
-            "//xmldsig:SignatureValue",
-            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
-        )
-        elements[0].text = ""
-
-        elements = tree.xpath(
-            "//xmldsig:DigestValue",
-            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
-        )
-        elements[0].text = ""
-
-        elements = tree.xpath(
-            "//xmldsig:X509Certificate",
-            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
-        )
-        elements[0].text = ""
+        expected_tree = etree.fromstring(expected)
 
         self.assertXMLEqual(
             etree.tostring(tree, pretty_print=True).decode("utf-8"),
-            etree.tostring(etree.fromstring(expected), pretty_print=True).decode(
+            etree.tostring(expected_tree, pretty_print=True).decode(
                 "utf-8"
             ),
         )
+from onelogin.saml2.constants import OneLogin_Saml2_Constants
+from onelogin.saml2.errors import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
+from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
+import xmlsec
 
 
 class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.attribute_statement = (
-            '<saml:AttributeStatement>'
-            '<saml:Attribute Name="urn:etoegang:core:ServiceID">'
-            '<saml:AttributeValue xsi:type="xs:string">urn:etoegang:DV:...:services:...</saml:AttributeValue>'
-            '</saml:Attribute>'
-            '<saml:Attribute Name="urn:etoegang:core:ServiceUUID">'
-            '<saml:AttributeValue xsi:type="xs:string">dd4dae83-0f35-4695-b24a-29d470a63ea7</saml:AttributeValue>'
-            '</saml:Attribute>'
-            '<saml:Attribute Name="urn:etoegang:1.9:EntityConcernedID:KvKnr">'
-            '<saml:AttributeValue xsi:type="xs:string">12345678</saml:AttributeValue>'
-            '</saml:Attribute>'
-            '<saml:Attribute Name="urn:etoegang:1.9:ServiceRestriction:Vestigingsnr">'
-            '<saml:AttributeValue xsi:type="xs:string">123456789012</saml:AttributeValue>'
-            '</saml:Attribute>'
-            '</saml:AttributeStatement>'
+        from django.conf import settings
+        cert_file = settings.EHERKENNING['cert_file']
+        key_file = settings.EHERKENNING['key_file']
+        key = open(key_file, 'r').read()
+        cert = open(cert_file, 'r').read()
+
+        encrypted_attribute = OneLogin_Saml2_Utils.generate_name_id(
+            '123456782', sp_nq=None, nq='urn:etoegang:1.9:EntityConcernedID:RSIN',
+            sp_format='urn:oasis:names:tc:SAML:2.0:nameid-format:persistent',
+            cert=cert
         )
-        # self.attribute_statement = (
-        #     '<saml:AttributeStatement>'
-        #     '<saml:Attribute Name="uid" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">'
-        #     '<saml:AttributeValue xsi:type="xs:string">test.</saml:AttributeValue>'
-        #     '</saml:Attribute>'
-        #     '</saml:AttributeStatement>'
-        # )
 
         self.assertion = (
-            '<saml:Assertion Version="2.0"'
-            ' ID="_535162e2-de06-11e4-98a2-080027a35b78"'
-            ' IssueInstant="2015-04-08T16:30:05Z">'
-            '<saml:Issuer>urn:etoegang:HM:...</saml:Issuer>'
-            '<saml:Subject>       '
+            '<saml:Assertion ID="_ae28e39f-bf7a-32d5-9653-3ad07c0e911e" IssueInstant="2020-04-09T08:31:46Z" Version="2.0" xmlns:xacml-saml="urn:oasis:xacml:2.0:saml:assertion:schema:os">'
+            '<saml:Issuer>urn:etoegang:HM:00000003520354760000:entities:9632</saml:Issuer>'
+            '<saml:Subject>'
+            '<saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient" NameQualifier="urn:etoegang:EB:00000004000000149000:entities:9009">b964780b-3441-4e57-a027-a59c21c3019d</saml:NameID>'
             '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
-            '<saml:SubjectConfirmationData Recipient="https://..." NotOnOrAfter="2015-04-08T16:40:03Z" InResponseTo="_6984066c-de03-11e4-a571-080027a35b78"/>'
+            '<saml:SubjectConfirmationData InResponseTo="id-jiaDzLL9mR3C3hioH" NotOnOrAfter="2020-04-09T08:35:46Z" Recipient="https://testserver/eherkenning/acs/"/>'
             '</saml:SubjectConfirmation>'
             '</saml:Subject>'
-            '<saml:Conditions NotBefore="2015-04-08T16:29:04Z" NotOnOrAfter="2015-04-08T17:00:04Z">'
+            '<saml:Conditions NotBefore="2020-04-09T08:31:46Z" NotOnOrAfter="2020-04-09T08:35:46Z">'
             '<saml:AudienceRestriction>'
-            '<saml:Audience>urn:etoegang:DV:...</saml:Audience>'
+            '<saml:Audience>urn:etoegang:DV:0000000000000000001:entities:0002</saml:Audience>'
             '</saml:AudienceRestriction>'
             '</saml:Conditions>'
-            '<saml:Advice>'
-            '<saml:Assertion IssueInstant="2015-04-08T16:30:04Z" ID="_8a792d9e-de07-11e4-9db2-080027a35b78" Version="2.0">'
-            '<saml:Issuer>urn:etoegang:AD:...</saml:Issuer>'
-            '<!-- Verbatim copy of AD declaration of identity contents -->'
-            '</saml:Assertion>'
-            '</saml:Advice>'
-            '<saml:AuthnStatement AuthnInstant="2015-04-08T16:30:04Z">'
+            '<saml:AuthnStatement AuthnInstant="2020-05-06T10:50:14Z">'
             '<saml:AuthnContext>'
-            '<saml:AuthnContextClassRef>urn:etoegang:core:assurance-class:loa4</saml:AuthnContextClassRef>'
+            '<saml:AuthnContextClassRef>urn:etoegang:core:assurance-class:loa3</saml:AuthnContextClassRef>'
+            '<saml:AuthenticatingAuthority>urn:etoegang:EB:00000004000000149000:entities:9009</saml:AuthenticatingAuthority>'
             '</saml:AuthnContext>'
             '</saml:AuthnStatement>'
-            '<saml:AttributeStatement>' +
-            self.attribute_statement +
+            '<saml:AttributeStatement>'
+            '<saml:Attribute Name="urn:etoegang:core:ServiceID">'
+            '<saml:AttributeValue xsi:type="xs:string">urn:etoegang:DV:00000002003214394001:services:5000</saml:AttributeValue>'
+            '</saml:Attribute>'
+            '<saml:Attribute Name="urn:etoegang:core:ServiceUUID">'
+            '<saml:AttributeValue xsi:type="xs:string">87f3035b-b0c2-482a-b693-98316f5f4ba4</saml:AttributeValue>'
+            '</saml:Attribute>'
+            '<saml:Attribute FriendlyName="ActingSubjectID" Name="urn:etoegang:core:ActingSubjectID"><saml:AttributeValue>'
+            + encrypted_attribute +
+            '</saml:AttributeValue></saml:Attribute>'
             '</saml:AttributeStatement>'
             '</saml:Assertion>'
         )
 
         self.response = (
-            '<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
-            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
-            ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
-            ' xmlns:xs="http://www.w3.org/2001/XMLSchema"'
-            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-            ' ID="_5e702d5c-de06-11e4-a5a1-080027a35b78"'
-            ' InResponseTo="6984066c-de03-11e4-a571-080027a35b78"'
+            '<samlp:Response'
+            ' Destination="https://testserver/eherkenning/acs/"'
+            ' ID="_d4d73890-b5ca-3ca4-ab7b-d078378e3527"'
+            ' InResponseTo="id-jiaDzLL9mR3C3hioH"'
+            ' IssueInstant="2020-04-09T08:31:46Z"'
             ' Version="2.0"'
-            ' Destination="https://..."'
-            ' IssueInstant="2015-04-08T16:30:06Z">'
-            '<saml:Issuer>urn:etoegang:HM:...</saml:Issuer>'
-            '<ds:Signature>'
-            '<ds:SignedInfo>'
-            '<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
-            '<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>'
-            '<ds:Reference URI="#_5e702d5c-de06-11e4-a5a1-080027a35b78">'
-            '<ds:Transforms>'
-            '<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>'
-            '<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
-            '</ds:Transforms>'
-            '<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>'
-            '<ds:DigestValue>...</ds:DigestValue>'
-            '</ds:Reference>'
-            '</ds:SignedInfo>'
-            '<ds:SignatureValue>...</ds:SignatureValue>'
-            '<ds:KeyInfo>'
-            '<ds:KeyName>...</ds:KeyName>'
-            '</ds:KeyInfo>'
-            '</ds:Signature>'
+            ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
+            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
+            ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
+            ' xmlns:xs="http://www.w3.org/2001/XMLSchema"'
+            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+            '<saml:Issuer>urn:etoegang:HM:00000003520354760000:entities:9632</saml:Issuer>'
             '<samlp:Status>'
-            '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />'
+            '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
             '</samlp:Status>' +
             self.assertion +
             '</samlp:Response>'
         )
-        # self.response = (
-        #     '<samlp:Response InResponseTo="_7afa5ce49" Version="2.0" ID="_1072ee96"'
-        #     ' IssueInstant="2020-04-09T08:31:46Z">'
-        #     "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
-        #     "<samlp:Status>"
-        #     '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
-        #     "</samlp:Status>"
-        #     '<saml:Assertion Version="2.0" ID="_dc9f70e61c" IssueInstant="2020-04-09T08:31:46Z">'
-        #     "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
-        #     "<saml:Subject>"
-        #     "<saml:NameID>s00000000:12345678</saml:NameID>"
-        #     '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
-        #     '<saml:SubjectConfirmationData InResponseTo="_7afa5ce49"'
-        #     ' Recipient="http://example.com/artifact_url" NotOnOrAfter="2020-04-10T08:31:46Z"/>'
-        #     "</saml:SubjectConfirmation>"
-        #     "</saml:Subject>"
-        #     '<saml:Conditions NotBefore="2012-12-20T18:48:27Z" NotOnOrAfter="2020-04-10T08:31:46Z">'
-        #     "<saml:AudienceRestriction>"
-        #     "<saml:Audience>http://sp.example.nl</saml:Audience>"
-        #     "</saml:AudienceRestriction>"
-        #     "</saml:Conditions>"
-        #     '<saml:AuthnStatement SessionIndex="17" AuthnInstant="2020-04-09T08:31:46Z">'
-        #     '<saml:SubjectLocality Address="127.0.0.1"/>'
-        #     '<saml:AuthnContext Comparison="minimum">'
-        #     "<saml:AuthnContextClassRef>"
-        #     " urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
-        #     "</saml:AuthnContextClassRef>"
-        #     "</saml:AuthnContext>"
-        #     "</saml:AuthnStatement>"
-        #     "</saml:Assertion>"
-        #     "</samlp:Response>"
-        # )
-
         self.artifact_response = (
             "<samlp:ArtifactResponse"
             ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
@@ -798,7 +713,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
             ' xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"'
             ' ID="_1330416516" Version="2.0" IssueInstant="2020-04-09T08:31:46Z"'
-            ' InResponseTo="_1330416516">'
+            ' InResponseTo="ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f">'
             "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
             "<samlp:Status>"
             '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
@@ -819,13 +734,12 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             b"</soapenv:Envelope>"
         )
 
+
     @responses.activate
-    @patch("digid_eherkenning.saml2.eherkenning.instant")
-    @patch("digid_eherkenning.saml2.eherkenning.sid")
+    @patch("onelogin.saml2.utils.uuid4")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_get(self, sid_mock, instant_mock):
-        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
-        instant_mock.return_value = "2020-04-09T08:31:46Z"
+    def test_get(self, uuid_mock):
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         responses.add(
             responses.POST,
@@ -833,13 +747,13 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             body=self.artifact_response_soap,
             status=200,
         )
-        artifact = create_example_artifact("urn:etoegang:HM:00000003520354760000:entities:9632", "xxx")
+        artifact = create_example_artifact("urn:etoegang:HM:00000003520354760000:entities:9632")
         url = (
             reverse("eherkenning:acs")
             + "?"
             + urllib.parse.urlencode({"SAMLart": artifact, "RelayState": "/home/"})
         )
-        response = self.client.get(url)
+        response = self.client.get(url, secure=True)
 
         # Make sure we're redirect the the right place.
         self.assertEqual(response.url, "/home/")

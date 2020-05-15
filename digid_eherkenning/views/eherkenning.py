@@ -17,7 +17,7 @@ from ..forms import SAML2Form
 from .base import get_redirect_url
 
 
-class eHerkenningLoginView(TemplateView):
+class eHerkenningLoginView(View):
     template_name = "digid_eherkenning/post_binding.html"
 
     def get_relay_state(self):
@@ -29,50 +29,16 @@ class eHerkenningLoginView(TemplateView):
         redirect_to = self.request.GET.get("next", "")
         return get_redirect_url(self.request, redirect_to)
 
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
+    #
+    # TODO: It might be a good idea to change this to a post-verb.
+    # I can't think of any realy attack-vectors, but seems like a good
+    # idea anyways.
+    #
+    def get(self, request):
         client = eHerkenningClient()
+        redirect_url = client.create_authn_request(self.request)
 
-        response_binding = BINDING_HTTP_ARTIFACT
-
-        # Retrieve the right HTTP POST location from the metadata file.
-        try:
-            location = client.sso_location(
-                settings.EHERKENNING['service_entity_id'], BINDING_HTTP_POST
-            )
-        except IdpUnspecified:
-            return HttpResponseServerError()
-
-        #
-        # nameid_format='' means don't include the NameIDPolicy.
-        #
-        session_id, request_xml = client.create_authn_request(
-            location,
-            force_authn=True,
-            is_passive="false",
-            binding=response_binding,
-            nameid_format="",
-            sign=True,
-            sign_prepare=False,
-            sign_alg=SIG_RSA_SHA256,
-            digest_alg=DIGEST_SHA256,
-            attribute_consuming_service_index=settings.EHERKENNING['attribute_consuming_service_index'],
-            requested_authn_context=requested_authn_context(settings.EHERKENNING['service_loa']),
-        )
-        saml_request = b64encode(str(request_xml).encode("utf-8")).decode("utf-8")
-        context_data.update(
-            {
-                "url": location,
-                "form": SAML2Form(
-                    initial={
-                        "SAMLRequest": saml_request,
-                        "RelayState": self.get_relay_state(),
-                    }
-                ),
-            }
-        )
-
-        return context_data
+        return HttpResponseRedirect(redirect_url)
 
 
 class eHerkenningAssertionConsumerServiceView(View):
