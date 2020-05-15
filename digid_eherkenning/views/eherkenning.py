@@ -1,5 +1,3 @@
-from base64 import b64encode
-
 from django.conf import settings
 from django.contrib import auth
 from django.core.exceptions import PermissionDenied
@@ -7,17 +5,12 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.views.generic.base import TemplateView, View
 
-from saml2 import BINDING_HTTP_ARTIFACT, BINDING_HTTP_POST
-from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT, requested_authn_context
-from saml2.client_base import IdpUnspecified
-from saml2.xmldsig import DIGEST_SHA256, SIG_RSA_SHA256
-
 from ..saml2.eherkenning import eHerkenningClient
 from ..forms import SAML2Form
 from .base import get_redirect_url
 
 
-class eHerkenningLoginView(View):
+class eHerkenningLoginView(TemplateView):
     template_name = "digid_eherkenning/post_binding.html"
 
     def get_relay_state(self):
@@ -34,11 +27,23 @@ class eHerkenningLoginView(View):
     # I can't think of any realy attack-vectors, but seems like a good
     # idea anyways.
     #
-    def get(self, request):
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
         client = eHerkenningClient()
-        redirect_url = client.create_authn_request(self.request)
+        location, parameters = client.create_authn_request(self.request)
 
-        return HttpResponseRedirect(redirect_url)
+        context_data.update(
+            {
+                "url": location,
+                "form": SAML2Form(
+                    initial={
+                        "SAMLRequest": parameters['SAMLRequest'],
+                        "RelayState": self.get_relay_state(),
+                    }
+                ),
+            }
+        )
+        return context_data
 
 
 class eHerkenningAssertionConsumerServiceView(View):

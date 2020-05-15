@@ -418,7 +418,7 @@ class eHerkenningClient:
             old_settings=self.saml2_settings,
             custom_base_path=None
         )
-        return saml2_auth.login(
+        return saml2_auth.login_post(
             return_to=return_to, force_authn=True, is_passive=False,
             set_nameid_policy=False, name_id_value_req=None
         )

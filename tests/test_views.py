@@ -6,12 +6,18 @@ from unittest.mock import patch
 from django.contrib import auth
 from django.test import TestCase
 from django.urls import reverse
+from django.conf import settings
 
 import responses
 from freezegun import freeze_time
 from lxml import etree
 from saml2.entity import create_artifact
 from saml2.s_utils import rndbytes
+from onelogin.saml2.constants import OneLogin_Saml2_Constants
+from onelogin.saml2.errors import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
+from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
+import xmlsec
+
 
 from .project.models import User
 from .utils import get_saml_element
@@ -528,7 +534,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         )
 
         # Make sure the Artifact is sent as-is.
-        self.assertEqual(elements[0].text, artifact)
+        self.assertEqual(elements[0].text, artifact.decode('utf-8'))
 
         elements[0].text = ""
 
@@ -596,24 +602,49 @@ class eHerkenningLoginViewTests(TestCase):
         uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
         response = self.client.get(reverse("eherkenning:login"))
 
-        saml_request = OneLogin_Saml2_Utils.decode_base64_and_inflate(
-            urllib.parse.parse_qs(
-                urllib.parse.urlparse(response.url).query
-            )['SAMLRequest'][0]
+        saml_request = b64decode(
+            response.context["form"].initial["SAMLRequest"].encode("utf-8")
         )
+
+
+        # saml_request = OneLogin_Saml2_Utils.b64decode(
+        #     urllib.parse.parse_qs(
+        #         urllib.parse.urlparse(response.url).query
+        #     )['SAMLRequest'][0]
+        # )
 
         expected = (
             '<samlp:AuthnRequest '
             'xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" '
             'xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" '
-            'AssertionConsumerServiceURL="https://testserver/eherkenningacs/" '
+            'AssertionConsumerServiceURL="https://example.com/eherkenning/acs/" '
             'AttributeConsumingServiceIndex="1" '
             'Destination="https://eh01.staging.iwelcome.nl/broker/sso/1.13" '
             'ForceAuthn="true" '
             'ID="ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f" '
             'IssueInstant="2020-04-09T08:31:46Z" '
             'ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact" Version="2.0">'
-            '<saml:Issuer>urn:etoegang:DV:00000002003214394001:entities:5000</saml:Issuer>'
+            '<saml:Issuer>urn:etoegang:DV:0000000000000000001:entities:0002</saml:Issuer>'
+            '<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
+            '<ds:SignedInfo>'
+            '<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
+            '<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>'
+            '<ds:Reference URI="#ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f">'
+            '<ds:Transforms>'
+            '<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>'
+            '<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
+            '</ds:Transforms>'
+            '<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>'
+            '<ds:DigestValue></ds:DigestValue>'
+            '</ds:Reference>'
+            '</ds:SignedInfo>'
+            '<ds:SignatureValue></ds:SignatureValue>'
+            '<ds:KeyInfo>'
+            '<ds:X509Data>'
+            '<ds:X509Certificate></ds:X509Certificate>'
+            '</ds:X509Data>'
+            '</ds:KeyInfo>'
+            '</ds:Signature>'
             '<samlp:RequestedAuthnContext Comparison="minimum">'
             "<saml:AuthnContextClassRef>"
             "urn:etoegang:core:assurance-class:loa3"
@@ -623,25 +654,36 @@ class eHerkenningLoginViewTests(TestCase):
         )
 
         tree = etree.fromstring(saml_request)
-        expected_tree = etree.fromstring(expected)
 
+        elements = tree.xpath(
+            "//xmldsig:SignatureValue",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        elements = tree.xpath(
+            "//xmldsig:DigestValue",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        elements = tree.xpath(
+            "//xmldsig:X509Certificate",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        expected_tree = etree.fromstring(expected)
         self.assertXMLEqual(
             etree.tostring(tree, pretty_print=True).decode("utf-8"),
-            etree.tostring(expected_tree, pretty_print=True).decode(
-                "utf-8"
-            ),
+            etree.tostring(expected_tree, pretty_print=True).decode("utf-8"),
         )
-from onelogin.saml2.constants import OneLogin_Saml2_Constants
-from onelogin.saml2.errors import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
-from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
-import xmlsec
 
 
 class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     def setUp(self):
         super().setUp()
 
-        from django.conf import settings
         cert_file = settings.EHERKENNING['cert_file']
         key_file = settings.EHERKENNING['key_file']
         key = open(key_file, 'r').read()
@@ -733,7 +775,6 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             + b"</soapenv:Body>"
             b"</soapenv:Envelope>"
         )
-
 
     @responses.activate
     @patch("onelogin.saml2.utils.uuid4")
