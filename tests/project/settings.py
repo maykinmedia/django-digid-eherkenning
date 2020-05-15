@@ -144,7 +144,7 @@ EHERKENNING = {
     # Also used as entity ID
     'url_prefix': 'https://example.com',
     'metadata_file': os.path.join(BASE_DIR, "files", "eherkenning", "metadata"),
-    'service_entity_id': 'urn:etoegang:HM:0000000000000000001:entities:0001',
+    'service_entity_id': 'urn:etoegang:HM:00000003520354760000:entities:9632',
     'entity_id': 'urn:etoegang:DV:0000000000000000001:entities:0002',
     'attribute_consuming_service_index': '1',
     'entity_concerned_types_allowed': []

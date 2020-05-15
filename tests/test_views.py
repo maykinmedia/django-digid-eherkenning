@@ -25,9 +25,8 @@ from .utils import get_saml_element
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 
-def create_example_artifact(endpoint_url):
+def create_example_artifact(endpoint_url, endpoint_index=b'\x00\x00'):
     type_code = b'\x00\x04'
-    endpoint_index = b'\x00\x00'
     source_id = sha1(endpoint_url.encode('utf-8')).digest()
     message_handle = b'01234567890123456789'  # something random
 
@@ -788,7 +787,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             body=self.artifact_response_soap,
             status=200,
         )
-        artifact = create_example_artifact("urn:etoegang:HM:00000003520354760000:entities:9632")
+        artifact = create_example_artifact("urn:etoegang:HM:00000003520354760000:entities:9632", endpoint_index=b'\x00\x01')
         url = (
             reverse("eherkenning:acs")
             + "?"

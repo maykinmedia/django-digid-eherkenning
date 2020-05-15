@@ -12,6 +12,7 @@ from lxml import etree
 from lxml.builder import ElementMaker
 from OpenSSL import crypto
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
+from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
@@ -222,6 +223,14 @@ def create_service_catalogus(conf):
 
 
 def create_eherkenning_config(conf):
+    metadata_content = open(conf['metadata_file'], 'r').read()
+    idp_settings = OneLogin_Saml2_IdPMetadataParser.parse(
+        metadata_content, entity_id=settings.EHERKENNING['service_entity_id']
+    )['idp']
+
+    idp_settings['artifactResolutionService']['clientKey'] = conf["key_file"]
+    idp_settings['artifactResolutionService']['clientCert'] = conf["cert_file"]
+
     return {
         # If strict is True, then the Python Toolkit will reject unsigned
         # or unencrypted messages if it expects them to be signed or encrypted.
@@ -281,86 +290,8 @@ def create_eherkenning_config(conf):
             # the certs folder. But we can also provide them with the following parameters
             "x509cert": open(conf["cert_file"], 'r').read().replace('-----BEGIN CERTIFICATE-----\n', '').replace('\n-----END CERTIFICATE-----\n', '').replace('\n', ''),
             "privateKey": open(conf["key_file"], 'r').read().replace('-----BEGIN CERTIFICATE-----\n', '').replace('\n-----END CERTIFICATE-----\n', '').replace('\n', ''),
-            # "x509cert": 'x',
-            # "privateKey": 'x',
-
-             # Key rollover
-             # If you plan to update the SP X.509cert and privateKey
-             # you can define here the new X.509cert and it will be
-             # published on the SP metadata so Identity Providers can
-             # read them and get ready for rollover.
-             # 'x509certNew': '',
         },
-
-        # Identity Provider Data that we want connected with our SP.
-        "idp": {
-            # Identifier of the IdP entity  (must be a URI)
-            "entityId": "urn:etoegang:HM:00000003520354760000:entities:9632",
-            # SSO endpoint info of the IdP. (Authentication Request protocol)
-            "singleSignOnService": {
-                # URL Target of the IdP where the Authentication Request Message
-                # will be sent.
-                "url": "https://eh01.staging.iwelcome.nl/broker/sso/1.13",
-                # SAML protocol binding to be used when returning the <Response>
-                # message. OneLogin Toolkit supports the HTTP-Redirect binding
-                # only for this endpoint.
-                "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
-            },
-            # SLO endpoint info of the IdP.
-            "singleLogoutService": {
-                # URL Location of the IdP where SLO Request will be sent.
-                "url": "https://eh01.staging.iwelcome.nl/broker/slo/1.13",
-                # SAML protocol binding to be used when returning the <Response>
-                # message. OneLogin Toolkit supports the HTTP-Redirect binding
-                # only for this endpoint.
-                "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-            },
-            "assertionConsumerService": {
-                "index": "0",
-                "url": "https://eh02.staging.iwelcome.nl/broker/ars/1.13",
-                "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
-                # The client key/cert used when doing a HTTP Artifact request.
-                "clientKey": conf["key_file"],
-                "clientCert": conf["cert_file"],
-            },
-            # Public X.509 certificate of the IdP
-            "x509cert": "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"
-            #
-            #  Instead of using the whole X.509cert you can use a fingerprint in order to
-            #  validate a SAMLResponse (but you still need the X.509cert to validate LogoutRequest and LogoutResponse using the HTTP-Redirect binding).
-            #  But take in mind that the fingerprint, is a hash, so at the end is open to a collision attack that can end on a signature validation bypass,
-            #  that why we don't recommend it use for production environments.
-            #
-            #  (openssl x509 -noout -fingerprint -in "idp.crt" to generate it,
-            #  or add for example the -sha256 , -sha384 or -sha512 parameter)
-            #
-            #  If a fingerprint is provided, then the certFingerprintAlgorithm is required in order to
-            #  let the toolkit know which algorithm was used.
-            #  Possible values: sha1, sha256, sha384 or sha512
-            #  'sha1' is the default value.
-            #
-            #  Notice that if you want to validate any SAML Message sent by the HTTP-Redirect binding, you
-            #  will need to provide the whole X.509cert.
-            #
-            # "certFingerprint": "",
-            # "certFingerprintAlgorithm": "sha1",
-
-            # In some scenarios the IdP uses different certificates for
-            # signing/encryption, or is under key rollover phase and
-            # more than one certificate is published on IdP metadata.
-            # In order to handle that the toolkit offers that parameter.
-            # (when used, 'X.509cert' and 'certFingerprint' values are
-            # ignored).
-            #
-            # 'x509certMulti': {
-            #      'signing': [
-            #          '<cert1-string>'
-            #      ],
-            #      'encryption': [
-            #          '<cert2-string>'
-            #      ]
-            # }
-        }
+        'idp': idp_settings,
     }
 
 
