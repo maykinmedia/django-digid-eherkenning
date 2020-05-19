@@ -10,9 +10,9 @@ from django.utils import timezone
 
 from lxml import etree
 from lxml.builder import ElementMaker
-from OpenSSL import crypto
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
+from OpenSSL import crypto
 
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml

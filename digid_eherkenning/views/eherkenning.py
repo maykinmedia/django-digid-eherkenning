@@ -5,8 +5,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.views.generic.base import TemplateView, View
 
-from ..saml2.eherkenning import eHerkenningClient
 from ..forms import SAML2Form
+from ..saml2.eherkenning import eHerkenningClient
 from .base import get_redirect_url
 
 
