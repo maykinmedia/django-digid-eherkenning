@@ -37,7 +37,7 @@ class eHerkenningLoginView(TemplateView):
                 "url": location,
                 "form": SAML2Form(
                     initial={
-                        "SAMLRequest": parameters['SAMLRequest'],
+                        "SAMLRequest": parameters["SAMLRequest"],
                         "RelayState": self.get_relay_state(),
                     }
                 ),
@@ -56,7 +56,9 @@ class eHerkenningAssertionConsumerServiceView(View):
         return get_redirect_url(self.request, redirect_to)
 
     def get(self, request):
-        user = auth.authenticate(request=request, eherkenning=True, saml_art=request.GET.get("SAMLart"))
+        user = auth.authenticate(
+            request=request, eherkenning=True, saml_art=request.GET.get("SAMLart")
+        )
         if user is None:
             raise PermissionDenied("Forbidden")
 

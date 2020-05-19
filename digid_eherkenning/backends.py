@@ -75,12 +75,16 @@ class eHerkenningBackend(ModelBackend):
         attributes = response.get_attributes()
 
         rsin = None
-        for attribute_value in attributes['urn:etoegang:core:ActingSubjectID']:
+        for attribute_value in attributes["urn:etoegang:core:ActingSubjectID"]:
             if not isinstance(attribute_value, dict):
                 continue
-            name_id = attribute_value['NameID']
-            if name_id and name_id['NameQualifier'] == 'urn:etoegang:1.9:EntityConcernedID:RSIN':
-                rsin = name_id['value']
+            name_id = attribute_value["NameID"]
+            if (
+                name_id
+                and name_id["NameQualifier"]
+                == "urn:etoegang:1.9:EntityConcernedID:RSIN"
+            ):
+                rsin = name_id["value"]
 
         if rsin == "":
             return

@@ -9,4 +9,4 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         client = eHerkenningClient()
 
-        print(client.create_metadata().decode('utf-8'))
+        print(client.create_metadata().decode("utf-8"))
