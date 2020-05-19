@@ -1,28 +1,25 @@
 import urllib
 from base64 import b64decode, b64encode
 from hashlib import sha1
+from unittest import skip
 from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib import auth
 from django.test import TestCase
 from django.urls import reverse
-from django.conf import settings
 
 import responses
+import xmlsec
 from freezegun import freeze_time
 from lxml import etree
-from saml2.entity import create_artifact
-from saml2.s_utils import rndbytes
 from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from onelogin.saml2.errors import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
+from onelogin.saml2.utils import OneLogin_Saml2_Utils
 from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
-import xmlsec
-
 
 from .project.models import User
 from .utils import get_saml_element
-
-from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 
 def create_example_artifact(endpoint_url, endpoint_index=b'\x00\x00'):
@@ -36,9 +33,9 @@ def create_example_artifact(endpoint_url, endpoint_index=b'\x00\x00'):
 class DigidLoginViewTests(TestCase):
     maxDiff = None
 
-    @patch("digid_eherkenning.saml2.digid.instant")
-    @patch("saml2.entity.sid")
-    def test_login(self, sid_mock, instant_mock):
+    @freeze_time("2020-04-09T08:31:46Z")
+    @patch("onelogin.saml2.utils.uuid4")
+    def test_login(self, uuid_mock):
         """
         DigID
 
@@ -46,8 +43,7 @@ class DigidLoginViewTests(TestCase):
 
         works as intended.
         """
-        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
-        instant_mock.return_value = "2020-04-09T08:31:46Z"
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
         response = self.client.get(reverse("digid:login"))
 
         saml_request = b64decode(
@@ -96,39 +92,43 @@ class DigidLoginViewTests(TestCase):
         # </ds:Signature>
 
         expected = (
-            "<ns0:AuthnRequest"
-            ' xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"'
-            ' xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"'
-            ' xmlns:ns2="http://www.w3.org/2000/09/xmldsig#"'
-            ' AssertionConsumerServiceURL="sp.example.nl/digid/acs/"'
+            "<samlp:AuthnRequest"
+            ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
+            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
+            ' AssertionConsumerServiceURL="https://sp.example.nl/digid/acs/"'
             ' Destination="https://preprod1.digid.nl/saml/idp/request_authentication"'
-            ' ID="id-pbQxNa0H9jce5a75n"'
+            ' ID="ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f"'
             ' IssueInstant="2020-04-09T08:31:46Z"'
             ' ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"'
+            ' AttributeConsumingServiceIndex="1"'
             ' Version="2.0">'
-            "<ns1:Issuer>sp.example.nl/digid</ns1:Issuer>"
-            '<ns2:Signature Id="Signature1">'
-            "<ns2:SignedInfo>"
-            '<ns2:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />'
-            '<ns2:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" />'
-            '<ns2:Reference URI="#id-pbQxNa0H9jce5a75n">'
-            "<ns2:Transforms>"
-            '<ns2:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />'
-            '<ns2:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />'
-            "</ns2:Transforms>"
-            '<ns2:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />'
-            "<ns2:DigestValue />"
-            "</ns2:Reference>"
-            "</ns2:SignedInfo>"
-            "<ns2:SignatureValue />"
-            "<ns2:KeyInfo><ns2:X509Data><ns2:X509Certificate></ns2:X509Certificate></ns2:X509Data></ns2:KeyInfo>"
-            "</ns2:Signature>"
-            '<ns0:RequestedAuthnContext Comparison="minimum">'
-            "<ns1:AuthnContextClassRef>"
+            "<saml:Issuer>sp.example.nl/digid</saml:Issuer>"
+            '<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
+            '<ds:SignedInfo>'
+            '<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
+            '<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>'
+            '<ds:Reference URI="#ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f">'
+            '<ds:Transforms>'
+            '<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>'
+            '<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
+            '</ds:Transforms>'
+            '<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>'
+            '<ds:DigestValue></ds:DigestValue>'
+            '</ds:Reference>'
+            '</ds:SignedInfo>'
+            '<ds:SignatureValue></ds:SignatureValue>'
+            '<ds:KeyInfo>'
+            '<ds:X509Data>'
+            '<ds:X509Certificate></ds:X509Certificate>'
+            '</ds:X509Data>'
+            '</ds:KeyInfo>'
+            '</ds:Signature>'
+            '<samlp:RequestedAuthnContext Comparison="minimum">'
+            "<saml:AuthnContextClassRef>"
             "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
-            "</ns1:AuthnContextClassRef>"
-            "</ns0:RequestedAuthnContext>"
-            "</ns0:AuthnRequest>"
+            "</saml:AuthnContextClassRef>"
+            "</samlp:RequestedAuthnContext>"
+            "</samlp:AuthnRequest>"
         )
 
         tree = etree.fromstring(saml_request)
@@ -224,17 +224,17 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             "<saml:NameID>s00000000:12345678</saml:NameID>"
             '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
             '<saml:SubjectConfirmationData InResponseTo="_7afa5ce49"'
-            ' Recipient="http://example.com/artifact_url" NotOnOrAfter="2020-04-10T08:31:46Z"/>'
+            ' Recipient="http://testserver/digid/acs/" NotOnOrAfter="2020-04-10T08:31:46Z"/>'
             "</saml:SubjectConfirmation>"
             "</saml:Subject>"
             '<saml:Conditions NotBefore="2012-12-20T18:48:27Z" NotOnOrAfter="2020-04-10T08:31:46Z">'
             "<saml:AudienceRestriction>"
-            "<saml:Audience>http://sp.example.nl</saml:Audience>"
+            "<saml:Audience>sp.example.nl/digid</saml:Audience>"
             "</saml:AudienceRestriction>"
             "</saml:Conditions>"
             '<saml:AuthnStatement SessionIndex="17" AuthnInstant="2020-04-09T08:31:46Z">'
             '<saml:SubjectLocality Address="127.0.0.1"/>'
-            '<saml:AuthnContext Comparison="minimum">'
+            '<saml:AuthnContext>'
             "<saml:AuthnContextClassRef>"
             " urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
             "</saml:AuthnContextClassRef>"
@@ -251,12 +251,12 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
             ' xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"'
             ' ID="_1330416516" Version="2.0" IssueInstant="2020-04-09T08:31:46Z"'
-            ' InResponseTo="_1330416516">'
+            ' InResponseTo="ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f">'
             "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
             "<samlp:Status>"
             '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
-            "</samlp:Status>" +
-            self.response +
+            "</samlp:Status>"
+            + self.response +
             "</samlp:ArtifactResponse>"
         )
 
@@ -273,12 +273,10 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         )
 
     @responses.activate
-    @patch("digid_eherkenning.saml2.digid.instant")
-    @patch("digid_eherkenning.saml2.digid.sid")
+    @patch("onelogin.saml2.utils.uuid4")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_response_status_code_authnfailed(self, sid_mock, instant_mock):
-        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
-        instant_mock.return_value = "2020-04-09T08:31:46Z"
+    def test_response_status_code_authnfailed(self, uuid_mock):
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         root_element = etree.fromstring(self.artifact_response_soap)
         status_code = get_saml_element(
@@ -302,12 +300,10 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch("digid_eherkenning.saml2.digid.instant")
-    @patch("digid_eherkenning.saml2.digid.sid")
+    @patch("onelogin.saml2.utils.uuid4")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_artifact_response_status_code_authnfailed(self, sid_mock, instant_mock):
-        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
-        instant_mock.return_value = "2020-04-09T08:31:46Z"
+    def test_artifact_response_status_code_authnfailed(self, uuid_mock):
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         root_element = etree.fromstring(self.artifact_response_soap)
         status_code = get_saml_element(
@@ -331,12 +327,10 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch("digid_eherkenning.saml2.digid.instant")
-    @patch("digid_eherkenning.saml2.digid.sid")
+    @patch("onelogin.saml2.utils.uuid4")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_invalid_subject_ip_address(self, sid_mock, instant_mock):
-        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
-        instant_mock.return_value = "2020-04-09T08:31:46Z"
+    def test_invalid_subject_ip_address(self, uuid_mock):
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         root_element = etree.fromstring(self.artifact_response_soap)
         status_code = get_saml_element(
@@ -361,12 +355,10 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch("digid_eherkenning.saml2.digid.instant")
-    @patch("digid_eherkenning.saml2.digid.sid")
+    @patch("onelogin.saml2.utils.uuid4")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_get(self, sid_mock, instant_mock):
-        sid_mock.return_value = "id-pbQxNa0H9jce5a75n"
-        instant_mock.return_value = "2020-04-09T08:31:46Z"
+    def test_get(self, uuid_mock):
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         # DigiD - 1.6 Voorbeeldbericht bij Stap 7 : Artifact Response (SOAP)
         # In een Soap envelope. Voor de leesbaarheid is de Saml Assertion uit de Response genomen.
@@ -425,7 +417,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             ' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"'
             ' xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"'
             ' ID="_1330416516" Version="2.0" IssueInstant="2020-04-09T08:31:46Z"'
-            ' InResponseTo="_1330416516">'
+            ' InResponseTo="ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f">'
             "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
             "<samlp:Status>"
             '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
@@ -442,17 +434,17 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             "<saml:NameID>s00000000:12345678</saml:NameID>"
             '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
             '<saml:SubjectConfirmationData InResponseTo="_7afa5ce49"'
-            ' Recipient="http://example.com/artifact_url" NotOnOrAfter="2020-04-10T08:31:46Z"/>'
+            ' Recipient="http://testserver/digid/acs/" NotOnOrAfter="2020-04-10T08:31:46Z"/>'
             "</saml:SubjectConfirmation>"
             "</saml:Subject>"
             '<saml:Conditions NotBefore="2012-12-20T18:48:27Z" NotOnOrAfter="2020-04-10T08:31:46Z">'
             "<saml:AudienceRestriction>"
-            "<saml:Audience>http://sp.example.nl</saml:Audience>"
+            "<saml:Audience>sp.example.nl/digid</saml:Audience>"
             "</saml:AudienceRestriction>"
             "</saml:Conditions>"
             '<saml:AuthnStatement SessionIndex="17" AuthnInstant="2020-04-09T08:31:46Z">'
             '<saml:SubjectLocality Address="127.0.0.1"/>'
-            '<saml:AuthnContext Comparison="minimum">'
+            '<saml:AuthnContext>'
             "<saml:AuthnContextClassRef>"
             " urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
             "</saml:AuthnContextClassRef>"
@@ -528,68 +520,18 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         elements[0].text = ""
 
         elements = tree.xpath(
-            "//saml:Artifact",
-            namespaces={"saml": "urn:oasis:names:tc:SAML:2.0:protocol"},
+            "//samlp:Artifact",
+            namespaces={"samlp": "urn:oasis:names:tc:SAML:2.0:protocol"},
         )
 
         # Make sure the Artifact is sent as-is.
         self.assertEqual(elements[0].text, artifact.decode('utf-8'))
 
-        elements[0].text = ""
-
-        expected_request = (
-            "<ns0:Envelope"
-            ' xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/">'
-            "<ns0:Body>"
-            "<ns0:ArtifactResolve"
-            ' xmlns:ns0="urn:oasis:names:tc:SAML:2.0:protocol"'
-            ' xmlns:ns1="urn:oasis:names:tc:SAML:2.0:assertion"'
-            ' xmlns:ns2="http://www.w3.org/2000/09/xmldsig#"'
-            ' Destination="https://was-preprod1.digid.nl/saml/idp/resolve_artifact"'
-            ' ID="id-pbQxNa0H9jce5a75n"'
-            ' IssueInstant="2020-04-09T08:31:46Z"'
-            ' Version="2.0">'
-            "<ns1:Issuer>sp.example.nl/digid</ns1:Issuer>"
-            '<ns2:Signature Id="Signature1">'
-            "<ns2:SignedInfo>"
-            "<ns2:CanonicalizationMethod"
-            ' Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
-            "<ns2:SignatureMethod"
-            ' Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>'
-            '<ns2:Reference URI="#id-pbQxNa0H9jce5a75n">'
-            "<ns2:Transforms>"
-            "<ns2:Transform"
-            ' Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>'
-            "<ns2:Transform"
-            ' Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
-            "</ns2:Transforms>"
-            "<ns2:DigestMethod"
-            ' Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>'
-            "<ns2:DigestValue>"
-            "</ns2:DigestValue>"
-            "</ns2:Reference>"
-            "</ns2:SignedInfo>"
-            "<ns2:SignatureValue>"
-            "</ns2:SignatureValue>"
-            "<ns2:KeyInfo>"
-            "<ns2:X509Data>"
-            "<ns2:X509Certificate>"
-            "</ns2:X509Certificate>"
-            "</ns2:X509Data>"
-            "</ns2:KeyInfo>"
-            "</ns2:Signature>"
-            "<ns0:Artifact></ns0:Artifact>"
-            "</ns0:ArtifactResolve>"
-            "</ns0:Body>"
-            "</ns0:Envelope>"
+        elements = tree.xpath(
+            "//saml:Issuer",
+            namespaces={"saml": "urn:oasis:names:tc:SAML:2.0:assertion"},
         )
-
-        self.assertXMLEqual(
-            etree.tostring(tree, pretty_print=True).decode("utf-8"),
-            etree.tostring(
-                etree.fromstring(expected_request), pretty_print=True
-            ).decode("utf-8"),
-        )
+        self.assertEqual(elements[0].text, "sp.example.nl/digid")
 
 
 class eHerkenningLoginViewTests(TestCase):

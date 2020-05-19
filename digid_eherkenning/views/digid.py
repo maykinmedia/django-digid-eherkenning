@@ -1,5 +1,3 @@
-from base64 import b64encode
-
 from django.conf import settings
 from django.contrib import auth
 from django.core.exceptions import PermissionDenied
@@ -7,13 +5,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.views.generic.base import TemplateView, View
 
-from saml2 import BINDING_HTTP_ARTIFACT, BINDING_HTTP_POST
-from saml2.authn_context import PASSWORDPROTECTEDTRANSPORT, requested_authn_context
-from saml2.client_base import IdpUnspecified
-from saml2.xmldsig import DIGEST_SHA256, SIG_RSA_SHA256
-
-from ..saml2.digid import DigiDClient
 from ..forms import SAML2Form
+from ..saml2.digid import DigiDClient
 from .base import get_redirect_url
 
 
@@ -33,47 +26,27 @@ class DigiDLoginView(TemplateView):
         redirect_to = self.request.GET.get("next", "")
         return get_redirect_url(self.request, redirect_to)
 
+    #
+    # TODO: It might be a good idea to change this to a post-verb.
+    # I can't think of any realy attack-vectors, but seems like a good
+    # idea anyways.
+    #
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
         client = DigiDClient()
-
-        response_binding = BINDING_HTTP_ARTIFACT
-
-        # Retrieve the right HTTP POST location from the metadata file.
-        try:
-            location = client.sso_location(
-                "https://was-preprod1.digid.nl/saml/idp/metadata", BINDING_HTTP_POST
-            )
-        except IdpUnspecified:
-            return HttpResponseServerError()
-
-        #
-        # nameid_format='' means don't include the NameIDPolicy.
-        #
-        session_id, request_xml = client.create_authn_request(
-            location,
-            binding=response_binding,
-            nameid_format="",
-            sign=True,
-            sign_prepare=False,
-            sign_alg=SIG_RSA_SHA256,
-            digest_alg=DIGEST_SHA256,
-            requested_authn_context=requested_authn_context(PASSWORDPROTECTEDTRANSPORT),
-        )
-        saml_request = b64encode(str(request_xml).encode("utf-8")).decode("utf-8")
+        location, parameters = client.create_authn_request(self.request)
 
         context_data.update(
             {
                 "url": location,
                 "form": SAML2Form(
                     initial={
-                        "SAMLRequest": saml_request,
+                        "SAMLRequest": parameters['SAMLRequest'],
                         "RelayState": self.get_relay_state(),
                     }
                 ),
             }
         )
-
         return context_data
 
 
