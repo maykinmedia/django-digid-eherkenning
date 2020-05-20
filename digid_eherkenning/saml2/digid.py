@@ -26,7 +26,7 @@ def create_digid_config(conf):
             "authnRequestsSigned": True,
             "requestedAuthnContextComparison": "minimum",
             "requestedAuthnContext": [
-                "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
+                "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract",
             ],
             # None sent for digi-id.
             "wantAttributeStatement": False,
