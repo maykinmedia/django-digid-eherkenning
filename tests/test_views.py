@@ -91,19 +91,56 @@ class DigidLoginViewTests(TestCase):
         #  <ds:SignatureValue>YJ0V4gCTwRYvgy <INGEKORT> LnOEvyF2ddwBFwILL4nCpw==</ds:SignatureValue>
         # </ds:Signature>
 
-        expected = (
-            "<samlp:AuthnRequest"
-            ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
-            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
-            ' AssertionConsumerServiceURL="https://sp.example.nl/digid/acs/"'
-            ' Destination="https://preprod1.digid.nl/saml/idp/request_authentication"'
-            ' ID="ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f"'
-            ' IssueInstant="2020-04-09T08:31:46Z"'
-            ' ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"'
-            ' AttributeConsumingServiceIndex="1"'
-            ' Version="2.0">'
-            "<saml:Issuer>sp.example.nl/digid</saml:Issuer>"
-            '<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
+        tree = etree.fromstring(saml_request)
+
+        self.assertEqual(
+            tree.attrib,
+            {
+                'ID': 'ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f',
+                'Version': '2.0',
+                'IssueInstant': '2020-04-09T08:31:46Z',
+                'Destination': 'https://preprod1.digid.nl/saml/idp/request_authentication',
+                'ProtocolBinding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact',
+                'AssertionConsumerServiceURL': 'https://sp.example.nl/digid/acs/',
+                'AttributeConsumingServiceIndex': '1'
+            }
+        )
+
+        auth_context_class_ref = tree.xpath(
+            "samlp:RequestedAuthnContext[@Comparison='minimum']/saml:AuthnContextClassRef",
+            namespaces={"samlp": "urn:oasis:names:tc:SAML:2.0:protocol", "saml": "urn:oasis:names:tc:SAML:2.0:assertion"}
+        )[0]
+
+        self.assertEqual(auth_context_class_ref.text, "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract")
+
+        # Make sure Signature properties are as expected.
+        signature = tree.xpath(
+            "//xmldsig:Signature",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )[0]
+
+        elements = signature.xpath(
+            "//xmldsig:SignatureValue",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        elements = signature.xpath(
+            "//xmldsig:DigestValue",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        elements = signature.xpath(
+            "//xmldsig:X509Certificate",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        expected_signature = (
+            '<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" '
+            ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" '
+            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">'
             "<ds:SignedInfo>"
             '<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
             '<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>'
@@ -123,38 +160,11 @@ class DigidLoginViewTests(TestCase):
             "</ds:X509Data>"
             "</ds:KeyInfo>"
             "</ds:Signature>"
-            '<samlp:RequestedAuthnContext Comparison="minimum">'
-            "<saml:AuthnContextClassRef>"
-            "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
-            "</saml:AuthnContextClassRef>"
-            "</samlp:RequestedAuthnContext>"
-            "</samlp:AuthnRequest>"
         )
-
-        tree = etree.fromstring(saml_request)
-        elements = tree.xpath(
-            "//xmldsig:SignatureValue",
-            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
-        )
-        elements[0].text = ""
-
-        elements = tree.xpath(
-            "//xmldsig:DigestValue",
-            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
-        )
-        elements[0].text = ""
-
-        elements = tree.xpath(
-            "//xmldsig:X509Certificate",
-            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
-        )
-        elements[0].text = ""
 
         self.assertXMLEqual(
-            etree.tostring(tree, pretty_print=True).decode("utf-8"),
-            etree.tostring(etree.fromstring(expected), pretty_print=True).decode(
-                "utf-8"
-            ),
+            etree.tostring(signature, pretty_print=True).decode("utf-8"),
+            etree.tostring(etree.fromstring(expected_signature), pretty_print=True).decode("utf-8"),
         )
 
 
