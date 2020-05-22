@@ -47,7 +47,7 @@ def create_digid_config(conf):
             # returned to the requester, in this case our SP.
             "assertionConsumerService": {
                 # URL Location where the <Response> from the IdP will be returned
-                "url": conf["url_prefix"] + reverse("digid:acs"),
+                "url": conf["base_url"] + reverse("digid:acs"),
                 # SAML protocol binding to be used when returning the <Response>
                 # message. OneLogin Toolkit supports this endpoint for the
                 # HTTP-POST binding only.
@@ -97,26 +97,10 @@ class DigiDClient:
     def create_metadata(self):
         return self.saml2_settings.get_sp_metadata()
 
-    def create_saml2_auth_request(self, request):
-        # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
-        return {
-            "https": "on" if request.is_secure() else "off",
-            # FIXME
-            "http_host": request.META["SERVER_NAME"],
-            # 'http_host': 'FIXME',
-            "script_name": request.META["PATH_INFO"],
-            "server_port": request.META["SERVER_PORT"],
-            "get_data": request.GET.copy(),
-            "post_data": request.POST.copy(),
-            # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
-            # 'lowercase_urlencoding': True,
-            "query_string": request.META["QUERY_STRING"],
-        }
-
     def create_authn_request(self, request, return_to=None):
-        saml2_auth_request = self.create_saml2_auth_request(request)
+        saml2_request = create_saml2_request(settings.DIGID['base_url'], request)
         saml2_auth = OneLogin_Saml2_Auth(
-            saml2_auth_request, old_settings=self.saml2_settings, custom_base_path=None
+            saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
         return saml2_auth.login_post(
             return_to=return_to,
@@ -126,9 +110,9 @@ class DigiDClient:
         )
 
     def artifact_resolve(self, request, saml_art):
-        saml2_auth_request = self.create_saml2_auth_request(request)
+        saml2_request = create_saml2_request(settings.DIGID['base_url'], request)
         saml2_auth = OneLogin_Saml2_Auth(
-            saml2_auth_request, old_settings=self.saml2_settings, custom_base_path=None
+            saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
         return saml2_auth.artifact_resolve(saml_art)
 

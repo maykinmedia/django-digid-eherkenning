@@ -119,7 +119,7 @@ STATIC_URL = "/static/"
 # DigiD settings
 #
 DIGID = {
-    "url_prefix": "https://sp.example.nl",
+    "base_url": "https://sp.example.nl",
     "entity_id": "sp.example.nl/digid",
     "metadata_file": os.path.join(BASE_DIR, "files", "digid", "metadata"),
     "key_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key"),
@@ -129,11 +129,6 @@ DIGID = {
     "service_name": "Example",
     "entity_concerned_types_allowed": [],
 }
-# DIGID_URL_PREFIX = "sp.example.nl/digid"
-# DIGID_SP_NAME = "example.nl"
-# DIGID_METADATA_FILE = os.path.join(BASE_DIR, "files", "digid", "metadata")
-# DIGID_KEY_FILE = os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key")
-# DIGID_CERT_FILE = os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem")
 
 #
 # eHerkenning settings
@@ -153,7 +148,7 @@ EHERKENNING = {
     "key_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key"),
     "cert_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem"),
     # Also used as entity ID
-    "url_prefix": "https://example.com",
+    "base_url": "https://example.com",
     "metadata_file": os.path.join(BASE_DIR, "files", "eherkenning", "metadata"),
     "service_entity_id": "urn:etoegang:HM:00000003520354760000:entities:9632",
     "entity_id": "urn:etoegang:DV:0000000000000000001:entities:0002",

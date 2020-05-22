@@ -12,8 +12,10 @@ from lxml import etree
 from lxml.builder import ElementMaker
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
+from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from OpenSSL import crypto
 
+from .base import create_saml2_request
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
 
@@ -262,7 +264,7 @@ def create_eherkenning_config(conf):
             # returned to the requester, in this case our SP.
             "assertionConsumerService": {
                 # URL Location where the <Response> from the IdP will be returned
-                "url": conf["url_prefix"] + reverse("eherkenning:acs"),
+                "url": conf["base_url"] + reverse("eherkenning:acs"),
                 # SAML protocol binding to be used when returning the <Response>
                 # message. OneLogin Toolkit supports this endpoint for the
                 # HTTP-POST binding only.
@@ -303,8 +305,6 @@ def create_eherkenning_config(conf):
 
 class eHerkenningClient:
     def __init__(self):
-        from onelogin.saml2.settings import OneLogin_Saml2_Settings
-
         self.saml2_settings = OneLogin_Saml2_Settings(
             create_eherkenning_config(conf=settings.EHERKENNING), custom_base_path=None
         )
@@ -312,26 +312,10 @@ class eHerkenningClient:
     def create_metadata(self):
         return self.saml2_settings.get_sp_metadata()
 
-    def create_saml2_auth_request(self, request):
-        # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
-        return {
-            "https": "on" if request.is_secure() else "off",
-            # FIXME
-            "http_host": request.META["SERVER_NAME"],
-            # 'http_host': 'FIXME',
-            "script_name": request.META["PATH_INFO"],
-            "server_port": request.META["SERVER_PORT"],
-            "get_data": request.GET.copy(),
-            "post_data": request.POST.copy(),
-            # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
-            # 'lowercase_urlencoding': True,
-            "query_string": request.META["QUERY_STRING"],
-        }
-
     def create_authn_request(self, request, return_to=None):
-        saml2_auth_request = self.create_saml2_auth_request(request)
+        saml2_request = create_saml2_request(settings.EHERKENNING['base_url'], request)
         saml2_auth = OneLogin_Saml2_Auth(
-            saml2_auth_request, old_settings=self.saml2_settings, custom_base_path=None
+            saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
         return saml2_auth.login_post(
             return_to=return_to,
@@ -342,9 +326,9 @@ class eHerkenningClient:
         )
 
     def artifact_resolve(self, request, saml_art):
-        saml2_auth_request = self.create_saml2_auth_request(request)
+        saml2_request = create_saml2_request(settings.EHERKENNING['base_url'], request)
         saml2_auth = OneLogin_Saml2_Auth(
-            saml2_auth_request, old_settings=self.saml2_settings, custom_base_path=None
+            saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
         return saml2_auth.artifact_resolve(saml_art)
 
