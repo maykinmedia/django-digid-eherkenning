@@ -72,7 +72,7 @@ class eHerkenningBackend(ModelBackend):
         attributes = response.get_attributes()
 
         rsin = None
-        for attribute_value in attributes["urn:etoegang:core:ActingSubjectID"]:
+        for attribute_value in attributes["urn:etoegang:core:LegalSubjectID"]:
             if not isinstance(attribute_value, dict):
                 continue
             name_id = attribute_value["NameID"]
