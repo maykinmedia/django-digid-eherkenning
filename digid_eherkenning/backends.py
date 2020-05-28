@@ -87,8 +87,8 @@ class eHerkenningBackend(ModelBackend):
             return
 
         try:
-            user = UserModel.digid_objects.get_by_bsn(rsin)
+            user = UserModel.eherkenning_objects.get_by_rsin(rsin)
         except UserModel.DoesNotExist:
-            user = UserModel.digid_objects.digid_create(rsin)
+            user = UserModel.eherkenning_objects.eherkenning_create(rsin)
 
         return user

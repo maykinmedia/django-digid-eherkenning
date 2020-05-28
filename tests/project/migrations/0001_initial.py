@@ -105,11 +105,12 @@ class Migration(migrations.Migration):
                         choices=[("digid", "DigiD")],
                         max_length=20,
                         validators=[
-                            djchoices.choices.ChoicesValidator({"digid": "DigiD"})
+                            djchoices.choices.ChoicesValidator({"digid": "DigiD", "eherkenning": "eHerkenning"})
                         ],
                     ),
                 ),
                 ("bsn", models.CharField(max_length=9)),
+                ("rsin", models.CharField(max_length=9)),
                 (
                     "groups",
                     models.ManyToManyField(

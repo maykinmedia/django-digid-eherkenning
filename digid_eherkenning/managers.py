@@ -7,3 +7,11 @@ class BaseDigidManager(Manager):
 
     def digid_create(self, bsn, **kwargs):
         raise NotImplementedError
+
+
+class BaseeHerkenningManager(Manager):
+    def get_by_rsin(self, rsin):
+        raise NotImplementedError
+
+    def eherkenning_create(self, rsin, **kwargs):
+        raise NotImplementedError
