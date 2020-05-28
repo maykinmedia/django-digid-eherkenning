@@ -30,15 +30,12 @@ def create_digid_config(conf):
             ],
             # None sent for digi-id.
             "wantAttributeStatement": False,
-            # Disabled for now, not really needed because we use the artifact-binding
-            # with mutual TLS.
-            # "wantAssertionsSigned": False,
-            # "wantMessagesSigned": False,
+            # For DigiD, if the Metadata file expires, we sent them an update. So
+            # there is no need for an expiry date.
             "metadataValidUntil": "",
             "metadataCacheDuration": "",
         },
-        # Enable debug mode (outputs errors).
-        "debug": True,
+        "debug": settings.DEBUG,
         # Service Provider Data that we are deploying.
         "sp": {
             # Identifier of the SP entity  (must be a URI)
@@ -46,11 +43,7 @@ def create_digid_config(conf):
             # Specifies info about where and how the <AuthnResponse> message MUST be
             # returned to the requester, in this case our SP.
             "assertionConsumerService": {
-                # URL Location where the <Response> from the IdP will be returned
                 "url": conf["base_url"] + reverse("digid:acs"),
-                # SAML protocol binding to be used when returning the <Response>
-                # message. OneLogin Toolkit supports this endpoint for the
-                # HTTP-POST binding only.
                 "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
             },
             # If you need to specify requested attributes, set a
@@ -65,22 +58,9 @@ def create_digid_config(conf):
                     for attr in conf.get("entity_concerned_types_allowed")
                 ],
             },
-            # Specifies the constraints on the name identifier to be used to
-            # represent the requested subject.
-            # Take a look on src/onelogin/saml2/constants.py to see the NameIdFormat that are supported.
             "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
-            # Usually X.509 cert and privateKey of the SP are provided by files placed at
-            # the certs folder. But we can also provide them with the following parameters
-            "x509cert": open(conf["cert_file"], "r")
-            .read()
-            .replace("-----BEGIN CERTIFICATE-----\n", "")
-            .replace("\n-----END CERTIFICATE-----\n", "")
-            .replace("\n", ""),
-            "privateKey": open(conf["key_file"], "r")
-            .read()
-            .replace("-----BEGIN CERTIFICATE-----\n", "")
-            .replace("\n-----END CERTIFICATE-----\n", "")
-            .replace("\n", ""),
+            "x509cert": open(conf["cert_file"], "r").read(),
+            "privateKey": open(conf["key_file"], "r").read(),
         },
         "idp": idp_settings,
     }
