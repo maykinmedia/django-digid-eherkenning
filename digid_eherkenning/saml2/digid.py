@@ -1,10 +1,10 @@
-import copy
-
 from django.conf import settings
 from django.urls import reverse
 
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
+
+from .base import create_saml2_request
 
 
 def create_digid_config(conf):
