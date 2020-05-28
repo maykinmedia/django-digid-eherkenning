@@ -331,13 +331,3 @@ class eHerkenningClient:
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
         return saml2_auth.artifact_resolve(saml_art)
-
-    def get_sso_url(self):
-        """
-        Gets the SSO URL.
-
-        :returns: An URL, the SSO endpoint of the IdP
-        :rtype: string
-        """
-        idp_data = self.__settings.get_idp_data()
-        return idp_data["singleSignOnService"]["url"]
