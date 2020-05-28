@@ -26,5 +26,6 @@ class eHerkenningManager(BaseeHerkenningManager):
     def eherkenning_create(self, rsin, **kwargs):
         return super().create(
             username="user-{}".format(rsin),
-            login_type=UserLoginType.eherkenning, rsin=rsin,
+            login_type=UserLoginType.eherkenning,
+            rsin=rsin,
         )

@@ -15,9 +15,9 @@ from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from OpenSSL import crypto
 
-from .base import create_saml2_request
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
+from .base import create_saml2_request
 
 namespaces = {
     "xs": "http://www.w3.org/2001/XMLSchema",
@@ -313,7 +313,7 @@ class eHerkenningClient:
         return self.saml2_settings.get_sp_metadata()
 
     def create_authn_request(self, request, return_to=None):
-        saml2_request = create_saml2_request(settings.EHERKENNING['base_url'], request)
+        saml2_request = create_saml2_request(settings.EHERKENNING["base_url"], request)
         saml2_auth = OneLogin_Saml2_Auth(
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
@@ -326,7 +326,7 @@ class eHerkenningClient:
         )
 
     def artifact_resolve(self, request, saml_art):
-        saml2_request = create_saml2_request(settings.EHERKENNING['base_url'], request)
+        saml2_request = create_saml2_request(settings.EHERKENNING["base_url"], request)
         saml2_auth = OneLogin_Saml2_Auth(
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )

@@ -98,7 +98,7 @@ class DigiDClient:
         return self.saml2_settings.get_sp_metadata()
 
     def create_authn_request(self, request, return_to=None):
-        saml2_request = create_saml2_request(settings.DIGID['base_url'], request)
+        saml2_request = create_saml2_request(settings.DIGID["base_url"], request)
         saml2_auth = OneLogin_Saml2_Auth(
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
@@ -110,7 +110,7 @@ class DigiDClient:
         )
 
     def artifact_resolve(self, request, saml_art):
-        saml2_request = create_saml2_request(settings.DIGID['base_url'], request)
+        saml2_request = create_saml2_request(settings.DIGID["base_url"], request)
         saml2_auth = OneLogin_Saml2_Auth(
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )

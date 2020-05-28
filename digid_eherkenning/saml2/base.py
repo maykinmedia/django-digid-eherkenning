@@ -13,7 +13,7 @@ def create_saml2_request(base_url, request):
     #
     parsed_url = urllib.parse.urlparse(base_url)
     return {
-        "https": "on" if parsed_url.scheme == 'https' else "off",
+        "https": "on" if parsed_url.scheme == "https" else "off",
         "http_host": parsed_url.netloc,
         "script_name": request.META["PATH_INFO"],
         "server_port": parsed_url.port,

@@ -8,7 +8,6 @@ from .saml2.digid import DigiDClient
 from .saml2.eherkenning import eHerkenningClient
 from .utils import get_client_ip
 
-
 UserModel = get_user_model()
 
 

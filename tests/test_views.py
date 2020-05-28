@@ -96,22 +96,28 @@ class DigidLoginViewTests(TestCase):
         self.assertEqual(
             tree.attrib,
             {
-                'ID': 'ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f',
-                'Version': '2.0',
-                'IssueInstant': '2020-04-09T08:31:46Z',
-                'Destination': 'https://preprod1.digid.nl/saml/idp/request_authentication',
-                'ProtocolBinding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact',
-                'AssertionConsumerServiceURL': 'https://sp.example.nl/digid/acs/',
-                'AttributeConsumingServiceIndex': '1'
-            }
+                "ID": "ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f",
+                "Version": "2.0",
+                "IssueInstant": "2020-04-09T08:31:46Z",
+                "Destination": "https://preprod1.digid.nl/saml/idp/request_authentication",
+                "ProtocolBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+                "AssertionConsumerServiceURL": "https://sp.example.nl/digid/acs/",
+                "AttributeConsumingServiceIndex": "1",
+            },
         )
 
         auth_context_class_ref = tree.xpath(
             "samlp:RequestedAuthnContext[@Comparison='minimum']/saml:AuthnContextClassRef",
-            namespaces={"samlp": "urn:oasis:names:tc:SAML:2.0:protocol", "saml": "urn:oasis:names:tc:SAML:2.0:assertion"}
+            namespaces={
+                "samlp": "urn:oasis:names:tc:SAML:2.0:protocol",
+                "saml": "urn:oasis:names:tc:SAML:2.0:assertion",
+            },
         )[0]
 
-        self.assertEqual(auth_context_class_ref.text, "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract")
+        self.assertEqual(
+            auth_context_class_ref.text,
+            "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract",
+        )
 
         # Make sure Signature properties are as expected.
         signature = tree.xpath(
@@ -164,7 +170,9 @@ class DigidLoginViewTests(TestCase):
 
         self.assertXMLEqual(
             etree.tostring(signature, pretty_print=True).decode("utf-8"),
-            etree.tostring(etree.fromstring(expected_signature), pretty_print=True).decode("utf-8"),
+            etree.tostring(
+                etree.fromstring(expected_signature), pretty_print=True
+            ).decode("utf-8"),
         )
 
 
@@ -225,36 +233,36 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         # </saml:Assertion>
 
         self.bogus_signature = (
-            '<ds:Signature>'
-            '<ds:SignedInfo>'
+            "<ds:Signature>"
+            "<ds:SignedInfo>"
             '<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
             '<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>'
             '<ds:Reference URI="#{id}">'
-            '<ds:Transforms>'
+            "<ds:Transforms>"
             '<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>'
             '<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#">'
             '<ec:InclusiveNamespaces xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#" PrefixList="xacml-saml"/>'
-            '</ds:Transform>'
-            '</ds:Transforms>'
+            "</ds:Transform>"
+            "</ds:Transforms>"
             '<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>'
-            '<ds:DigestValue></ds:DigestValue>'
-            '</ds:Reference>'
-            '</ds:SignedInfo>'
-            '<ds:SignatureValue>'
-            ''
-            '</ds:SignatureValue>'
-            '<ds:KeyInfo>'
-            '<ds:KeyName></ds:KeyName>'
-            '</ds:KeyInfo>'
-            '</ds:Signature>'
+            "<ds:DigestValue></ds:DigestValue>"
+            "</ds:Reference>"
+            "</ds:SignedInfo>"
+            "<ds:SignatureValue>"
+            ""
+            "</ds:SignatureValue>"
+            "<ds:KeyInfo>"
+            "<ds:KeyName></ds:KeyName>"
+            "</ds:KeyInfo>"
+            "</ds:Signature>"
         )
 
         self.response = (
             '<samlp:Response InResponseTo="_7afa5ce49" Version="2.0" ID="_1072ee96"'
             ' IssueInstant="2020-04-09T08:31:46Z">'
             "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
-            + self.bogus_signature.format(id='_1072ee96') +
-            "<samlp:Status>"
+            + self.bogus_signature.format(id="_1072ee96")
+            + "<samlp:Status>"
             '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
             "</samlp:Status>"
             '<saml:Assertion Version="2.0" ID="_dc9f70e61c" IssueInstant="2020-04-09T08:31:46Z">'
@@ -581,28 +589,28 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
         )
 
         self.bogus_signature = (
-            '<ds:Signature>'
-            '<ds:SignedInfo>'
+            "<ds:Signature>"
+            "<ds:SignedInfo>"
             '<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
             '<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>'
             '<ds:Reference URI="#{id}">'
-            '<ds:Transforms>'
+            "<ds:Transforms>"
             '<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>'
             '<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#">'
             '<ec:InclusiveNamespaces xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#" PrefixList="xacml-saml"/>'
-            '</ds:Transform>'
-            '</ds:Transforms>'
+            "</ds:Transform>"
+            "</ds:Transforms>"
             '<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>'
-            '<ds:DigestValue></ds:DigestValue>'
-            '</ds:Reference>'
-            '</ds:SignedInfo>'
-            '<ds:SignatureValue>'
-            ''
-            '</ds:SignatureValue>'
-            '<ds:KeyInfo>'
-            '<ds:KeyName></ds:KeyName>'
-            '</ds:KeyInfo>'
-            '</ds:Signature>'
+            "<ds:DigestValue></ds:DigestValue>"
+            "</ds:Reference>"
+            "</ds:SignedInfo>"
+            "<ds:SignatureValue>"
+            ""
+            "</ds:SignatureValue>"
+            "<ds:KeyInfo>"
+            "<ds:KeyName></ds:KeyName>"
+            "</ds:KeyInfo>"
+            "</ds:Signature>"
         )
         # self.bogus_signature = (
         #     '<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
@@ -639,8 +647,8 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
         self.assertion = (
             '<saml:Assertion ID="_ae28e39f-bf7a-32d5-9653-3ad07c0e911e" IssueInstant="2020-04-09T08:31:46Z" Version="2.0" xmlns:xacml-saml="urn:oasis:xacml:2.0:saml:assertion:schema:os">'
             "<saml:Issuer>urn:etoegang:HM:00000003520354760000:entities:9632</saml:Issuer>"
-            + self.bogus_signature.format(id="_ae28e39f-bf7a-32d5-9653-3ad07c0e911e") +
-            "<saml:Subject>"
+            + self.bogus_signature.format(id="_ae28e39f-bf7a-32d5-9653-3ad07c0e911e")
+            + "<saml:Subject>"
             '<saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient" NameQualifier="urn:etoegang:EB:00000004000000149000:entities:9009">b964780b-3441-4e57-a027-a59c21c3019d</saml:NameID>'
             '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
             '<saml:SubjectConfirmationData InResponseTo="id-jiaDzLL9mR3C3hioH" NotOnOrAfter="2020-04-09T08:35:46Z" Recipient="https://example.com/eherkenning/acs/"/>'
@@ -665,7 +673,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             '<saml:AttributeValue xsi:type="xs:string">87f3035b-b0c2-482a-b693-98316f5f4ba4</saml:AttributeValue>'
             "</saml:Attribute>"
             '<saml:Attribute FriendlyName="ActingSubjectID" Name="urn:etoegang:core:LegalSubjectID">'
-            '<saml:AttributeValue>'
+            "<saml:AttributeValue>"
             + encrypted_attribute
             + "</saml:AttributeValue></saml:Attribute>"
             "</saml:AttributeStatement>"
@@ -741,4 +749,3 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
 
         # Make sure we're redirect the the right place.
         self.assertEqual(response.url, "/home/")
-

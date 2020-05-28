@@ -105,7 +105,9 @@ class Migration(migrations.Migration):
                         choices=[("digid", "DigiD")],
                         max_length=20,
                         validators=[
-                            djchoices.choices.ChoicesValidator({"digid": "DigiD", "eherkenning": "eHerkenning"})
+                            djchoices.choices.ChoicesValidator(
+                                {"digid": "DigiD", "eherkenning": "eHerkenning"}
+                            )
                         ],
                     ),
                 ),
