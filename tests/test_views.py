@@ -484,6 +484,31 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         )
         self.assertEqual(elements[0].text, "sp.example.nl/digid")
 
+    @responses.activate
+    @patch.object(OneLogin_Saml2_Utils, "validate_sign")
+    @patch("onelogin.saml2.utils.uuid4")
+    @freeze_time("2020-04-09T08:31:46Z")
+    def test_redirect_default(self, uuid_mock, validate_sign_mock):
+        """
+        Make sure the view returns to the default URL if no RelayState is set
+        """
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
+
+        responses.add(
+            responses.POST,
+            "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
+            body=self.artifact_response_soap,
+            status=200,
+        )
+
+        artifact = create_example_artifact(
+            "https://was-preprod1.digid.nl/saml/idp/metadata"
+        )
+        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        response = self.client.get(url)
+
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL)
+
 
 class eHerkenningLoginViewTests(TestCase):
     maxDiff = None
@@ -749,3 +774,28 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
 
         # Make sure we're redirect the the right place.
         self.assertEqual(response.url, "/home/")
+
+    @responses.activate
+    @patch.object(OneLogin_Saml2_Utils, "validate_sign")
+    @patch("onelogin.saml2.utils.uuid4")
+    @freeze_time("2020-04-09T08:31:46Z")
+    def test_redirect_default(self, uuid_mock, validate_sign_mock):
+        """
+        Make sure the view returns to the default URL if no RelayState is set
+        """
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
+
+        responses.add(
+            responses.POST,
+            "https://eh02.staging.iwelcome.nl/broker/ars/1.13",
+            body=self.artifact_response_soap,
+            status=200,
+        )
+        artifact = create_example_artifact(
+            "urn:etoegang:HM:00000003520354760000:entities:9632",
+            endpoint_index=b"\x00\x01",
+        )
+        url = reverse("eherkenning:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        response = self.client.get(url)
+
+        self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL)

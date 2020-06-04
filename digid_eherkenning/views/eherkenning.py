@@ -64,4 +64,4 @@ class eHerkenningAssertionConsumerServiceView(View):
 
         auth.login(request, user)
 
-        return HttpResponseRedirect(self.get_redirect_url())
+        return HttpResponseRedirect(self.get_success_url())
