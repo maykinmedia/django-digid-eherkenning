@@ -5,7 +5,7 @@ from .base import BaseSaml2Client
 
 
 class DigiDClient(BaseSaml2Client):
-    cache_key_prefix = "digid_"
+    cache_key_prefix = "digid"
     cache_timeout = 60 * 60  # 1 hour
 
     def __init__(self):

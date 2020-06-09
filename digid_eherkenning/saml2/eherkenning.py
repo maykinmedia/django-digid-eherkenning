@@ -229,7 +229,7 @@ def create_service_catalogus(conf):
 
 
 class eHerkenningClient(BaseSaml2Client):
-    cache_key_prefix = "digid_"
+    cache_key_prefix = "eherkenning"
     cache_timeout = 60 * 60  # 1 hour
 
     def __init__(self):
