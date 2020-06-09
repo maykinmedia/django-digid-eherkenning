@@ -127,7 +127,7 @@ DIGID = {
     "service_entity_id": "https://was-preprod1.digid.nl/saml/idp/metadata",
     "attribute_consuming_service_index": "1",
     "service_name": "Example",
-    "entity_concerned_types_allowed": [],
+    "requested_attributes": [],
 }
 
 #
@@ -153,7 +153,7 @@ EHERKENNING = {
     "service_entity_id": "urn:etoegang:HM:00000003520354760000:entities:9632",
     "entity_id": "urn:etoegang:DV:0000000000000000001:entities:0002",
     "attribute_consuming_service_index": "1",
-    "entity_concerned_types_allowed": [],
+    "requested_attributes": [],
 }
 
 
