@@ -26,6 +26,7 @@ class DigiDBackend(ModelBackend):
         try:
             response = client.artifact_resolve(request, saml_art)
         except OneLogin_Saml2_ValidationError:
+            # TODO Log errors somewhere.
             return
 
         name_id = response.get_nameid()
@@ -66,7 +67,11 @@ class eHerkenningBackend(ModelBackend):
             return
 
         client = eHerkenningClient()
-        response = client.artifact_resolve(request, saml_art)
+        try:
+            response = client.artifact_resolve(request, saml_art)
+        except OneLogin_Saml2_ValidationError:
+            # TODO Log errors somewhere.
+            return
 
         attributes = response.get_attributes()
 
