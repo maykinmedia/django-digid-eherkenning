@@ -48,6 +48,10 @@ class BaseSaml2Client:
             self.create_config_dict(conf=self.conf),
         )
 
+        self.authn_storage = AuthnRequestStorage(
+            self.cache_key_prefix, self.cache_timeout
+        )
+
     def create_metadata(self):
         return self.saml2_settings.get_sp_metadata()
 
@@ -58,6 +62,11 @@ class BaseSaml2Client:
         )
         url, parameters = saml2_auth.login_post(return_to=return_to, **kwargs)
 
+        # Save the request ID so we can verify that we've sent
+        # it when we receive the Artifact/ACS response.
+        request_id = saml2_auth.get_last_request_id()
+        self.authn_storage.store(request_id, get_client_ip(request))
+
         return url, parameters
 
     def artifact_resolve(self, request, saml_art):
@@ -67,7 +76,38 @@ class BaseSaml2Client:
         )
         response = saml2_auth.artifact_resolve(saml_art)
 
+        self.verify_saml2_response(response, get_client_ip(request))
+
         return response
+
+    def verify_saml2_response(self, response, client_ip_address):
+        #
+        # SAMLProf: 4.1.4.2 <Response> Usage
+        #
+        # If the containing message is in response to an <AuthnRequest>,
+        # then the InResponseTo attribute MUST match the request's ID
+        #
+        in_response_to = response.get_in_response_to()
+        authn_request = self.authn_storage.get(in_response_to)
+        if authn_request is None:
+            raise OneLogin_Saml2_ValidationError(
+                f'The InResponseTo of the Response: {in_response_to}, is not a request id'
+                'found in the request cache',
+                OneLogin_Saml2_ValidationError.WRONG_INRESPONSETO
+            )
+
+        #
+        # This is not a mandatory check by the SAML specification. But seems
+        # like a good idea to guard against various attacks.
+        #
+        authn_ip_address = authn_request['client_ip_address']
+        if authn_ip_address != client_ip_address:
+            raise OneLogin_Saml2_ValidationError(
+                f'A different IP address ({authn_ip_address})'
+                f'was used when retrieving the AuthNRequest then for retrieving'
+                f' the request to the ACS ({client_ip_address}).',
+                OneLogin_Saml2_ValidationError.WRONG_INRESPONSETO
+            )
 
     def create_config(self, config_dict):
         """
@@ -138,3 +178,31 @@ class BaseSaml2Client:
             },
             "idp": idp_settings,
         }
+
+
+class AuthnRequestStorage:
+    def __init__(self, cache_key_prefix, cache_timeout):
+        self.cache_key_prefix = cache_key_prefix
+        self.cache_timeout = cache_timeout
+
+    def get_cache_key(self, request_id):
+        return f"{self.cache_key_prefix}_{request_id}"
+
+    def store(self, request_id, client_ip_address):
+        """
+        Save the request id and the ip address of the client in the cache.
+        We use this later to check if this match if the user retrieves
+        the response.
+        """
+
+        cache_key = self.get_cache_key(request_id)
+        cache_value = {
+            'current_time': timezone.now(),
+            'client_ip_address': client_ip_address,
+        }
+        cache.set(cache_key, cache_value, self.cache_timeout)
+
+    def get(self, request_id):
+        cache_key = self.get_cache_key(request_id)
+        cached_value = cache.get(cache_key)
+        return cached_value

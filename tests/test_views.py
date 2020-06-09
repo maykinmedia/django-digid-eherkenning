@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib import auth
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 import responses
 import xmlsec
@@ -319,8 +320,13 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
 
     @responses.activate
     @patch("onelogin.saml2.utils.uuid4")
+    @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_response_status_code_authnfailed(self, uuid_mock):
+    def test_response_status_code_authnfailed(self, cache_mock, uuid_mock):
+        cache_mock.get.return_value = {
+            "current_time": timezone.now(),
+            "client_ip_address": "127.0.0.1",
+        }
         uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         root_element = etree.fromstring(self.artifact_response_soap)
@@ -348,8 +354,13 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
 
     @responses.activate
     @patch("onelogin.saml2.utils.uuid4")
+    @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_artifact_response_status_code_authnfailed(self, uuid_mock):
+    def test_artifact_response_status_code_authnfailed(self, cache_mock, uuid_mock):
+        cache_mock.get.return_value = {
+            "current_time": timezone.now(),
+            "client_ip_address": "127.0.0.1",
+        }
         uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         root_element = etree.fromstring(self.artifact_response_soap)
@@ -377,8 +388,13 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
 
     @responses.activate
     @patch("onelogin.saml2.utils.uuid4")
+    @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_invalid_subject_ip_address(self, uuid_mock):
+    def test_invalid_subject_ip_address(self, cache_mock, uuid_mock):
+        cache_mock.get.return_value = {
+            "current_time": timezone.now(),
+            "client_ip_address": "127.0.0.1",
+        }
         uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         root_element = etree.fromstring(self.artifact_response_soap)
@@ -408,8 +424,13 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @responses.activate
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
+    @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_get(self, uuid_mock, validate_sign_mock):
+    def test_get(self, cache_mock, uuid_mock, validate_sign_mock):
+        cache_mock.get.return_value = {
+            "current_time": timezone.now(),
+            "client_ip_address": "127.0.0.1",
+        }
         uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         responses.add(
@@ -487,11 +508,16 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @responses.activate
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
+    @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_redirect_default(self, uuid_mock, validate_sign_mock):
+    def test_redirect_default(self, cache_mock, uuid_mock, validate_sign_mock):
         """
         Make sure the view returns to the default URL if no RelayState is set
         """
+        cache_mock.get.return_value = {
+            "current_time": timezone.now(),
+            "client_ip_address": "127.0.0.1",
+        }
         uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         responses.add(
@@ -763,8 +789,13 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     @responses.activate
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
+    @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_get(self, uuid_mock, validate_sign_mock):
+    def test_get(self, cache_mock, uuid_mock, validate_sign_mock):
+        cache_mock.get.return_value = {
+            "current_time": timezone.now(),
+            "client_ip_address": "127.0.0.1",
+        }
         uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         responses.add(
@@ -790,11 +821,16 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     @responses.activate
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
+    @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
-    def test_redirect_default(self, uuid_mock, validate_sign_mock):
+    def test_redirect_default(self, cache_mock, uuid_mock, validate_sign_mock):
         """
         Make sure the view returns to the default URL if no RelayState is set
         """
+        cache_mock.get.return_value = {
+            "current_time": timezone.now(),
+            "client_ip_address": "127.0.0.1",
+        }
         uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
         responses.add(
