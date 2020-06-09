@@ -523,25 +523,62 @@ class eHerkenningLoginViewTests(TestCase):
             response.context["form"].initial["SAMLRequest"].encode("utf-8")
         )
 
-        # saml_request = OneLogin_Saml2_Utils.b64decode(
-        #     urllib.parse.parse_qs(
-        #         urllib.parse.urlparse(response.url).query
-        #     )['SAMLRequest'][0]
-        # )
+        tree = etree.fromstring(saml_request)
 
-        expected = (
-            "<samlp:AuthnRequest "
-            'xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" '
-            'xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" '
-            'AssertionConsumerServiceURL="https://example.com/eherkenning/acs/" '
-            'AttributeConsumingServiceIndex="1" '
-            'Destination="https://eh01.staging.iwelcome.nl/broker/sso/1.13" '
-            'ForceAuthn="true" '
-            'ID="ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f" '
-            'IssueInstant="2020-04-09T08:31:46Z" '
-            'ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact" Version="2.0">'
-            "<saml:Issuer>urn:etoegang:DV:0000000000000000001:entities:0002</saml:Issuer>"
-            '<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
+        self.assertEqual(
+            tree.attrib,
+            {
+                "ID": "ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f",
+                "Version": "2.0",
+                "ForceAuthn": "true",
+                "IssueInstant": "2020-04-09T08:31:46Z",
+                "Destination": "https://eh01.staging.iwelcome.nl/broker/sso/1.13",
+                "ProtocolBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+                "AssertionConsumerServiceURL": "https://example.com/eherkenning/acs/",
+                "AttributeConsumingServiceIndex": "1",
+            },
+        )
+
+        auth_context_class_ref = tree.xpath(
+            "samlp:RequestedAuthnContext[@Comparison='minimum']/saml:AuthnContextClassRef",
+            namespaces={
+                "samlp": "urn:oasis:names:tc:SAML:2.0:protocol",
+                "saml": "urn:oasis:names:tc:SAML:2.0:assertion",
+            },
+        )[0]
+
+        self.assertEqual(
+            auth_context_class_ref.text, "urn:etoegang:core:assurance-class:loa3",
+        )
+
+        # Make sure Signature properties are as expected.
+        signature = tree.xpath(
+            "//xmldsig:Signature",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )[0]
+
+        elements = signature.xpath(
+            "//xmldsig:SignatureValue",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        elements = signature.xpath(
+            "//xmldsig:DigestValue",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        elements = signature.xpath(
+            "//xmldsig:X509Certificate",
+            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
+        )
+        elements[0].text = ""
+
+        expected_signature = (
+            '<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" '
+            ' xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" '
+            ' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">'
             "<ds:SignedInfo>"
             '<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>'
             '<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>'
@@ -561,38 +598,13 @@ class eHerkenningLoginViewTests(TestCase):
             "</ds:X509Data>"
             "</ds:KeyInfo>"
             "</ds:Signature>"
-            '<samlp:RequestedAuthnContext Comparison="minimum">'
-            "<saml:AuthnContextClassRef>"
-            "urn:etoegang:core:assurance-class:loa3"
-            "</saml:AuthnContextClassRef>"
-            "</samlp:RequestedAuthnContext>"
-            "</samlp:AuthnRequest>"
         )
 
-        tree = etree.fromstring(saml_request)
-
-        elements = tree.xpath(
-            "//xmldsig:SignatureValue",
-            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
-        )
-        elements[0].text = ""
-
-        elements = tree.xpath(
-            "//xmldsig:DigestValue",
-            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
-        )
-        elements[0].text = ""
-
-        elements = tree.xpath(
-            "//xmldsig:X509Certificate",
-            namespaces={"xmldsig": "http://www.w3.org/2000/09/xmldsig#"},
-        )
-        elements[0].text = ""
-
-        expected_tree = etree.fromstring(expected)
         self.assertXMLEqual(
-            etree.tostring(tree, pretty_print=True).decode("utf-8"),
-            etree.tostring(expected_tree, pretty_print=True).decode("utf-8"),
+            etree.tostring(signature, pretty_print=True).decode("utf-8"),
+            etree.tostring(
+                etree.fromstring(expected_signature), pretty_print=True
+            ).decode("utf-8"),
         )
 
 
@@ -795,7 +807,11 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             "urn:etoegang:HM:00000003520354760000:entities:9632",
             endpoint_index=b"\x00\x01",
         )
-        url = reverse("eherkenning:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        url = (
+            reverse("eherkenning:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": artifact})
+        )
         response = self.client.get(url)
 
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL)
