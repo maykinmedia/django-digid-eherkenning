@@ -142,6 +142,11 @@ class BaseSaml2Client:
             metadata_content, entity_id=conf["service_entity_id"]
         )["idp"]
 
+        _service_name = conf.get("service_name")
+        service_name = _service_name['en'] if isinstance(_service_name, dict) else _service_name
+        _service_description = conf.get("service_description", '')
+        service_description = _service_description['en'] if isinstance(_service_description, dict) else _service_description
+
         return {
             "strict": True,
             "security": {
@@ -165,8 +170,8 @@ class BaseSaml2Client:
                 # friendlyName can be ommited
                 "attributeConsumingService": {
                     "index": conf["attribute_consuming_service_index"],
-                    "serviceName": conf["service_name"],
-                    "serviceDescription": "",
+                    "serviceName": service_name,
+                    "serviceDescription": service_description,
                     "requestedAttributes": [
                         {"name": attr, "isRequired": True,}
                         for attr in conf.get("requested_attributes")

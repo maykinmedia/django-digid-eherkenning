@@ -38,6 +38,31 @@ def xml_datetime(d):
     return d.isoformat(timespec="seconds")
 
 
+def create_language_elements(element_name, option_value, default_language='en'):
+    """
+    Convert a configuration option into zero or more eHerkenning dienstcatalogus
+    elements
+
+    :param element_name Name of the XML element to be generated
+    :param option_value Configuration option being either a string or a dictionary
+                        containing the language code as key, and the option as value.
+    :return list of etree elements
+    """
+
+    if option_value is None:
+        options = []
+
+    options = option_value if isinstance(option_value, dict) else {default_language: option_value}
+
+    elements = []
+    for lang, option in options.items():
+        xml_lang = {"{http://www.w3.org/XML/1998/namespace}lang": lang}
+        elements.append(
+            ESC(element_name, option, **xml_lang),
+        )
+    return elements
+
+
 def create_service_catalogue(id, issue_instant, signature, service_provider):
     ns = namespaces["esc"]
     args = [
@@ -92,9 +117,11 @@ def create_service_provider(
     service_provider_id, organization_display_name, service_definition, service_instance
 ):
     ns = namespaces["esc"]
+    org_name_elements = create_language_elements('OrganizationDisplayName', organization_display_name)
+
     args = [
         ESC("ServiceProviderID", service_provider_id),
-        ESC("OrganizationDisplayName", organization_display_name, **xml_nl_lang),
+        *org_name_elements,
         service_definition,
         service_instance,
     ]
@@ -105,11 +132,15 @@ def create_service_provider(
 def create_service_definition(
     service_uuid, service_name, service_description, loa, entity_concerned_types_allowed
 ):
+
+    service_name_elements = create_language_elements('ServiceName', service_name)
+    service_description_elements = create_language_elements('ServiceDescription', service_description)
+
     ns = namespaces["esc"]
     args = [
         ESC("ServiceUUID", service_uuid),
-        ESC("ServiceName", service_name, **xml_nl_lang),
-        ESC("ServiceDescription", service_description, **xml_nl_lang),
+        *service_name_elements,
+        *service_description_elements,
         SAML("AuthnContextClassRef", loa),
         ESC("HerkenningsmakelaarId", "00000003244440010000"),
     ]
@@ -131,12 +162,15 @@ def create_service_instance(
     key_descriptor,
 ):
     ns = namespaces["esc"]
+
+    privacy_url_elements = create_language_elements('PrivacyPolicyURL', privacy_policy_url)
+
     args = [
         ESC("ServiceID", service_id),
         ESC("ServiceUUID", service_uuid),
         ESC("InstanceOfService", instance_of_service),
         ESC("ServiceURL", service_url, **xml_nl_lang),
-        ESC("PrivacyPolicyURL", privacy_policy_url, **xml_nl_lang),
+        *privacy_url_elements,
         ESC("HerkenningsmakelaarId", herkenningsmakelaars_id),
         ESC("SSOSupport", "false"),
         ESC("ServiceCertificate", key_descriptor),
