@@ -91,22 +91,22 @@ class BaseSaml2Client:
         authn_request = self.authn_storage.get(in_response_to)
         if authn_request is None:
             raise OneLogin_Saml2_ValidationError(
-                f'The InResponseTo of the Response: {in_response_to}, is not a request id'
-                'found in the request cache',
-                OneLogin_Saml2_ValidationError.WRONG_INRESPONSETO
+                f"The InResponseTo of the Response: {in_response_to}, is not a request id"
+                "found in the request cache",
+                OneLogin_Saml2_ValidationError.WRONG_INRESPONSETO,
             )
 
         #
         # This is not a mandatory check by the SAML specification. But seems
         # like a good idea to guard against various attacks.
         #
-        authn_ip_address = authn_request['client_ip_address']
+        authn_ip_address = authn_request["client_ip_address"]
         if authn_ip_address != client_ip_address:
             raise OneLogin_Saml2_ValidationError(
-                f'A different IP address ({authn_ip_address})'
-                f'was used when retrieving the AuthNRequest then for retrieving'
-                f' the request to the ACS ({client_ip_address}).',
-                OneLogin_Saml2_ValidationError.WRONG_INRESPONSETO
+                f"A different IP address ({authn_ip_address})"
+                f"was used when retrieving the AuthNRequest then for retrieving"
+                f" the request to the ACS ({client_ip_address}).",
+                OneLogin_Saml2_ValidationError.WRONG_INRESPONSETO,
             )
 
     def create_config(self, config_dict):
@@ -143,9 +143,15 @@ class BaseSaml2Client:
         )["idp"]
 
         _service_name = conf.get("service_name")
-        service_name = _service_name['en'] if isinstance(_service_name, dict) else _service_name
-        _service_description = conf.get("service_description", '')
-        service_description = _service_description['en'] if isinstance(_service_description, dict) else _service_description
+        service_name = (
+            _service_name["en"] if isinstance(_service_name, dict) else _service_name
+        )
+        _service_description = conf.get("service_description", "")
+        service_description = (
+            _service_description["en"]
+            if isinstance(_service_description, dict)
+            else _service_description
+        )
 
         return {
             "strict": True,
@@ -202,8 +208,8 @@ class AuthnRequestStorage:
 
         cache_key = self.get_cache_key(request_id)
         cache_value = {
-            'current_time': timezone.now(),
-            'client_ip_address': client_ip_address,
+            "current_time": timezone.now(),
+            "client_ip_address": client_ip_address,
         }
         cache.set(cache_key, cache_value, self.cache_timeout)
 

@@ -38,7 +38,7 @@ def xml_datetime(d):
     return d.isoformat(timespec="seconds")
 
 
-def create_language_elements(element_name, option_value, default_language='en'):
+def create_language_elements(element_name, option_value, default_language="en"):
     """
     Convert a configuration option into zero or more eHerkenning dienstcatalogus
     elements
@@ -52,14 +52,16 @@ def create_language_elements(element_name, option_value, default_language='en'):
     if option_value is None:
         options = []
 
-    options = option_value if isinstance(option_value, dict) else {default_language: option_value}
+    options = (
+        option_value
+        if isinstance(option_value, dict)
+        else {default_language: option_value}
+    )
 
     elements = []
     for lang, option in options.items():
         xml_lang = {"{http://www.w3.org/XML/1998/namespace}lang": lang}
-        elements.append(
-            ESC(element_name, option, **xml_lang),
-        )
+        elements.append(ESC(element_name, option, **xml_lang),)
     return elements
 
 
@@ -117,7 +119,9 @@ def create_service_provider(
     service_provider_id, organization_display_name, service_definition, service_instance
 ):
     ns = namespaces["esc"]
-    org_name_elements = create_language_elements('OrganizationDisplayName', organization_display_name)
+    org_name_elements = create_language_elements(
+        "OrganizationDisplayName", organization_display_name
+    )
 
     args = [
         ESC("ServiceProviderID", service_provider_id),
@@ -133,8 +137,10 @@ def create_service_definition(
     service_uuid, service_name, service_description, loa, entity_concerned_types_allowed
 ):
 
-    service_name_elements = create_language_elements('ServiceName', service_name)
-    service_description_elements = create_language_elements('ServiceDescription', service_description)
+    service_name_elements = create_language_elements("ServiceName", service_name)
+    service_description_elements = create_language_elements(
+        "ServiceDescription", service_description
+    )
 
     ns = namespaces["esc"]
     args = [
@@ -163,7 +169,9 @@ def create_service_instance(
 ):
     ns = namespaces["esc"]
 
-    privacy_url_elements = create_language_elements('PrivacyPolicyURL', privacy_policy_url)
+    privacy_url_elements = create_language_elements(
+        "PrivacyPolicyURL", privacy_policy_url
+    )
 
     args = [
         ESC("ServiceID", service_id),
