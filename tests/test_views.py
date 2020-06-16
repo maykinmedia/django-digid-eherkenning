@@ -322,7 +322,6 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
-    @override_settings(LOGIN_URL="/admin/login/")
     def test_response_status_code_authnfailed(self, cache_mock, uuid_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
@@ -362,7 +361,6 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
-    @override_settings(LOGIN_URL="/admin/login/")
     def test_artifact_response_status_code_authnfailed(self, cache_mock, uuid_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
@@ -402,7 +400,6 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
-    @override_settings(LOGIN_URL="/admin/login/")
     def test_invalid_subject_ip_address(self, cache_mock, uuid_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
