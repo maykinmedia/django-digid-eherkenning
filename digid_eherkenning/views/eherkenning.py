@@ -1,8 +1,9 @@
 from django.conf import settings
-from django.contrib import auth
+from django.contrib import auth, messages
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
+from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView, View
 
 from ..forms import SAML2Form
@@ -47,6 +48,11 @@ class eHerkenningLoginView(TemplateView):
 
 
 class eHerkenningAssertionConsumerServiceView(View):
+    login_url = None
+
+    def get_login_url(self):
+        return self.login_url or resolve_url(settings.LOGIN_URL)
+
     def get_success_url(self):
         url = self.get_redirect_url()
         return url or resolve_url(settings.LOGIN_REDIRECT_URL)
@@ -60,7 +66,11 @@ class eHerkenningAssertionConsumerServiceView(View):
             request=request, eherkenning=True, saml_art=request.GET.get("SAMLart")
         )
         if user is None:
-            raise PermissionDenied("Forbidden")
+            messages.error(
+                request, _("Login to eHerkenning did not succeed. Please try again.")
+            )
+            login_url = self.get_login_url()
+            return HttpResponseRedirect(login_url)
 
         auth.login(request, user)
 

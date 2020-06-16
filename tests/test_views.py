@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib import auth
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -322,6 +322,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
+    @override_settings(LOGIN_URL="/admin/login/")
     def test_response_status_code_authnfailed(self, cache_mock, uuid_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
@@ -346,16 +347,22 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             "https://was-preprod1.digid.nl/saml/idp/metadata"
         )
         url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
-        response = self.client.get(url)
+        response = self.client.get(url, follow=True)
+
+        self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
+        self.assertEqual(
+            list(response.context["messages"])[0].message,
+            "Login to DigiD did not succeed. Please try again.",
+        )
 
         # Make sure no user is created.
-        self.assertEqual(response.status_code, 403)
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
+    @override_settings(LOGIN_URL="/admin/login/")
     def test_artifact_response_status_code_authnfailed(self, cache_mock, uuid_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
@@ -380,16 +387,22 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             "https://was-preprod1.digid.nl/saml/idp/metadata"
         )
         url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
-        response = self.client.get(url)
+        response = self.client.get(url, follow=True)
+
+        self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
+        self.assertEqual(
+            list(response.context["messages"])[0].message,
+            "Login to DigiD did not succeed. Please try again.",
+        )
 
         # Make sure no user is created.
-        self.assertEqual(response.status_code, 403)
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
     @freeze_time("2020-04-09T08:31:46Z")
+    @override_settings(LOGIN_URL="/admin/login/")
     def test_invalid_subject_ip_address(self, cache_mock, uuid_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
@@ -415,10 +428,15 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             "https://was-preprod1.digid.nl/saml/idp/metadata"
         )
         url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
-        response = self.client.get(url)
+        response = self.client.get(url, follow=True)
+
+        self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
+        self.assertEqual(
+            list(response.context["messages"])[0].message,
+            "Login to DigiD did not succeed. Please try again.",
+        )
 
         # Make sure no user is created.
-        self.assertEqual(response.status_code, 403)
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
@@ -851,3 +869,5 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL)
+
+    # TODO: Add authnfailed tests here as well.
