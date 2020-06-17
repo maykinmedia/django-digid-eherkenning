@@ -6,18 +6,14 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib import auth
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 import responses
-import xmlsec
 from freezegun import freeze_time
 from lxml import etree
-from onelogin.saml2.constants import OneLogin_Saml2_Constants
-from onelogin.saml2.errors import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
-from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
 
 from .project.models import User
 from .utils import get_saml_element
@@ -318,6 +314,10 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             b"</soapenv:Envelope>"
         )
 
+        self.artifact = create_example_artifact(
+            "https://was-preprod1.digid.nl/saml/idp/metadata"
+        )
+
     @responses.activate
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
@@ -342,10 +342,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact(
-            "https://was-preprod1.digid.nl/saml/idp/metadata"
-        )
-        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
         response = self.client.get(url, follow=True)
 
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
@@ -381,10 +378,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact(
-            "https://was-preprod1.digid.nl/saml/idp/metadata"
-        )
-        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
         response = self.client.get(url, follow=True)
 
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
@@ -421,10 +415,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact(
-            "https://was-preprod1.digid.nl/saml/idp/metadata"
-        )
-        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
         response = self.client.get(url, follow=True)
 
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
@@ -455,13 +446,10 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact(
-            "https://was-preprod1.digid.nl/saml/idp/metadata"
-        )
         url = (
             reverse("digid:acs")
             + "?"
-            + urllib.parse.urlencode({"SAMLart": artifact, "RelayState": "/home/"})
+            + urllib.parse.urlencode({"SAMLart": self.artifact, "RelayState": "/home/"})
         )
         response = self.client.get(url)
 
@@ -512,7 +500,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         )
 
         # Make sure the Artifact is sent as-is.
-        self.assertEqual(elements[0].text, artifact.decode("utf-8"))
+        self.assertEqual(elements[0].text, self.artifact.decode("utf-8"))
 
         elements = tree.xpath(
             "//saml:Issuer",
@@ -543,11 +531,8 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact(
-            "https://was-preprod1.digid.nl/saml/idp/metadata"
-        )
         url = (
-            reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+            reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
@@ -578,10 +563,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        artifact = create_example_artifact(
-            "https://was-preprod1.digid.nl/saml/idp/metadata"
-        )
-        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
         response = self.client.get(url)
 
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL)
@@ -837,6 +819,11 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             b"</soapenv:Envelope>"
         )
 
+        self.artifact = create_example_artifact(
+            "urn:etoegang:HM:00000003520354760000:entities:9632",
+            endpoint_index=b"\x00\x01",
+        )
+
     @responses.activate
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
@@ -855,14 +842,10 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             body=self.artifact_response_soap,
             status=200,
         )
-        artifact = create_example_artifact(
-            "urn:etoegang:HM:00000003520354760000:entities:9632",
-            endpoint_index=b"\x00\x01",
-        )
         url = (
             reverse("eherkenning:acs")
             + "?"
-            + urllib.parse.urlencode({"SAMLart": artifact, "RelayState": "/home/"})
+            + urllib.parse.urlencode({"SAMLart": self.artifact, "RelayState": "/home/"})
         )
         response = self.client.get(url, secure=True)
 
@@ -892,12 +875,8 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             body=self.artifact_response_soap,
             status=200,
         )
-        artifact = create_example_artifact(
-            "urn:etoegang:HM:00000003520354760000:entities:9632",
-            endpoint_index=b"\x00\x01",
-        )
         url = (
-            reverse("eherkenning:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+            reverse("eherkenning:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
@@ -926,14 +905,10 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             body=self.artifact_response_soap,
             status=200,
         )
-        artifact = create_example_artifact(
-            "urn:etoegang:HM:00000003520354760000:entities:9632",
-            endpoint_index=b"\x00\x01",
-        )
         url = (
             reverse("eherkenning:acs")
             + "?"
-            + urllib.parse.urlencode({"SAMLart": artifact})
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
         response = self.client.get(url)
 
