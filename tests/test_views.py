@@ -520,6 +520,42 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         )
         self.assertEqual(elements[0].text, "sp.example.nl/digid")
 
+        # Make sure that the cache is checked for the InResponseTo returned
+        # by the IDP.
+        cache_mock.get.assert_called_once_with('digid__7afa5ce49')
+
+    @responses.activate
+    @patch.object(OneLogin_Saml2_Utils, "validate_sign")
+    @patch("onelogin.saml2.utils.uuid4")
+    @patch("digid_eherkenning.saml2.base.cache")
+    @freeze_time("2020-04-09T08:31:46Z")
+    def test_no_authn_request(self, cache_mock, uuid_mock, validate_sign_mock):
+        """
+        Make sure that when the InResponseTo in the Response does not match
+        any id we've given out, an error occurs.
+        """
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
+        cache_mock.get.return_value = None
+        responses.add(
+            responses.POST,
+            "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
+            body=self.artifact_response_soap,
+            status=200,
+        )
+
+        artifact = create_example_artifact(
+            "https://was-preprod1.digid.nl/saml/idp/metadata"
+        )
+        url = (
+            reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, settings.DIGID['login_url'])
+
+        # Make sure no user is created.
+        self.assertEqual(User.objects.count(), 0)
+
     @responses.activate
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
@@ -832,6 +868,42 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
 
         # Make sure we're redirect the the right place.
         self.assertEqual(response.url, "/home/")
+
+        # Make sure that the cache is checked for the InResponseTo returned
+        # by the IDP.
+        cache_mock.get.assert_called_once_with('eherkenning_id-jiaDzLL9mR3C3hioH')
+
+    @responses.activate
+    @patch.object(OneLogin_Saml2_Utils, "validate_sign")
+    @patch("onelogin.saml2.utils.uuid4")
+    @patch("digid_eherkenning.saml2.base.cache")
+    @freeze_time("2020-04-09T08:31:46Z")
+    def test_no_authn_request(self, cache_mock, uuid_mock, validate_sign_mock):
+        """
+        Make sure that when the InResponseTo in the Response does not match
+        any id we've given out, an error occurs.
+        """
+        cache_mock.get.return_value = None
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
+
+        responses.add(
+            responses.POST,
+            "https://eh02.staging.iwelcome.nl/broker/ars/1.13",
+            body=self.artifact_response_soap,
+            status=200,
+        )
+        artifact = create_example_artifact(
+            "urn:etoegang:HM:00000003520354760000:entities:9632",
+            endpoint_index=b"\x00\x01",
+        )
+        url = (
+            reverse("eherkenning:acs") + "?" + urllib.parse.urlencode({"SAMLart": artifact})
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, settings.EHERKENNING['login_url'])
+        # Make sure no user is created.
+        self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
