@@ -156,6 +156,7 @@ class BaseSaml2Client:
         return {
             "strict": True,
             "security": {
+                "signMetadata": True,
                 "authnRequestsSigned": True,
                 "soapClientKey": conf["key_file"],
                 "soapClientCert": conf["cert_file"],
