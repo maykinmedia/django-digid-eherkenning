@@ -173,6 +173,7 @@ class DigidLoginViewTests(TestCase):
         )
 
 
+@freeze_time("2020-04-09T08:31:46Z")
 class DigidAssertionConsumerServiceViewTests(TestCase):
     maxDiff = None
 
@@ -321,7 +322,6 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @responses.activate
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
-    @freeze_time("2020-04-09T08:31:46Z")
     def test_response_status_code_authnfailed(self, cache_mock, uuid_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
@@ -357,7 +357,6 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @responses.activate
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
-    @freeze_time("2020-04-09T08:31:46Z")
     def test_artifact_response_status_code_authnfailed(self, cache_mock, uuid_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
@@ -393,7 +392,6 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @responses.activate
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
-    @freeze_time("2020-04-09T08:31:46Z")
     def test_invalid_subject_ip_address(self, cache_mock, uuid_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
@@ -431,7 +429,6 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
-    @freeze_time("2020-04-09T08:31:46Z")
     def test_get(self, cache_mock, uuid_mock, validate_sign_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
@@ -516,7 +513,6 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
-    @freeze_time("2020-04-09T08:31:46Z")
     def test_no_authn_request(self, cache_mock, uuid_mock, validate_sign_mock):
         """
         Make sure that when the InResponseTo in the Response does not match
@@ -545,7 +541,6 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
-    @freeze_time("2020-04-09T08:31:46Z")
     def test_redirect_default(self, cache_mock, uuid_mock, validate_sign_mock):
         """
         Make sure the view returns to the default URL if no RelayState is set
@@ -667,6 +662,7 @@ class eHerkenningLoginViewTests(TestCase):
         )
 
 
+@freeze_time("2020-04-09T08:31:46Z")
 class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     def setUp(self):
         super().setUp()
@@ -828,7 +824,6 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
-    @freeze_time("2020-04-09T08:31:46Z")
     def test_get(self, cache_mock, uuid_mock, validate_sign_mock):
         cache_mock.get.return_value = {
             "current_time": timezone.now(),
@@ -860,7 +855,6 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
-    @freeze_time("2020-04-09T08:31:46Z")
     def test_no_authn_request(self, cache_mock, uuid_mock, validate_sign_mock):
         """
         Make sure that when the InResponseTo in the Response does not match
@@ -888,7 +882,6 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
     @patch("onelogin.saml2.utils.uuid4")
     @patch("digid_eherkenning.saml2.base.cache")
-    @freeze_time("2020-04-09T08:31:46Z")
     def test_redirect_default(self, cache_mock, uuid_mock, validate_sign_mock):
         """
         Make sure the view returns to the default URL if no RelayState is set
