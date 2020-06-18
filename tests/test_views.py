@@ -318,17 +318,22 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.artifact = create_example_artifact(
             "https://was-preprod1.digid.nl/saml/idp/metadata"
         )
+        self.uuid_patcher = patch("onelogin.saml2.utils.uuid4")
+        self.cache_patcher = patch("digid_eherkenning.saml2.base.cache")
 
-    @responses.activate
-    @patch("onelogin.saml2.utils.uuid4")
-    @patch("digid_eherkenning.saml2.base.cache")
-    def test_response_status_code_authnfailed(self, cache_mock, uuid_mock):
-        cache_mock.get.return_value = {
+        self.uuid_mock = self.uuid_patcher.start()
+        self.uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
+
+        self.cache_mock = self.cache_patcher.start()
+        self.cache_mock.get.return_value = {
             "current_time": timezone.now(),
             "client_ip_address": "127.0.0.1",
         }
-        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
+        self.addCleanup(patch.stopall)
+
+    @responses.activate
+    def test_response_status_code_authnfailed(self):
         root_element = etree.fromstring(self.artifact_response_soap)
         status_code = get_saml_element(
             root_element, "//samlp:Response/samlp:Status/samlp:StatusCode"
@@ -342,7 +347,11 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
+        url = (
+            reverse("digid:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
+        )
         response = self.client.get(url, follow=True)
 
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
@@ -355,15 +364,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch("onelogin.saml2.utils.uuid4")
-    @patch("digid_eherkenning.saml2.base.cache")
-    def test_artifact_response_status_code_authnfailed(self, cache_mock, uuid_mock):
-        cache_mock.get.return_value = {
-            "current_time": timezone.now(),
-            "client_ip_address": "127.0.0.1",
-        }
-        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
-
+    def test_artifact_response_status_code_authnfailed(self):
         root_element = etree.fromstring(self.artifact_response_soap)
         status_code = get_saml_element(
             root_element, "//samlp:ArtifactResponse/samlp:Status/samlp:StatusCode"
@@ -377,7 +378,11 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
+        url = (
+            reverse("digid:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
+        )
         response = self.client.get(url, follow=True)
 
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
@@ -390,15 +395,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch("onelogin.saml2.utils.uuid4")
-    @patch("digid_eherkenning.saml2.base.cache")
-    def test_invalid_subject_ip_address(self, cache_mock, uuid_mock):
-        cache_mock.get.return_value = {
-            "current_time": timezone.now(),
-            "client_ip_address": "127.0.0.1",
-        }
-        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
-
+    def test_invalid_subject_ip_address(self):
         root_element = etree.fromstring(self.artifact_response_soap)
         status_code = get_saml_element(
             root_element, "//saml:AuthnStatement/saml:SubjectLocality"
@@ -413,7 +410,11 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
+        url = (
+            reverse("digid:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
+        )
         response = self.client.get(url, follow=True)
 
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
@@ -427,15 +428,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
 
     @responses.activate
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
-    @patch("onelogin.saml2.utils.uuid4")
-    @patch("digid_eherkenning.saml2.base.cache")
-    def test_get(self, cache_mock, uuid_mock, validate_sign_mock):
-        cache_mock.get.return_value = {
-            "current_time": timezone.now(),
-            "client_ip_address": "127.0.0.1",
-        }
-        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
-
+    def test_get(self, validate_sign_mock):
         responses.add(
             responses.POST,
             "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
@@ -507,19 +500,16 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
 
         # Make sure that the cache is checked for the InResponseTo returned
         # by the IDP.
-        cache_mock.get.assert_called_once_with('digid__7afa5ce49')
+        self.cache_mock.get.assert_called_once_with("digid__7afa5ce49")
 
     @responses.activate
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
-    @patch("onelogin.saml2.utils.uuid4")
-    @patch("digid_eherkenning.saml2.base.cache")
-    def test_no_authn_request(self, cache_mock, uuid_mock, validate_sign_mock):
+    def test_no_authn_request(self, validate_sign_mock):
         """
         Make sure that when the InResponseTo in the Response does not match
         any id we've given out, an error occurs.
         """
-        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
-        cache_mock.get.return_value = None
+        self.cache_mock.get.return_value = None
         responses.add(
             responses.POST,
             "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
@@ -528,29 +518,23 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         )
 
         url = (
-            reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
+            reverse("digid:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, settings.DIGID['login_url'])
+        self.assertEqual(response.url, settings.DIGID["login_url"])
 
         # Make sure no user is created.
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
     @patch.object(OneLogin_Saml2_Utils, "validate_sign")
-    @patch("onelogin.saml2.utils.uuid4")
-    @patch("digid_eherkenning.saml2.base.cache")
-    def test_redirect_default(self, cache_mock, uuid_mock, validate_sign_mock):
+    def test_redirect_default(self, validate_sign_mock):
         """
         Make sure the view returns to the default URL if no RelayState is set
         """
-        cache_mock.get.return_value = {
-            "current_time": timezone.now(),
-            "client_ip_address": "127.0.0.1",
-        }
-        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
-
         responses.add(
             responses.POST,
             "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
@@ -558,7 +542,11 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
 
-        url = reverse("digid:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
+        url = (
+            reverse("digid:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
+        )
         response = self.client.get(url)
 
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL)
@@ -820,17 +808,25 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             endpoint_index=b"\x00\x01",
         )
 
-    @responses.activate
-    @patch.object(OneLogin_Saml2_Utils, "validate_sign")
-    @patch("onelogin.saml2.utils.uuid4")
-    @patch("digid_eherkenning.saml2.base.cache")
-    def test_get(self, cache_mock, uuid_mock, validate_sign_mock):
-        cache_mock.get.return_value = {
+        self.uuid_patcher = patch("onelogin.saml2.utils.uuid4")
+        self.cache_patcher = patch("digid_eherkenning.saml2.base.cache")
+
+        self.uuid_mock = self.uuid_patcher.start()
+        self.uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
+
+        self.cache_mock = self.cache_patcher.start()
+        self.cache_mock.get.return_value = {
             "current_time": timezone.now(),
             "client_ip_address": "127.0.0.1",
         }
-        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
 
+        self.validate_sign_patcher = patch.object(OneLogin_Saml2_Utils, "validate_sign")
+        self.validate_sign_mock = self.validate_sign_patcher.start()
+
+        self.addCleanup(patch.stopall)
+
+    @responses.activate
+    def test_get(self):
         responses.add(
             responses.POST,
             "https://eh02.staging.iwelcome.nl/broker/ars/1.13",
@@ -849,19 +845,15 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
 
         # Make sure that the cache is checked for the InResponseTo returned
         # by the IDP.
-        cache_mock.get.assert_called_once_with('eherkenning_id-jiaDzLL9mR3C3hioH')
+        self.cache_mock.get.assert_called_once_with("eherkenning_id-jiaDzLL9mR3C3hioH")
 
     @responses.activate
-    @patch.object(OneLogin_Saml2_Utils, "validate_sign")
-    @patch("onelogin.saml2.utils.uuid4")
-    @patch("digid_eherkenning.saml2.base.cache")
-    def test_no_authn_request(self, cache_mock, uuid_mock, validate_sign_mock):
+    def test_no_authn_request(self):
         """
         Make sure that when the InResponseTo in the Response does not match
         any id we've given out, an error occurs.
         """
-        cache_mock.get.return_value = None
-        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
+        self.cache_mock.get.return_value = None
 
         responses.add(
             responses.POST,
@@ -870,28 +862,21 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             status=200,
         )
         url = (
-            reverse("eherkenning:acs") + "?" + urllib.parse.urlencode({"SAMLart": self.artifact})
+            reverse("eherkenning:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, settings.EHERKENNING['login_url'])
+        self.assertEqual(response.url, settings.EHERKENNING["login_url"])
         # Make sure no user is created.
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch.object(OneLogin_Saml2_Utils, "validate_sign")
-    @patch("onelogin.saml2.utils.uuid4")
-    @patch("digid_eherkenning.saml2.base.cache")
-    def test_redirect_default(self, cache_mock, uuid_mock, validate_sign_mock):
+    def test_redirect_default(self):
         """
         Make sure the view returns to the default URL if no RelayState is set
         """
-        cache_mock.get.return_value = {
-            "current_time": timezone.now(),
-            "client_ip_address": "127.0.0.1",
-        }
-        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
-
         responses.add(
             responses.POST,
             "https://eh02.staging.iwelcome.nl/broker/ars/1.13",
