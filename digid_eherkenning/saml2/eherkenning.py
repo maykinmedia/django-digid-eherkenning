@@ -262,9 +262,7 @@ def create_service_catalogus(conf):
     )
     xml = create_service_catalogue(sc_id, timezone.now(), signature, service_provider)
 
-    catalogus = tostring(
-        xml, pretty_print=True, xml_declaration=True, encoding="utf-8"
-    )
+    catalogus = tostring(xml, pretty_print=True, xml_declaration=True, encoding="utf-8")
     errors = validate_xml(BytesIO(catalogus), EHERKENNING_DS_XSD)
     assert errors is None, errors
     return catalogus

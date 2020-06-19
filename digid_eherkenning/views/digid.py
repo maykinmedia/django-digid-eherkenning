@@ -63,7 +63,7 @@ class DigiDAssertionConsumerServiceView(View):
         if url:
             return url
 
-        digid_login_url = settings.DIGID.get('login_url')
+        digid_login_url = settings.DIGID.get("login_url")
         if digid_login_url:
             return resolve_url(digid_login_url)
 

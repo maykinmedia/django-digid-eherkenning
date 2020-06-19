@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+
 from django.urls import reverse_lazy
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -129,7 +130,7 @@ DIGID = {
     "attribute_consuming_service_index": "1",
     "service_name": "Example",
     "requested_attributes": [],
-    "login_url": reverse_lazy('admin:login'),
+    "login_url": reverse_lazy("admin:login"),
 }
 
 #
@@ -156,7 +157,7 @@ EHERKENNING = {
     "entity_id": "urn:etoegang:DV:0000000000000000001:entities:0002",
     "attribute_consuming_service_index": "1",
     "requested_attributes": [],
-    "login_url": reverse_lazy('admin:login'),
+    "login_url": reverse_lazy("admin:login"),
 }
 
 
