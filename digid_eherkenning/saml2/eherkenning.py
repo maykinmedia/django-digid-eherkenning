@@ -8,7 +8,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
-from lxml import etree
+from defusedxml.lxml import tostring
 from lxml.builder import ElementMaker
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
@@ -262,7 +262,7 @@ def create_service_catalogus(conf):
     )
     xml = create_service_catalogue(sc_id, timezone.now(), signature, service_provider)
 
-    catalogus = etree.tostring(
+    catalogus = tostring(
         xml, pretty_print=True, xml_declaration=True, encoding="utf-8"
     )
     errors = validate_xml(BytesIO(catalogus), EHERKENNING_DS_XSD)

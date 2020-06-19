@@ -1,3 +1,4 @@
+from defusedxml.lxml import parse
 from lxml import etree
 
 
@@ -20,8 +21,8 @@ def validate_xml(xml, xsd):
     :return the error log if validation errors occurred
     """
     try:
-        xmlschema = etree.XMLSchema(etree.parse(xsd))
-        doc = etree.parse(xml)
+        xmlschema = etree.XMLSchema(parse(xsd))
+        doc = parse(xml)
         if not xmlschema.validate(doc):
             return xmlschema.error_log
         return None
