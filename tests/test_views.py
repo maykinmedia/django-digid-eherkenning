@@ -352,7 +352,13 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             + "?"
             + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
-        response = self.client.get(url, follow=True)
+        with self.assertLogs("digid_eherkenning.backends", level="INFO") as log_watcher:
+            response = self.client.get(url, follow=True)
+
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "A technical error occurred from 127.0.0.1 during DigiD login.", logs
+        )
 
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
         self.assertEqual(
@@ -383,7 +389,14 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             + "?"
             + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
-        response = self.client.get(url, follow=True)
+
+        with self.assertLogs("digid_eherkenning.backends", level="INFO") as log_watcher:
+            response = self.client.get(url, follow=True)
+
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "A technical error occurred from 127.0.0.1 during DigiD login.", logs
+        )
 
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
         self.assertEqual(
@@ -415,7 +428,14 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             + "?"
             + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
-        response = self.client.get(url, follow=True)
+
+        with self.assertLogs("digid_eherkenning.backends", level="INFO") as log_watcher:
+            response = self.client.get(url, follow=True)
+
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "A technical error occurred from 127.0.0.1 during DigiD login.", logs
+        )
 
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
         self.assertEqual(
@@ -441,7 +461,14 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             + "?"
             + urllib.parse.urlencode({"SAMLart": self.artifact, "RelayState": "/home/"})
         )
-        response = self.client.get(url)
+        with self.assertLogs("digid_eherkenning.backends", level="INFO") as log_watcher:
+            response = self.client.get(url, secure=True)
+
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "User user-12345678 (new account) from 127.0.0.1 logged in using DigiD",
+            logs,
+        )
 
         # Make sure we're redirect the the right place.
         self.assertEqual(response.url, "/home/")
@@ -523,6 +550,15 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
         response = self.client.get(url)
+
+        with self.assertLogs("digid_eherkenning.backends", level="INFO") as log_watcher:
+            response = self.client.get(url, secure=True)
+
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "A technical error occurred from 127.0.0.1 during DigiD login.", logs
+        )
+
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, settings.DIGID["login_url"])
 
@@ -838,7 +874,15 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             + "?"
             + urllib.parse.urlencode({"SAMLart": self.artifact, "RelayState": "/home/"})
         )
-        response = self.client.get(url, secure=True)
+
+        with self.assertLogs("digid_eherkenning.backends", level="INFO") as log_watcher:
+            response = self.client.get(url, secure=True)
+
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "User user-123456782 (new account) from 127.0.0.1 logged in using eHerkenning",
+            logs,
+        )
 
         # Make sure we're redirect the the right place.
         self.assertEqual(response.url, "/home/")
@@ -866,7 +910,16 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             + "?"
             + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
-        response = self.client.get(url)
+
+        with self.assertLogs("digid_eherkenning.backends", level="INFO") as log_watcher:
+            response = self.client.get(url)
+
+        logs = [r.getMessage() for r in log_watcher.records]
+
+        self.assertIn(
+            "A technical error occurred from 127.0.0.1 during eHerkenning login.", logs
+        )
+
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, settings.EHERKENNING["login_url"])
         # Make sure no user is created.
@@ -893,3 +946,56 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL)
 
     # TODO: Add authnfailed tests here as well.
+
+    @responses.activate
+    def test_user_cancels(self):
+        """
+        Test that when a user cancels this is logged properly.
+        """
+
+        artifact_response_soap = etree.fromstring(self.artifact_response_soap)
+
+        # Remove Assertion element. It will not be returned
+        # when user cancels.
+        assertion = get_saml_element(artifact_response_soap, "//saml:Assertion",)
+        assertion.getparent().remove(assertion)
+
+        status_code = get_saml_element(
+            artifact_response_soap, "//samlp:Response/samlp:Status/samlp:StatusCode"
+        )
+        status_code.set("Value", "urn:oasis:names:tc:SAML:2.0:status:Responder")
+
+        status_code.insert(
+            0,
+            etree.Element(
+                "{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode",
+                Value="urn:oasis:names:tc:SAML:2.0:status:AuthnFailed",
+            ),
+        )
+
+        responses.add(
+            responses.POST,
+            "https://eh02.staging.iwelcome.nl/broker/ars/1.13",
+            body=etree.tostring(artifact_response_soap),
+            status=200,
+        )
+
+        url = (
+            reverse("eherkenning:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
+        )
+
+        with self.assertLogs("digid_eherkenning.backends", level="INFO") as log_watcher:
+            response = self.client.get(url)
+
+        logs = [r.getMessage() for r in log_watcher.records]
+
+        self.assertIn(
+            "The eHerkenning login from 127.0.0.1 did not succeed or was cancelled.",
+            logs,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        # Make sure no user is created.
+        self.assertEqual(User.objects.count(), 0)
