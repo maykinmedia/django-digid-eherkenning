@@ -130,7 +130,7 @@ class DigiDBackend(BaseSaml2Backend):
 
         success_message = self.error_messages["login_success"] % {
             "user": str(user),
-            "new_account": " (new account)" if created else "",
+            "new_account": _(" (new account)") if created else "",
             "ip": get_client_ip(request),
             "service": self.service_name,
         }

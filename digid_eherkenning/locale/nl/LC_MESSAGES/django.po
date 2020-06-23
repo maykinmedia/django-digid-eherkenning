@@ -1,0 +1,53 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-06-23 17:22+0200\n"
+"PO-Revision-Date: 2020-06-23 16:55+0200\n"
+"Last-Translator: Alexander Schrijver <alexander@maykinmedia.nl>\n"
+"Language-Team: Maykin Media <info@maykinmedia.nl>\n"
+"Language: NL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: backends.py:24
+#, python-format
+msgid "The %(service)s login from %(ip)s did not succeed or was cancelled."
+msgstr "De %(service)s-login van %(ip)s is niet geslaagd geannuleerd."
+
+# python-format
+#: backends.py:27
+#, python-format
+msgid "A technical error occurred from %(ip)s during %(service)s login."
+msgstr ""
+"Er is een technische fout opgetreden tijdens de %(service)s-login vanaf "
+"%(ip)s."
+
+# python-format
+#: backends.py:30
+#, python-format
+msgid "User %(user)s%(new_account)s from %(ip)s logged in using %(service)s"
+msgstr ""
+"Gebruiker %(user)s%(new_account)s is met %(service)s ingelogd vanaf %(ip)s."
+
+#: backends.py:75
+msgid "Login failed due to no BSN being returned by DigiD."
+msgstr "Login mislukt doordat er geen BSN is teruggegeven door DigiD."
+
+#: backends.py:133
+msgid " (new account)"
+msgstr " (nieuw account)"
+
+#: backends.py:149
+msgid "Login failed due to no RSIN being returned by eHerkenning."
+msgstr "Login mislukt doordat er geen RSIN is teruggegeven door eHerkenning."
+
+#: views/digid.py:86
+msgid "Login to DigiD did not succeed. Please try again."
+msgstr "DigiD-login mislukt. Probeer het nogmaals"
+
+#: views/eherkenning.py:78
+msgid "Login to eHerkenning did not succeed. Please try again."
+msgstr "eHerkenning-login mislukt. Probeer het nogmaals"
