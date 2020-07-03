@@ -51,10 +51,7 @@ class BaseSaml2Backend(ModelBackend):
         e = sys.exc_info()[1]
         assert e is not None, "This method needs to be called from Exception context."
 
-        #
-        # TODO: Do this nicely.
-        #
-        if "urn:oasis:names:tc:SAML:2.0:status:AuthnFailed" in str(e):
+        if e.code == OneLogin_Saml2_ValidationError.STATUS_CODE_AUTHNFAILED:
             error_message = self.error_messages["login_cancelled"] % {
                 "ip": get_client_ip(request),
                 "service": self.service_name,

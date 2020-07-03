@@ -335,10 +335,24 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
     @responses.activate
     def test_response_status_code_authnfailed(self):
         root_element = etree.fromstring(self.artifact_response_soap)
+
+        # Remove Assertion element. It will not be returned
+        # when user cancels.
+        assertion = get_saml_element(root_element, "//saml:Assertion",)
+        assertion.getparent().remove(assertion)
+
         status_code = get_saml_element(
             root_element, "//samlp:Response/samlp:Status/samlp:StatusCode"
         )
-        status_code.set("Value", "urn:oasis:names:tc:SAML:2.0:status:AuthnFailed")
+        status_code.set("Value", "urn:oasis:names:tc:SAML:2.0:status:Responder")
+
+        status_code.insert(
+            0,
+            etree.Element(
+                "{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode",
+                Value="urn:oasis:names:tc:SAML:2.0:status:NoAvailableIDP",
+            ),
+        )
 
         responses.add(
             responses.POST,
