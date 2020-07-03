@@ -835,7 +835,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             ' xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#"'
             ' ID="_1330416516" Version="2.0" IssueInstant="2020-04-09T08:31:46Z"'
             ' InResponseTo="ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f">'
-            "<saml:Issuer>https://was-preprod1.digid.nl/saml/idp/metadata</saml:Issuer>"
+            "<saml:Issuer>urn:etoegang:HM:00000003520354760000:entities:9632</saml:Issuer>"
             "<samlp:Status>"
             '<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>'
             "</samlp:Status>" + self.response + "</samlp:ArtifactResponse>"
