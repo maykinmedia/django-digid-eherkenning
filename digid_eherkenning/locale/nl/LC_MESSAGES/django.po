@@ -15,7 +15,7 @@ msgstr ""
 #: backends.py:24
 #, python-format
 msgid "The %(service)s login from %(ip)s did not succeed or was cancelled."
-msgstr "De %(service)s-login van %(ip)s is niet geslaagd geannuleerd."
+msgstr "De %(service)s-login van %(ip)s is niet geslaagd of was geannuleerd."
 
 # python-format
 #: backends.py:27
