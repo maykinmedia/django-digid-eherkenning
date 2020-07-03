@@ -330,6 +330,9 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             "client_ip_address": "127.0.0.1",
         }
 
+        self.validate_sign_patcher = patch.object(OneLogin_Saml2_Utils, "validate_sign")
+        self.validate_sign_mock = self.validate_sign_patcher.start()
+
         self.addCleanup(patch.stopall)
 
     @responses.activate
@@ -421,6 +424,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         # Make sure no user is created.
         self.assertEqual(User.objects.count(), 0)
 
+    @skip('See issue #2. Not implemented')
     @responses.activate
     def test_invalid_subject_ip_address(self):
         root_element = etree.fromstring(self.artifact_response_soap)
@@ -461,8 +465,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch.object(OneLogin_Saml2_Utils, "validate_sign")
-    def test_get(self, validate_sign_mock):
+    def test_get(self):
         responses.add(
             responses.POST,
             "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
@@ -544,8 +547,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.cache_mock.get.assert_called_once_with("digid__7afa5ce49")
 
     @responses.activate
-    @patch.object(OneLogin_Saml2_Utils, "validate_sign")
-    def test_no_authn_request(self, validate_sign_mock):
+    def test_no_authn_request(self):
         """
         Make sure that when the InResponseTo in the Response does not match
         any id we've given out, an error occurs.
@@ -580,8 +582,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(User.objects.count(), 0)
 
     @responses.activate
-    @patch.object(OneLogin_Saml2_Utils, "validate_sign")
-    def test_redirect_default(self, validate_sign_mock):
+    def test_redirect_default(self):
         """
         Make sure the view returns to the default URL if no RelayState is set
         """
