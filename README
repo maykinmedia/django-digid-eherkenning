@@ -44,6 +44,7 @@ eHerkenningMetadata: https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata
 eHerkenning: https://afsprakenstelsel.etoegang.nl/display/as/Interface+specifications+DV-HM
 eHerkenningDC: https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
 DigiD: https://www.logius.nl/sites/default/files/public/bestanden/diensten/DigiD/Koppelvlakspecificatie-SAML-DigiD.pdf
+DigiDCheck: logius.nl/sites/default/files/bestanden/website/DigiD Checklist Testen v7.0 (definitief).pdf
 SAML: http://www.oasis-open.org/committees/download.php/56776/sstc-saml-core-errata-2.0-wd-07.pdf
 SAMLBind: https://www.oasis-open.org/committees/download.php/56779/sstc-saml-bindings-errata-2.0-wd-06.pdf
 SAMLProf: https://www.oasis-open.org/committees/download.php/56782/sstc-saml-profiles-errata-2.0-wd-07.pdf

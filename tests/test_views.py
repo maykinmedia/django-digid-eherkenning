@@ -602,6 +602,33 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
 
         self.assertEqual(response.url, settings.LOGIN_REDIRECT_URL)
 
+    @responses.activate
+    def test_lower_session_age(self):
+        """
+        Make sure the session age is lowered. Since 'session_age' is
+        set to 15 * 60 minutes in the configuration.
+
+        DigiD requires a session of max 15 minutes. See DigiDCheck 2.2 T14 -- Sessieduur
+        """
+        responses.add(
+            responses.POST,
+            "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
+            body=self.artifact_response_soap,
+            status=200,
+        )
+
+        url = (
+            reverse("digid:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
+        )
+        response = self.client.get(url)
+
+        self.assertEqual(
+            self.client.session.get_expiry_age(),
+            900
+        )
+
 
 class eHerkenningLoginViewTests(TestCase):
     maxDiff = None
