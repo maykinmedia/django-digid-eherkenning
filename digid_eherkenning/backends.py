@@ -135,7 +135,7 @@ class DigiDBackend(BaseSaml2Backend):
         self.log_success(request, success_message)
 
         # DigiD requires a session of max 15 minutes. See DigiDCheck 2.2 T14 -- Sessieduur
-        session_age = client.conf.get('session_age', None)
+        session_age = client.conf.get("session_age", None)
         if session_age is not None:
             request.session.set_expiry(session_age)
 
@@ -205,7 +205,7 @@ class eHerkenningBackend(BaseSaml2Backend):
 
         self.log_success(request, success_message)
 
-        session_age = client.conf.get('session_age', None)
+        session_age = client.conf.get("session_age", None)
         if session_age is not None:
             request.session.set_expiry(session_age)
 

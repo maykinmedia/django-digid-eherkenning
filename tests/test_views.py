@@ -424,7 +424,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         # Make sure no user is created.
         self.assertEqual(User.objects.count(), 0)
 
-    @skip('See issue #2. Not implemented')
+    @skip("See issue #2. Not implemented")
     @responses.activate
     def test_invalid_subject_ip_address(self):
         root_element = etree.fromstring(self.artifact_response_soap)
@@ -624,10 +624,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         )
         response = self.client.get(url)
 
-        self.assertEqual(
-            self.client.session.get_expiry_age(),
-            900
-        )
+        self.assertEqual(self.client.session.get_expiry_age(), 900)
 
 
 class eHerkenningLoginViewTests(TestCase):
