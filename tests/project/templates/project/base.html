@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ app_title }}</title>
+</head>
+<style>
+    main {
+        max-width: 600px;
+        margin: 20px auto;
+        font-family: sans-serif;
+        border: 1px solid grey;
+        border-radius: 4px;
+        padding: 10px 20px;
+    }
+    code {
+        font-size: 130%;
+        background-color: #eee;
+        padding: 2px 3px;
+    }
+    h1 {
+        font-size: 1.2rem;
+    }
+    p {
+        line-height: 140%;
+    }
+</style>
+<body>
+<main>
+    <h1>{{ app_title }}</h1>
+    {% block body %}{% endblock %}
+</main>
+</body>
+</html>
