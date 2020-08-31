@@ -136,7 +136,7 @@ DIGID = {
     "service_name": "Example",
     "requested_attributes": [],
     "login_url": reverse_lazy("admin:login"),
-    "session_age": 15 * 61,
+    "session_age": 15 * 60,
 }
 
 #
