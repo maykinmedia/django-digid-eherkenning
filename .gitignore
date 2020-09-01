@@ -20,3 +20,4 @@ local.py
 .env
 
 tests/db.sqlite3
+/digid_eherkenning/db.sqlite3
