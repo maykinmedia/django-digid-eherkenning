@@ -56,7 +56,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = "tests.project.urls"
 # ROOT_URLCONF = "tests.project.mock_urls"
 
-LOGIN_URL = '/'
+LOGIN_URL = "/"
 
 TEMPLATES = [
     {
@@ -95,9 +95,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
 ]
 
 
@@ -178,8 +184,7 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = "project.User"
 
-DIGID_MOCK_APP_TITLE = 'DigiD Mock Test App'
+DIGID_MOCK_APP_TITLE = "DigiD Mock Test App"
 # DIGID_MOCK_IDP_LOGIN_URL = 'http://localhost:8008/digid/idp/inloggen/'
 # DIGID_MOCK_RETURN_URL = '/'
 # DIGID_MOCK_CANCEL_URL = '/'
-

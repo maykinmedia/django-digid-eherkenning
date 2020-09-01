@@ -6,4 +6,4 @@ AUTHENTICATION_BACKENDS = [
     "digid_eherkenning.mock.backends.DigiDBackend",
 ]
 
-DIGID_MOCK_APP_TITLE = 'DigiD Mock Standalone Demo'  # service name displayed in popup
+DIGID_MOCK_APP_TITLE = "DigiD Mock Standalone Demo"  # service name displayed in popup

@@ -341,7 +341,10 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
 
         # Remove Assertion element. It will not be returned
         # when user cancels.
-        assertion = get_saml_element(root_element, "//saml:Assertion",)
+        assertion = get_saml_element(
+            root_element,
+            "//saml:Assertion",
+        )
         assertion.getparent().remove(assertion)
 
         status_code = get_saml_element(
@@ -665,7 +668,8 @@ class eHerkenningLoginViewTests(TestCase):
         )[0]
 
         self.assertEqual(
-            auth_context_class_ref.text, "urn:etoegang:core:assurance-class:loa3",
+            auth_context_class_ref.text,
+            "urn:etoegang:core:assurance-class:loa3",
         )
 
         # Make sure Signature properties are as expected.
@@ -996,7 +1000,10 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
 
         # Remove Assertion element. It will not be returned
         # when user cancels.
-        assertion = get_saml_element(artifact_response_soap, "//saml:Assertion",)
+        assertion = get_saml_element(
+            artifact_response_soap,
+            "//saml:Assertion",
+        )
         assertion.getparent().remove(assertion)
 
         status_code = get_saml_element(

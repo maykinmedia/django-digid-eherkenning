@@ -180,7 +180,10 @@ class BaseSaml2Client:
                     "serviceName": service_name,
                     "serviceDescription": service_description,
                     "requestedAttributes": [
-                        {"name": attr, "isRequired": True,}
+                        {
+                            "name": attr,
+                            "isRequired": True,
+                        }
                         for attr in conf.get("requested_attributes")
                     ],
                 },

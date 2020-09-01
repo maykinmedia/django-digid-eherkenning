@@ -96,7 +96,9 @@ class DigiDBackend(BSNBackendMixin, BaseSaml2Backend):
     service_name = "DigiD"
     error_messages = dict(
         BaseSaml2Backend.error_messages,
-        **{"digid_no_bsn": _("Login failed due to no BSN being returned by DigiD."),}
+        **{
+            "digid_no_bsn": _("Login failed due to no BSN being returned by DigiD."),
+        }
     )
 
     def authenticate(self, request, digid=None, saml_art=None):

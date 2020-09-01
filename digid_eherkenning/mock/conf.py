@@ -8,14 +8,20 @@ def get_app_title():
     """
     Title of application to display in IDP view
     """
-    return force_str(getattr(settings, 'DIGID_MOCK_APP_TITLE', '') or 'DigiD Mock Login')
+    return force_str(
+        getattr(settings, "DIGID_MOCK_APP_TITLE", "") or "DigiD Mock Login"
+    )
 
 
 def get_success_url():
     """
     Default URL to redirect to after login
     """
-    url = getattr(settings, 'DIGID_MOCK_RETURN_URL', '') or getattr(settings, 'LOGIN_REDIRECT_URL', '') or '/'
+    url = (
+        getattr(settings, "DIGID_MOCK_RETURN_URL", "")
+        or getattr(settings, "LOGIN_REDIRECT_URL", "")
+        or "/"
+    )
     return resolve_url(url)
 
 
@@ -23,7 +29,11 @@ def get_cancel_url():
     """
     Default URL if user presses 'vorige/back' in IDP view
     """
-    url = getattr(settings, 'DIGID_MOCK_CANCEL_URL', '') or getattr(settings, 'LOGIN_URL', '') or '/'
+    url = (
+        getattr(settings, "DIGID_MOCK_CANCEL_URL", "")
+        or getattr(settings, "LOGIN_URL", "")
+        or "/"
+    )
     return resolve_url(url)
 
 
@@ -31,5 +41,7 @@ def get_idp_login_url():
     """
     URL of the IDP login page (possibly on other domain)
     """
-    url = getattr(settings, 'DIGID_MOCK_IDP_LOGIN_URL', '') or reverse('digid-mock:login')
+    url = getattr(settings, "DIGID_MOCK_IDP_LOGIN_URL", "") or reverse(
+        "digid-mock:login"
+    )
     return resolve_url(url)

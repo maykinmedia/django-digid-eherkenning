@@ -1,6 +1,9 @@
 from django.conf.urls import url
 
-from digid_eherkenning.mock.views.digid import DigiDLoginMockView, DigiDAssertionConsumerServiceMockView
+from digid_eherkenning.mock.views.digid import (
+    DigiDLoginMockView,
+    DigiDAssertionConsumerServiceMockView,
+)
 
 """
 this is a mock replacement for the regular digid_urls.py

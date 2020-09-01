@@ -9,7 +9,9 @@ class User(AbstractUser):
     login_type = models.CharField(
         max_length=20,
         choices=UserLoginType.choices,
-        validators=[UserLoginType.validator,],
+        validators=[
+            UserLoginType.validator,
+        ],
     )
     bsn = models.CharField(max_length=9)
     rsin = models.CharField(max_length=9)

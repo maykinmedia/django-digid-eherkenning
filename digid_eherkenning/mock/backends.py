@@ -13,14 +13,15 @@ UserModel = get_user_model()
 
 
 class DigiDBackend(BSNBackendMixin, BaseBackend):
-    service_name = 'DigiD_Mock'
+    service_name = "DigiD_Mock"
     error_messages = dict(
         BaseBackend.error_messages,
         **{
             "digid_no_bsn": _("Login failed due to no BSN being returned by DigiD."),
             "digid_len_bsn": _("Login failed due to no BSN having more then 9 digits."),
             "digid_num_bsn": _("Login failed due to no BSN not being numerical."),
-        })
+        }
+    )
 
     def authenticate(self, request, bsn=None):
         if bsn is None:

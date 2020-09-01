@@ -19,24 +19,33 @@ class DigiDLoginMockView(RedirectView):
 
     we do a simple redirect instead of a form POST like post_binding.html does
     """
+
     def get_redirect_url(self, *args, **kwargs):
         # TODO use get_redirect_url() ?
         url = self.request.build_absolute_uri(conf.get_idp_login_url())
 
-        next_url = self.request.GET.get("next") or self.request.build_absolute_uri(conf.get_success_url())
-        next_url = get_redirect_url(self.request, next_url, require_https=self.request.is_secure())
+        next_url = self.request.GET.get("next") or self.request.build_absolute_uri(
+            conf.get_success_url()
+        )
+        next_url = get_redirect_url(
+            self.request, next_url, require_https=self.request.is_secure()
+        )
         if not next_url:
             return HttpResponseBadRequest("bad 'next' redirect parameter")
 
-        cancel_url = self.request.GET.get("cancel") or self.request.build_absolute_uri(conf.get_cancel_url())
-        cancel_url = get_redirect_url(self.request, cancel_url, require_https=self.request.is_secure())
+        cancel_url = self.request.GET.get("cancel") or self.request.build_absolute_uri(
+            conf.get_cancel_url()
+        )
+        cancel_url = get_redirect_url(
+            self.request, cancel_url, require_https=self.request.is_secure()
+        )
         if not cancel_url:
             return HttpResponseBadRequest("bad 'cancel' redirect parameter")
 
         params = {
-            'next': next_url,
-            'cancel': cancel_url,
-            'acs': self.request.build_absolute_uri(reverse('digid:acs')),
+            "next": next_url,
+            "cancel": cancel_url,
+            "acs": self.request.build_absolute_uri(reverse("digid:acs")),
         }
         return f"{url}?{urlencode(params)}"
 
@@ -51,11 +60,13 @@ class DigiDAssertionConsumerServiceMockView(View):
         where to go after unsuccessful login
         """
         url = self.request.build_absolute_uri(conf.get_cancel_url())
-        url = get_redirect_url(self.request, url, require_https=self.request.is_secure())
+        url = get_redirect_url(
+            self.request, url, require_https=self.request.is_secure()
+        )
         if url:
             return url
 
-        if hasattr(settings, 'DIGID'):
+        if hasattr(settings, "DIGID"):
             digid_login_url = settings.DIGID.get("login_url")
             if digid_login_url:
                 return resolve_url(digid_login_url)
@@ -66,14 +77,16 @@ class DigiDAssertionConsumerServiceMockView(View):
         """
         where to go after successful login
         """
-        url = self.request.GET.get("next") or self.request.build_absolute_uri(conf.get_success_url())
-        url = get_redirect_url(self.request, url, require_https=self.request.is_secure())
+        url = self.request.GET.get("next") or self.request.build_absolute_uri(
+            conf.get_success_url()
+        )
+        url = get_redirect_url(
+            self.request, url, require_https=self.request.is_secure()
+        )
         return url or resolve_url(settings.LOGIN_REDIRECT_URL)
 
     def get(self, request):
-        user = auth.authenticate(
-            request=request, bsn=request.GET.get("bsn")
-        )
+        user = auth.authenticate(request=request, bsn=request.GET.get("bsn"))
         if user is None:
             messages.error(
                 request, _("Login to DigiD did not succeed. Please try again.")
