@@ -22,7 +22,7 @@ OVERRIDE_SETTINGS = dict(
 MODIFY_SETTINGS = dict(
     AUTHENTICATION_BACKENDS={
         'append': [
-            "digid_eherkenning.mock.backends.DigiDMockBackend",
+            "digid_eherkenning.mock.backends.DigiDBackend",
         ],
         'remove': [
             "digid_eherkenning.backends.DigiDBackend",

@@ -6,7 +6,7 @@ from digid_eherkenning.mock.idp.views.digid import DigiDMockIDPLoginView, DigiDM
 app_name = 'digid-mock'
 
 urlpatterns = [
-    url(r"inloggen/", DigiDMockIDPLoginView.as_view(), name='login'),
-    url(r"inloggen_ww/", DigiDMockIDPPasswordLoginView.as_view(), name='password'),
-    url(r"$", RedirectView.as_view(url='/'), name='index'),
+    url(r"^inloggen/?$", DigiDMockIDPLoginView.as_view(), name='login'),
+    url(r"^inloggen_ww/?$", DigiDMockIDPPasswordLoginView.as_view(), name='password'),
+    url(r"^$", RedirectView.as_view(url='/'), name='index'),
 ]

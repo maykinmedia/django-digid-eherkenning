@@ -172,14 +172,14 @@ EHERKENNING = {
 
 AUTHENTICATION_BACKENDS = [
     "digid_eherkenning.backends.DigiDBackend",
-    # "digid_eherkenning.mock.backends.DigiDMockBackend",
+    # "digid_eherkenning.mock.backends.DigiDBackend",
     "digid_eherkenning.backends.eHerkenningBackend",
 ]
 
 AUTH_USER_MODEL = "project.User"
 
-DIGID_MOCK_APP_TITLE = 'DigiD Mock Login Test App'
-DIGID_MOCK_LOGIN_URL = '/'
-DIGID_MOCK_RETURN_URL = '/'
-DIGID_MOCK_CANCEL_URL = '/'
+DIGID_MOCK_APP_TITLE = 'DigiD Mock Test App'
+# DIGID_MOCK_IDP_LOGIN_URL = 'http://localhost:8008/digid/idp/inloggen/'
+# DIGID_MOCK_RETURN_URL = '/'
+# DIGID_MOCK_CANCEL_URL = '/'
 

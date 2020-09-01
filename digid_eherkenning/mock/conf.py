@@ -31,5 +31,5 @@ def get_idp_login_url():
     """
     URL of the IDP login page (possibly on other domain)
     """
-    url = getattr(settings, 'DIGID_MOCK_LOGIN_URL', '') or reverse('digid-mock:login')
+    url = getattr(settings, 'DIGID_MOCK_IDP_LOGIN_URL', '') or reverse('digid-mock:login')
     return resolve_url(url)

@@ -8,5 +8,5 @@ urlpatterns = [
     url("digid/idp/", include("digid_eherkenning.mock.idp.digid_urls")),
     url("admin/", admin.site.urls),
     url("success", MockSuccessView.as_view(), name='test-success'),
-    url("$", MockIndexView.as_view(), name='test-index'),
+    url("^$", MockIndexView.as_view(), name='test-index'),
 ]

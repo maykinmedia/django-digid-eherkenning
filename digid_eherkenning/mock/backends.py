@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 UserModel = get_user_model()
 
 
-class DigiDMockBackend(ModelBackend):
+class DigiDBackend(ModelBackend):
     # TODO consider extending from regular DigiDBackend for more API compatibility? (but then we have half-broken SAML functionality)
 
     service_name = 'DigiD_Mock'
