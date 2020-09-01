@@ -24,6 +24,33 @@ Add to the digid url patterns to urls.py
     url(r'^digid/', include("digid_eherkenning.digid_urls")),
 
 
+Usage of mock login flow
+========================
+
+For development and demonstration purposes you can swap-in a mockup Digid login flow that accepts any BSN and doesn't require an actual DigiD metadata configuration.
+
+In the login view username field you can enter any integer up to 9 digits (and a random password) to be used as the BSN in the authentication backend.
+
+Swap the authentication backend for the mock version:
+
+    AUTHENTICATION_BACKENDS = (
+        "digid_eherkenning.backends.mock.DigiDBackend"
+    )
+
+Swap the digid url patterns for the mock version:
+
+    url(r'^digid/', include("digid_eherkenning.mock.digid_urls")),
+
+Additionally add the URLs for the mock IDP service:
+
+    url(r'^digid/idp/', include("digid_eherkenning.mock.idp.digid_urls")),
+
+Alternately you can start the mock IDP service on another IP/port if you run this project with manage.py runserver,
+ and set DIGID_MOCK_IDP_LOGIN_URL to your '<host>:<ip>/digid/inloggen/'.
+
+For more optional settings see digid_eherkenning/mock/config.py
+
+
 Other SAML2 implementations
 ===========================
 
