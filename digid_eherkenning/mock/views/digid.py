@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -12,6 +13,8 @@ from django.views.generic import RedirectView
 from digid_eherkenning.mock import conf
 from digid_eherkenning.views.base import get_redirect_url
 
+logger = logging.getLogger(__name__)
+
 
 class DigiDLoginMockView(RedirectView):
     """
@@ -21,7 +24,6 @@ class DigiDLoginMockView(RedirectView):
     """
 
     def get_redirect_url(self, *args, **kwargs):
-        # TODO use get_redirect_url() ?
         url = self.request.build_absolute_uri(conf.get_idp_login_url())
 
         next_url = self.request.GET.get("next") or self.request.build_absolute_uri(
@@ -31,6 +33,7 @@ class DigiDLoginMockView(RedirectView):
             self.request, next_url, require_https=self.request.is_secure()
         )
         if not next_url:
+            logger.debug("bad 'next' redirect parameter")
             return HttpResponseBadRequest("bad 'next' redirect parameter")
 
         cancel_url = self.request.GET.get("cancel") or self.request.build_absolute_uri(
@@ -40,6 +43,7 @@ class DigiDLoginMockView(RedirectView):
             self.request, cancel_url, require_https=self.request.is_secure()
         )
         if not cancel_url:
+            logger.debug("bad 'cancel' redirect parameter")
             return HttpResponseBadRequest("bad 'cancel' redirect parameter")
 
         params = {

@@ -1,11 +1,14 @@
+import logging
 from urllib.parse import urlencode
 
-from django.http import HttpResponseNotAllowed, HttpResponseBadRequest
+from django.http import HttpResponseBadRequest
 from django.urls import reverse
 from django.views.generic import TemplateView, FormView
 
 from digid_eherkenning.mock import conf
 from digid_eherkenning.mock.idp.forms import PasswordLoginForm
+
+logger = logging.getLogger(__name__)
 
 
 class _BaseIDPViewMixin(TemplateView):
@@ -20,11 +23,14 @@ class _BaseIDPViewMixin(TemplateView):
         )
 
         if not self.acs_url:
-            return HttpResponseBadRequest("bad parameters: missing 'acs' parameter")
+            logger.debug("missing 'acs' parameter")
+            return HttpResponseBadRequest("missing 'acs' parameter")
         if not self.next_url:
-            return HttpResponseBadRequest("bad parameters: missing 'next' parameter")
+            logger.debug("missing 'next' parameter")
+            return HttpResponseBadRequest("missing 'next' parameter")
         if not self.cancel_url:
-            return HttpResponseBadRequest("bad parameters: missing 'cancel' parameter")
+            logger.debug("missing 'cancel' parameter")
+            return HttpResponseBadRequest("missing 'cancel' parameter")
 
         return super().dispatch(request, *args, **kwargs)
 
