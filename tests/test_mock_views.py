@@ -127,3 +127,32 @@ class PasswordLoginViewTests(DigidMockTestCase):
         self.assertContains(response, "Je bent ingelogged als gebruiker")
         self.assertContains(response, "<code>{}</code>".format(str(user)))
         self.assertContains(response, "<code>123456789</code>")
+
+    def test_backend_rejects_non_numerical_name(self):
+        url = reverse("digid-mock:password")
+        params = {
+            "acs": reverse("digid:acs"),
+            "next": reverse("test-success"),
+            "cancel": reverse("test-index"),
+        }
+        url = f"{url}?{urlencode(params)}"
+
+        data = {
+            "auth_name": "foo",
+            "auth_pass": "bar",
+        }
+        # post our password to the IDP
+        response = self.client.post(url, data, follow=False)
+
+        # it will redirect to our ACS
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("digid:acs"), response["Location"])
+
+        # follow the ACS redirect and get/create the user
+        response = self.client.get(response["Location"], follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("test-index"), response["Location"])
+
+        User = get_user_model()
+        with self.assertRaises(User.DoesNotExist):
+            User.digid_objects.get(bsn="foo")

@@ -45,10 +45,7 @@ Additionally add the URLs for the mock IDP service to run in the same runserver 
 
     url(r'^digid/idp/', include("digid_eherkenning.mock.idp.digid_urls")),
 
-Alternately you can start the mock IDP service on another IP/port. Run manage.py runidpserver in a second console
- and set DIGID_MOCK_IDP_LOGIN_URL with your host and port (default is 'http://localhost:8008/digid/inloggen/').
-
-For more optional settings see digid_eherkenning/mock/config.py
+For settings to control mock behaviour see digid_eherkenning/mock/config.py
 
 
 Other SAML2 implementations
