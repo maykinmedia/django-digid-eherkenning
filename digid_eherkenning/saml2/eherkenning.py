@@ -61,7 +61,9 @@ def create_language_elements(element_name, option_value, default_language="en"):
     elements = []
     for lang, option in options.items():
         xml_lang = {"{http://www.w3.org/XML/1998/namespace}lang": lang}
-        elements.append(ESC(element_name, option, **xml_lang),)
+        elements.append(
+            ESC(element_name, option, **xml_lang),
+        )
     return elements
 
 
@@ -152,7 +154,9 @@ def create_service_definition(
     ]
 
     for entity in entity_concerned_types_allowed:
-        args.append(ESC("EntityConcernedTypesAllowed", entity),)
+        args.append(
+            ESC("EntityConcernedTypesAllowed", entity),
+        )
 
     kwargs = {f"{{{ns}}}IsPublic": "true"}
     return ESC("ServiceDefinition", *args, **kwargs)
@@ -233,9 +237,15 @@ def create_service_catalogus(conf):
     )
     service_instance_uuid = conf["service_instance_uuid"]
 
-    service_url = conf.get("service_url",)
-    privacy_policy_url = conf.get("privacy_policy_url",)
-    herkenningsmakelaars_id = conf.get("herkenningsmakelaars_id",)
+    service_url = conf.get(
+        "service_url",
+    )
+    privacy_policy_url = conf.get(
+        "privacy_policy_url",
+    )
+    herkenningsmakelaars_id = conf.get(
+        "herkenningsmakelaars_id",
+    )
     entity_concerned_types_allowed = conf.get("entity_concerned_types_allowed")
 
     signature = create_signature(sc_id)
@@ -290,7 +300,9 @@ class eHerkenningClient(BaseSaml2Client):
                 "metadataValidUntil": "",
                 "metadataCacheDuration": "",
                 "requestedAuthnContextComparison": "minimum",
-                "requestedAuthnContext": [self.conf["service_loa"],],
+                "requestedAuthnContext": [
+                    self.conf["service_loa"],
+                ],
             }
         )
         return super().create_config(config_dict)

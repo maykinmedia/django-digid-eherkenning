@@ -54,6 +54,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "tests.project.urls"
+# ROOT_URLCONF = "tests.project.mock_urls"
+
+LOGIN_URL = "/"
 
 TEMPLATES = [
     {
@@ -92,9 +95,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
 ]
 
 
@@ -136,7 +145,7 @@ DIGID = {
     "service_name": "Example",
     "requested_attributes": [],
     "login_url": reverse_lazy("admin:login"),
-    "session_age": 15 * 61,
+    "session_age": 15 * 60,
 }
 
 #
@@ -169,7 +178,13 @@ EHERKENNING = {
 
 AUTHENTICATION_BACKENDS = [
     "digid_eherkenning.backends.DigiDBackend",
+    # "digid_eherkenning.mock.backends.DigiDBackend",
     "digid_eherkenning.backends.eHerkenningBackend",
 ]
 
 AUTH_USER_MODEL = "project.User"
+
+DIGID_MOCK_APP_TITLE = "DigiD Mock Test App"
+# DIGID_MOCK_IDP_LOGIN_URL = 'http://localhost:8008/digid/idp/inloggen/'
+# DIGID_MOCK_RETURN_URL = '/'
+# DIGID_MOCK_CANCEL_URL = '/'

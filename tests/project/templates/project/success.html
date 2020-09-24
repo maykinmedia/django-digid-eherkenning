@@ -1,0 +1,10 @@
+{% extends 'project/base.html' %}
+
+{% block body %}
+    <p>
+        Je bent ingelogged als gebruiker <code>{{ user }}</code> met BSN <code>{{ user.bsn }}</code>, aangemaakt op <code>{{ user.date_joined|date:'Y-m-d H:i' }}</code>
+    </p>
+    <p>
+        <a href="/">Naar homepage</a>
+    </p>
+{% endblock %}

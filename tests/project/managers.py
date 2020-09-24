@@ -12,7 +12,9 @@ class DigidManager(BaseDigidManager):
 
     def digid_create(self, bsn, **kwargs):
         return super().create(
-            username="user-{}".format(bsn), login_type=UserLoginType.digid, bsn=bsn,
+            username="user-{}".format(bsn),
+            login_type=UserLoginType.digid,
+            bsn=bsn,
         )
 
 

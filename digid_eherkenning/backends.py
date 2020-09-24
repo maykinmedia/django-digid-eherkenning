@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 UserModel = get_user_model()
 
 
-class BaseSaml2Backend(ModelBackend):
+class BaseBackend(ModelBackend):
     service_name = None
     error_messages = {
         "login_cancelled": _(
@@ -47,6 +47,8 @@ class BaseSaml2Backend(ModelBackend):
         """
         logger.info(message)
 
+
+class BaseSaml2Backend(BaseBackend):
     def handle_validation_error(self, request):
         e = sys.exc_info()[1]
         assert e is not None, "This method needs to be called from Exception context."
@@ -65,11 +67,38 @@ class BaseSaml2Backend(ModelBackend):
             self.log_error(request, error_message, e)
 
 
-class DigiDBackend(BaseSaml2Backend):
+class BSNBackendMixin:
+    def get_or_create_user_from_bsn(self, request, bsn):
+        if bsn == "":
+            self.log_error(request, self.error_messages["digid_no_bsn"])
+            return
+
+        created = False
+        try:
+            user = UserModel.digid_objects.get_by_bsn(bsn)
+        except UserModel.DoesNotExist:
+            user = UserModel.digid_objects.digid_create(bsn)
+            created = True
+
+        success_message = self.error_messages["login_success"] % {
+            "user": str(user),
+            "new_account": _(" (new account)") if created else "",
+            "ip": get_client_ip(request),
+            "service": self.service_name,
+        }
+
+        self.log_success(request, success_message)
+
+        return user
+
+
+class DigiDBackend(BSNBackendMixin, BaseSaml2Backend):
     service_name = "DigiD"
     error_messages = dict(
         BaseSaml2Backend.error_messages,
-        **{"digid_no_bsn": _("Login failed due to no BSN being returned by DigiD."),}
+        **{
+            "digid_no_bsn": _("Login failed due to no BSN being returned by DigiD."),
+        }
     )
 
     def authenticate(self, request, digid=None, saml_art=None):
@@ -114,25 +143,8 @@ class DigiDBackend(BaseSaml2Backend):
 
         bsn = sectoral_number
 
-        if bsn == "":
-            self.log_error(request, self.error_messages["digid_no_bsn"])
-            return
-
-        created = False
-        try:
-            user = UserModel.digid_objects.get_by_bsn(bsn)
-        except UserModel.DoesNotExist:
-            user = UserModel.digid_objects.digid_create(bsn)
-            created = True
-
-        success_message = self.error_messages["login_success"] % {
-            "user": str(user),
-            "new_account": _(" (new account)") if created else "",
-            "ip": get_client_ip(request),
-            "service": self.service_name,
-        }
-
-        self.log_success(request, success_message)
+        # Produce a user
+        user = self.get_or_create_user_from_bsn(request, bsn)
 
         # DigiD requires a session of max 15 minutes. See DigiDCheck 2.2 T14 -- Sessieduur
         session_age = client.conf.get("session_age", None)
