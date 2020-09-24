@@ -8,6 +8,6 @@ from digid_eherkenning.mock.idp.views.digid import (
 app_name = "digid-mock"
 
 urlpatterns = [
-    url(r"^inloggen/?$", DigiDMockIDPLoginView.as_view(), name="login"),
-    url(r"^inloggen_ww/?$", DigiDMockIDPPasswordLoginView.as_view(), name="password"),
+    url(r"^inloggen/", DigiDMockIDPLoginView.as_view(), name="login"),
+    url(r"^inloggen_ww/", DigiDMockIDPPasswordLoginView.as_view(), name="password"),
 ]

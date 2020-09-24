@@ -1,4 +1,5 @@
 import logging
+import re
 
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
@@ -25,13 +26,11 @@ class DigiDBackend(BSNBackendMixin, BaseBackend):
         if bsn is None:
             return
 
-        # TODO unify the following login and user creation with the regular backend (since that is where we took this anyway)
-
         if bsn == "":
             self.log_error(request, self.error_messages["digid_no_bsn"])
             return
 
-        elif not bsn.isdigit():
+        elif not re.match(r"^[0-9]+$", bsn):
             self.log_error(request, self.error_messages["digid_num_bsn"])
             return
 
