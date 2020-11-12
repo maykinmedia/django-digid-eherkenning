@@ -160,6 +160,7 @@ class BaseSaml2Client:
                 "authnRequestsSigned": True,
                 "soapClientKey": conf["key_file"],
                 "soapClientCert": conf["cert_file"],
+                "soapClientPassphrase": conf.get('key_passphrase', None),
             },
             "debug": settings.DEBUG,
             # Service Provider Data that we are deploying.
@@ -190,6 +191,7 @@ class BaseSaml2Client:
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
                 "x509cert": open(conf["cert_file"], "r").read(),
                 "privateKey": open(conf["key_file"], "r").read(),
+                "privateKeyPassphrase": conf.get('key_passphrase', None),
             },
             "idp": idp_settings,
         }
