@@ -2,5 +2,5 @@ django<3
 django-choices>=1.6.0
 defusedxml>=0.5.0
 lxml>=4.4.0
--e git+https://github.com/maykinmedia/python3-saml.git@494f815bac3e58a6f754e697aa769f8570eb69b8#egg=python3_saml
+-e git+https://github.com/maykinmedia/python3-saml.git@8ceadcd4c8bbfaa925b2557871db29173f611452#egg=python3_saml
 pyopenssl>=19.1.0
