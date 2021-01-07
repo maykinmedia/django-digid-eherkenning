@@ -990,6 +990,36 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
 
     # TODO: Add authnfailed tests here as well.
 
+
+    @responses.activate
+    def test_no_rsin(self):
+        artifact_response_soap = etree.fromstring(self.artifact_response_soap)
+
+        # Remove the RSIN. In this scenario it is not returned by eHerkenning.
+        encrypted_id = get_saml_element(
+            artifact_response_soap,
+            "//saml:EncryptedID",
+        )
+        encrypted_id.getparent().remove(encrypted_id)
+
+        responses.add(
+            responses.POST,
+            "https://eh02.staging.iwelcome.nl/broker/ars/1.13",
+            body=etree.tostring(artifact_response_soap),
+            status=200,
+        )
+
+        url = (
+            reverse("eherkenning:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
+        )
+
+        response = self.client.get(url, follow=True)
+
+        messages = [str(m) for m in response.context['messages']]
+        self.assertIn('No RSIN returned by eHerkenning. Login to eHerkenning did not succeed.', messages)
+
     @responses.activate
     def test_user_cancels(self):
         """

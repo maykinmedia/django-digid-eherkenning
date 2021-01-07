@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from onelogin.saml2.utils import OneLogin_Saml2_ValidationError
 
 from .choices import SectorType
+from .exceptions import eHerkenningNoRSINError
 from .saml2.digid import DigiDClient
 from .saml2.eherkenning import eHerkenningClient
 from .utils import get_client_ip
@@ -156,14 +157,6 @@ class DigiDBackend(BSNBackendMixin, BaseSaml2Backend):
 
 class eHerkenningBackend(BaseSaml2Backend):
     service_name = "eHerkenning"
-    error_messages = dict(
-        BaseSaml2Backend.error_messages,
-        **{
-            "eherkenning_no_rsin": _(
-                "Login failed due to no RSIN being returned by eHerkenning."
-            )
-        }
-    )
 
     def authenticate(self, request, eherkenning=None, saml_art=None):
         if saml_art is None:
@@ -185,8 +178,8 @@ class eHerkenningBackend(BaseSaml2Backend):
             self.handle_validation_error(request)
             return
 
-        rsin = None
-        for attribute_value in attributes["urn:etoegang:core:LegalSubjectID"]:
+        rsin = ""
+        for attribute_value in attributes.get("urn:etoegang:core:LegalSubjectID", []):
             if not isinstance(attribute_value, dict):
                 continue
             name_id = attribute_value["NameID"]
@@ -198,8 +191,8 @@ class eHerkenningBackend(BaseSaml2Backend):
                 rsin = name_id["value"]
 
         if rsin == "":
-            self.log_error(request, self.error_messages["eherkenning_no_rsin"])
-            return
+            error_message = "Login failed due to no RSIN being returned by eHerkenning."
+            raise eHerkenningNoRSINError(error_message)
 
         created = False
         try:

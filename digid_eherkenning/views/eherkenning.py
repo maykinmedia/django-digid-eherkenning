@@ -6,6 +6,7 @@ from django.shortcuts import resolve_url
 from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView, View
 
+from ..exceptions import SAML2Error, eHerkenningNoRSINError
 from ..forms import SAML2Form
 from ..saml2.eherkenning import eHerkenningClient
 from .base import get_redirect_url
@@ -69,16 +70,32 @@ class eHerkenningAssertionConsumerServiceView(View):
         redirect_to = self.request.GET.get("RelayState")
         return get_redirect_url(self.request, redirect_to)
 
+    def handle_error(self, request, message):
+        messages.error(request, message)
+        login_url = self.get_login_url()
+        return HttpResponseRedirect(login_url)
+
     def get(self, request):
-        user = auth.authenticate(
-            request=request, eherkenning=True, saml_art=request.GET.get("SAMLart")
-        )
-        if user is None:
-            messages.error(
+        try:
+            user = auth.authenticate(
+                request=request, eherkenning=True, saml_art=request.GET.get("SAMLart")
+            )
+        except eHerkenningNoRSINError:
+            return self.handle_error(
+                request,
+                _(
+                    "No RSIN returned by eHerkenning. Login to eHerkenning did not succeed."
+                ),
+            )
+        except SAML2Error:
+            return self.handle_error(
                 request, _("Login to eHerkenning did not succeed. Please try again.")
             )
-            login_url = self.get_login_url()
-            return HttpResponseRedirect(login_url)
+
+        if user is None:
+            return self.handle_error(
+                request, _("Login to eHerkenning did not succeed. Please try again.")
+            )
 
         auth.login(request, user)
 
