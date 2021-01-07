@@ -7,11 +7,12 @@ from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse
 from django.utils import timezone
 
-from digid_eherkenning.utils import get_client_ip
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from onelogin.saml2.utils import OneLogin_Saml2_ValidationError
+
+from digid_eherkenning.utils import get_client_ip
 
 
 def create_saml2_request(base_url, request):
@@ -160,7 +161,7 @@ class BaseSaml2Client:
                 "authnRequestsSigned": True,
                 "soapClientKey": conf["key_file"],
                 "soapClientCert": conf["cert_file"],
-                "soapClientPassphrase": conf.get('key_passphrase', None),
+                "soapClientPassphrase": conf.get("key_passphrase", None),
             },
             "debug": settings.DEBUG,
             # Service Provider Data that we are deploying.
@@ -191,7 +192,7 @@ class BaseSaml2Client:
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
                 "x509cert": open(conf["cert_file"], "r").read(),
                 "privateKey": open(conf["key_file"], "r").read(),
-                "privateKeyPassphrase": conf.get('key_passphrase', None),
+                "privateKeyPassphrase": conf.get("key_passphrase", None),
             },
             "idp": idp_settings,
         }
