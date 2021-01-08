@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 
 from django.http import HttpResponseBadRequest
 from django.urls import reverse
-from django.views.generic import TemplateView, FormView
+from django.views.generic import FormView, TemplateView
 
 from digid_eherkenning.mock import conf
 from digid_eherkenning.mock.idp.forms import PasswordLoginForm
