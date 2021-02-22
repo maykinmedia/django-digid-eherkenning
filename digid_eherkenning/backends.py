@@ -39,7 +39,10 @@ class BaseBackend(ModelBackend):
         """
         General technical errors, are logged using this method.
         """
-        logger.exception(message)
+        if exception is not None:
+            logger.exception(message)
+        else:
+            logger.error(message)
 
     def log_auth_failed(self, request, message, exception=None):
         """
