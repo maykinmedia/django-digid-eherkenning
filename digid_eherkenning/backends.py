@@ -191,7 +191,7 @@ class eHerkenningBackend(BaseSaml2Backend):
 
         return kvk_numbers[0]
 
-    def get_or_create_user(self, saml_response, saml_attributes):
+    def get_or_create_user(self, request, saml_response, saml_attributes):
         rsin = self.get_rsin(saml_attributes)
         if rsin == "":
             error_message = "Login failed due to no RSIN being returned by eHerkenning."
@@ -203,6 +203,15 @@ class eHerkenningBackend(BaseSaml2Backend):
         except UserModel.DoesNotExist:
             user = UserModel.eherkenning_objects.eherkenning_create(rsin)
             created = True
+
+        success_message = self.error_messages["login_success"] % {
+            "user": str(user),
+            "user_info": " (new account)" if created else "",
+            "ip": get_client_ip(request),
+            "service": self.service_name,
+        }
+
+        self.log_success(request, success_message)
 
         return user, created
 
@@ -226,16 +235,7 @@ class eHerkenningBackend(BaseSaml2Backend):
             self.handle_validation_error(request)
             return
 
-        user, created = self.get_or_create_user(response, attributes)
-
-        success_message = self.error_messages["login_success"] % {
-            "user": str(user),
-            "new_account": " (new account)" if created else "",
-            "ip": get_client_ip(request),
-            "service": self.service_name,
-        }
-
-        self.log_success(request, success_message)
+        user, created = self.get_or_create_user(request, response, attributes)
 
         session_age = client.conf.get("session_age", None)
         if session_age is not None:
