@@ -153,9 +153,9 @@ def create_service_definition(
         ESC("HerkenningsmakelaarId", "00000003244440010000"),
     ]
 
-    for entity in entity_concerned_types_allowed:
+    for i, entity in enumerate(entity_concerned_types_allowed, start=1):
         args.append(
-            ESC("EntityConcernedTypesAllowed", entity),
+            ESC("EntityConcernedTypesAllowed", entity, setNumber=str(i)),
         )
 
     kwargs = {f"{{{ns}}}IsPublic": "true"}
