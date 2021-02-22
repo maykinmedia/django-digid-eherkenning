@@ -158,6 +158,51 @@ class DigiDBackend(BSNBackendMixin, BaseSaml2Backend):
 class eHerkenningBackend(BaseSaml2Backend):
     service_name = "eHerkenning"
 
+    def get_rsin(self, attributes):
+        rsin = ""
+        for attribute_value in attributes.get("urn:etoegang:core:LegalSubjectID", []):
+            if not isinstance(attribute_value, dict):
+                continue
+            name_id = attribute_value["NameID"]
+            if (
+                name_id
+                and name_id["NameQualifier"]
+                == "urn:etoegang:1.9:EntityConcernedID:RSIN"
+            ):
+                rsin = name_id["value"]
+        return rsin
+
+    def get_company_name(self, attributes):
+        company_names = attributes.get("urn:etoegang:1.11:attribute-represented:CompanyName", [])
+
+        return' '.join(company_names)
+
+    def get_kvk_number(self, attributes):
+        kvk_numbers = attributes.get("urn:etoegang:1.11:attribute-represented:KvKnr", [])
+
+        if len(kvk_numbers) > 1:
+            logger.error("More than 1 KVK-number returned.")
+        if len(kvk_numbers) == 0:
+            logger.error("No KVK-number returned.")
+            return ''
+
+        return kvk_numbers[0]
+
+    def get_or_create_user(self, saml_response, saml_attributes):
+        rsin = self.get_rsin(saml_attributes)
+        if rsin == "":
+            error_message = "Login failed due to no RSIN being returned by eHerkenning."
+            raise eHerkenningNoRSINError(error_message)
+
+        created = False
+        try:
+            user = UserModel.eherkenning_objects.get_by_rsin(rsin)
+        except UserModel.DoesNotExist:
+            user = UserModel.eherkenning_objects.eherkenning_create(rsin)
+            created = True
+
+        return user, created
+
     def authenticate(self, request, eherkenning=None, saml_art=None):
         if saml_art is None:
             return
@@ -178,28 +223,7 @@ class eHerkenningBackend(BaseSaml2Backend):
             self.handle_validation_error(request)
             return
 
-        rsin = ""
-        for attribute_value in attributes.get("urn:etoegang:core:LegalSubjectID", []):
-            if not isinstance(attribute_value, dict):
-                continue
-            name_id = attribute_value["NameID"]
-            if (
-                name_id
-                and name_id["NameQualifier"]
-                == "urn:etoegang:1.9:EntityConcernedID:RSIN"
-            ):
-                rsin = name_id["value"]
-
-        if rsin == "":
-            error_message = "Login failed due to no RSIN being returned by eHerkenning."
-            raise eHerkenningNoRSINError(error_message)
-
-        created = False
-        try:
-            user = UserModel.eherkenning_objects.get_by_rsin(rsin)
-        except UserModel.DoesNotExist:
-            user = UserModel.eherkenning_objects.eherkenning_create(rsin)
-            created = True
+        user, created = self.get_or_create_user(response, attributes)
 
         success_message = self.error_messages["login_success"] % {
             "user": str(user),
