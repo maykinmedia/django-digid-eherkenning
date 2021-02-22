@@ -28,7 +28,7 @@ class BaseBackend(ModelBackend):
             "A technical error occurred from %(ip)s during %(service)s login."
         ),
         "login_success": _(
-            "User %(user)s%(new_account)s from %(ip)s logged in using %(service)s"
+            "User %(user)s%(user_info)s from %(ip)s logged in using %(service)s"
         ),
     }
 
@@ -86,7 +86,7 @@ class BSNBackendMixin:
 
         success_message = self.error_messages["login_success"] % {
             "user": str(user),
-            "new_account": _(" (new account)") if created else "",
+            "user_info": _(" (new account)") if created else "",
             "ip": get_client_ip(request),
             "service": self.service_name,
         }
