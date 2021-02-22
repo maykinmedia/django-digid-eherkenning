@@ -161,19 +161,18 @@ class DigiDBackend(BSNBackendMixin, BaseSaml2Backend):
 class eHerkenningBackend(BaseSaml2Backend):
     service_name = "eHerkenning"
 
-    def get_rsin(self, attributes):
+    def get_legal_subject_id(self, attributes, name_qualifier):
         rsin = ""
         for attribute_value in attributes.get("urn:etoegang:core:LegalSubjectID", []):
             if not isinstance(attribute_value, dict):
                 continue
             name_id = attribute_value["NameID"]
-            if (
-                name_id
-                and name_id["NameQualifier"]
-                == "urn:etoegang:1.9:EntityConcernedID:RSIN"
-            ):
+            if (name_id and name_id["NameQualifier"] == name_qualifier):
                 rsin = name_id["value"]
         return rsin
+
+    def get_legal_subject_rsin(self, attributes):
+        return self.get_legal_subject_id(attributes, "urn:etoegang:1.9:EntityConcernedID:RSIN")
 
     def get_company_name(self, attributes):
         company_names = attributes.get("urn:etoegang:1.11:attribute-represented:CompanyName", [])
@@ -192,7 +191,7 @@ class eHerkenningBackend(BaseSaml2Backend):
         return kvk_numbers[0]
 
     def get_or_create_user(self, request, saml_response, saml_attributes):
-        rsin = self.get_rsin(saml_attributes)
+        rsin = self.get_legal_subject_rsin(saml_attributes)
         if rsin == "":
             error_message = "Login failed due to no RSIN being returned by eHerkenning."
             raise eHerkenningNoRSINError(error_message)
