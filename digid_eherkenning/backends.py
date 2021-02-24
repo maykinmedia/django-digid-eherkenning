@@ -171,6 +171,9 @@ class eHerkenningBackend(BaseSaml2Backend):
                 rsin = name_id["value"]
         return rsin
 
+    def get_legal_subject_kvk(self, attributes):
+        return self.get_legal_subject_id(attributes, "urn:etoegang:1.9:EntityConcernedID:KvKnr")
+
     def get_legal_subject_rsin(self, attributes):
         return self.get_legal_subject_id(attributes, "urn:etoegang:1.9:EntityConcernedID:RSIN")
 
