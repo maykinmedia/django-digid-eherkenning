@@ -154,6 +154,16 @@ class BaseSaml2Client:
             else _service_description
         )
 
+        requested_attributes = []
+        for requested_attribute in conf.get('requested_attributes', []):
+            if isinstance(requested_attribute, dict):
+                requested_attributes.append(requested_attribute)
+            else:
+                requested_attributes.append({
+                    'name': requested_attribute,
+                    'required': True,
+                })
+
         return {
             "strict": True,
             "security": {
@@ -183,10 +193,10 @@ class BaseSaml2Client:
                     "serviceDescription": service_description,
                     "requestedAttributes": [
                         {
-                            "name": attr,
-                            "isRequired": True,
+                            "name": attr['name'],
+                            "isRequired": True if attr['required'] else False,
                         }
-                        for attr in conf.get("requested_attributes")
+                        for attr in requested_attributes
                     ],
                 },
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
