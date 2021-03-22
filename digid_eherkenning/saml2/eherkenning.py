@@ -134,9 +134,8 @@ def create_service_provider(
     kwargs = {f"{{{ns}}}IsPublic": "true"}
     return ESC("ServiceProvider", *args, **kwargs)
 
-
 def create_service_definition(
-    service_uuid, service_name, service_description, loa, entity_concerned_types_allowed
+    service_uuid, service_name, service_description, loa, entity_concerned_types_allowed, requested_attributes
 ):
 
     service_name_elements = create_language_elements("ServiceName", service_name)
@@ -153,10 +152,35 @@ def create_service_definition(
         ESC("HerkenningsmakelaarId", "00000003244440010000"),
     ]
 
-    for i, entity in enumerate(entity_concerned_types_allowed, start=1):
+    for entity in entity_concerned_types_allowed:
+        assert isinstance(entity, dict)
+
+        kwargs = {}
+        set_number = entity.get('set_number')
+        if set_number:
+            kwargs['setNumber'] = set_number
         args.append(
-            ESC("EntityConcernedTypesAllowed", entity, setNumber=str(i)),
+            ESC("EntityConcernedTypesAllowed", entity['name'], **kwargs),
         )
+
+    for requested_attribute in requested_attributes:
+        if isinstance(requested_attribute, dict):
+            ra_kwargs = {}
+            if 'required' in requested_attribute:
+                ra_kwargs['isRequired'] = 'true' if requested_attribute['required'] else 'false'
+
+            ra_args = []
+            if 'purpose_statements' in requested_attribute:
+                ra_args += create_language_elements("PurposeStatement", service_name)
+
+            ra_kwargs['Name'] = requested_attribute['name']
+            args.append(
+                ESC("RequestedAttribute", *ra_args, **ra_kwargs),
+            )
+        else:
+            args.append(
+                ESC("RequestedAttribute", Name=requested_attribute),
+            )
 
     kwargs = {f"{{{ns}}}IsPublic": "true"}
     return ESC("ServiceDefinition", *args, **kwargs)
@@ -247,6 +271,7 @@ def create_service_catalogus(conf):
         "herkenningsmakelaars_id",
     )
     entity_concerned_types_allowed = conf.get("entity_concerned_types_allowed")
+    requested_attributes = conf.get("requested_attributes", [])
 
     signature = create_signature(sc_id)
     key_descriptor = create_key_descriptor(x509_certificate_content)
@@ -259,6 +284,7 @@ def create_service_catalogus(conf):
             service_description,
             service_loa,
             entity_concerned_types_allowed,
+            requested_attributes
         ),
         create_service_instance(
             service_id,
@@ -285,10 +311,6 @@ class eHerkenningClient(BaseSaml2Client):
     def __init__(self):
         conf = settings.EHERKENNING.copy()
         conf.setdefault("acs_path", reverse("eherkenning:acs"))
-        if "entity_concerned_types_allowed" in conf:
-            conf.setdefault(
-                "requested_attributes", conf["entity_concerned_types_allowed"]
-            )
 
         super().__init__(conf)
 
