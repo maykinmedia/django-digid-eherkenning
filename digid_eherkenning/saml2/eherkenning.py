@@ -331,6 +331,9 @@ class eHerkenningClient(BaseSaml2Client):
     def create_config(self, config_dict):
         config_dict["security"].update(
             {
+                # See comment in the python3-saml for in  OneLogin_Saml2_Response.validate_num_assertions (onelogin/saml2/response.py)
+                # for why we need this option.
+                "disableSignatureWrappingProtection": True,
                 # For eHerkenning, if the Metadata file expires, we sent them an update. So
                 # there is no need for an expiry date.
                 "metadataValidUntil": "",
