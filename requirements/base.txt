@@ -3,5 +3,5 @@ django-choices>=1.6.0
 defusedxml>=0.5.0
 lxml>=4.4.0
 # The branch where our changes are maintained is 'digid-eherkenning'
--e git+https://github.com/maykinmedia/python3-saml.git@d8be582fc916145de80890d826073a687f453bd6#egg=python3_saml
+-e git+https://github.com/maykinmedia/python3-saml.git@ba7c0b7cc1c1e2ca2da4ab6e24c8aa6a3e226dad#egg=python3_saml
 pyopenssl>=19.1.0
