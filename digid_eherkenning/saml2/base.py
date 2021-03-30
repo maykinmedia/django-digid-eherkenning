@@ -98,6 +98,19 @@ class BaseSaml2Client:
 
         return response
 
+    def handle_post_response(self, request):
+        saml2_request = create_saml2_request(self.conf["base_url"], request)
+
+        saml2_auth = OneLogin_Saml2_Auth(
+            saml2_request, old_settings=self.saml2_settings, custom_base_path=None
+        )
+
+        response = saml2_auth.post_response()
+
+        self.verify_saml2_response(response, get_client_ip(request))
+
+        return response
+
     def verify_saml2_response(self, response, client_ip_address):
         #
         # SAMLProf: 4.1.4.2 <Response> Usage
