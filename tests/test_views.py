@@ -803,6 +803,17 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
         #     '</ds:KeyInfo>'
         #     '</ds:Signature>'
         # )
+
+        # eHerkenning has a Advice element with more elements than this. But these elements are what
+        # broke python3-saml and for which I had to introduce "disableSignatureWrappingProtection" security setting.
+        self.advice = (
+            '<saml:Advice>'
+            '<saml:Assertion ID="bla" IssueInstant="2020-04-09T08:31:46Z" Version="2.0">'
+            "<saml:Issuer>urn:etoegang:HM:00000003520354760000:entities:9632</saml:Issuer>"
+            + self.bogus_signature.format(id='bla') +
+            '</saml:Assertion>'
+            '</saml:Advice>'
+        )
         self.assertion = (
             '<saml:Assertion ID="_ae28e39f-bf7a-32d5-9653-3ad07c0e911e" IssueInstant="2020-04-09T08:31:46Z" Version="2.0" xmlns:xacml-saml="urn:oasis:xacml:2.0:saml:assertion:schema:os">'
             "<saml:Issuer>urn:etoegang:HM:00000003520354760000:entities:9632</saml:Issuer>"
@@ -818,6 +829,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             "<saml:Audience>urn:etoegang:DV:0000000000000000001:entities:0002</saml:Audience>"
             "</saml:AudienceRestriction>"
             "</saml:Conditions>"
+            + self.advice +
             '<saml:AuthnStatement AuthnInstant="2020-05-06T10:50:14Z">'
             "<saml:AuthnContext>"
             "<saml:AuthnContextClassRef>urn:etoegang:core:assurance-class:loa3</saml:AuthnContextClassRef>"
