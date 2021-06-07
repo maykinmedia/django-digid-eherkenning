@@ -1044,7 +1044,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
         # when user cancels.
         assertion = get_saml_element(
             artifact_response_soap,
-            "//saml:Assertion",
+            "//samlp:Response/saml:Assertion",
         )
         assertion.getparent().remove(assertion)
 
