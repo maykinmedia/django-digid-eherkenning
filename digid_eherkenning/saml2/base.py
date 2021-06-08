@@ -56,6 +56,23 @@ class BaseSaml2Client:
     def create_metadata(self):
         return self.saml2_settings.get_sp_metadata()
 
+    def get_saml_metadata_path(self):
+        """
+        File is written to the current working directory by default.
+        """
+        date_string = timezone.now().date().isoformat()
+        return f"{self.cache_key_prefix}-metadata-{date_string}.xml"
+
+    def write_metadata(self):
+        """
+        Write SAML metadata to the path specified by get_saml_metadata_path.
+
+        :raises FileExistsError
+        """
+        metadata_content = self.create_metadata()
+        metadata_file = open(self.get_saml_metadata_path(), "xb")
+        metadata_file.write(metadata_content)
+
     def create_authn_request(self, request, return_to=None, **kwargs):
         saml2_request = create_saml2_request(self.conf["base_url"], request)
         saml2_auth = OneLogin_Saml2_Auth(
@@ -76,6 +93,19 @@ class BaseSaml2Client:
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
         response = saml2_auth.artifact_resolve(saml_art)
+
+        self.verify_saml2_response(response, get_client_ip(request))
+
+        return response
+
+    def handle_post_response(self, request):
+        saml2_request = create_saml2_request(self.conf["base_url"], request)
+
+        saml2_auth = OneLogin_Saml2_Auth(
+            saml2_request, old_settings=self.saml2_settings, custom_base_path=None
+        )
+
+        response = saml2_auth.post_response()
 
         self.verify_saml2_response(response, get_client_ip(request))
 

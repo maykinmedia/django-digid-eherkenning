@@ -314,9 +314,26 @@ class eHerkenningClient(BaseSaml2Client):
 
         super().__init__(conf)
 
+    def write_metadata(self):
+        """
+        Write the dienstencatalogus, in addition to the saml2 metadata to the
+        current working directory.
+
+        :raises FileExistsError
+        """
+        super().write_metadata()
+
+        service_catalogus = create_service_catalogus(settings.EHERKENNING)
+        dc_filename = f"eherkenning-dienstencatalogus-{date_string}.xml"
+        dc_file = open(dc_filename, "xb")
+        dc_file.write(service_catalogus)
+
     def create_config(self, config_dict):
         config_dict["security"].update(
             {
+                # See comment in the python3-saml for in  OneLogin_Saml2_Response.validate_num_assertions (onelogin/saml2/response.py)
+                # for why we need this option.
+                "disableSignatureWrappingProtection": True,
                 # For eHerkenning, if the Metadata file expires, we sent them an update. So
                 # there is no need for an expiry date.
                 "metadataValidUntil": "",
