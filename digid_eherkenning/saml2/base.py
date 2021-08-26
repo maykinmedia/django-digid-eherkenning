@@ -4,7 +4,6 @@ import urllib
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
-from django.urls import reverse
 from django.utils import timezone
 
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
@@ -199,6 +198,7 @@ class BaseSaml2Client:
             "security": {
                 "signMetadata": True,
                 "authnRequestsSigned": True,
+                "wantAssertionsSigned": conf.get("want_assertions_signed", False),
                 "soapClientKey": conf["key_file"],
                 "soapClientCert": conf["cert_file"],
                 "soapClientPassphrase": conf.get("key_passphrase", None),
