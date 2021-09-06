@@ -6,15 +6,17 @@ from uuid import uuid4
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
+from django.core.exceptions import ImproperlyConfigured
 
 from defusedxml.lxml import tostring
 from lxml.builder import ElementMaker
 from lxml.etree import Element
 from OpenSSL import crypto
+from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
-from .base import BaseSaml2Client
+from .base import BaseSaml2Client, get_service_name, get_service_description, get_requested_attributes
 
 namespaces = {
     "xs": "http://www.w3.org/2001/XMLSchema",
@@ -326,6 +328,29 @@ def create_service_catalogus(conf, validate=True):
     return catalogus
 
 
+def create_attribute_consuming_services(services: list) -> list:
+
+    attribute_consuming_services = []
+    for service in services:
+        service_name = get_service_name(service)
+        service_description = get_service_description(service)
+        requested_attributes = get_requested_attributes(service)
+        
+        attribute_consuming_services.append({
+            "index": service["attribute_consuming_service_index"],
+            "serviceName": service_name,
+            "serviceDescription": service_description,
+            "requestedAttributes": [
+                {
+                    "name": attr['name'],
+                    "isRequired": True if attr['required'] else False,
+                }
+                for attr in requested_attributes
+            ],
+        })
+    return attribute_consuming_services
+
+
 class eHerkenningClient(BaseSaml2Client):
     cache_key_prefix = "eherkenning"
     cache_timeout = 60 * 60  # 1 hour
@@ -353,6 +378,50 @@ class eHerkenningClient(BaseSaml2Client):
         dc_file.write(service_catalogus)
         dc_file.close()
 
+    def create_config_dict(self, conf):
+        try:
+            metadata_content = open(conf["metadata_file"], "r").read()
+        except FileNotFoundError:
+            raise ImproperlyConfigured(
+                f"The file: {conf['metadata_file']} could not be found. Please "
+                "specify an existing metadata in the conf['metadata_file'] setting."
+            )
+
+        idp_settings = OneLogin_Saml2_IdPMetadataParser.parse(
+            metadata_content, entity_id=conf["service_entity_id"]
+        )["idp"]
+
+        attribute_consuming_services = create_attribute_consuming_services(conf["services"])
+
+        return {
+            "strict": True,
+            "security": {
+                "signMetadata": True,
+                "authnRequestsSigned": True,
+                "soapClientKey": conf["key_file"],
+                "soapClientCert": conf["cert_file"],
+                "soapClientPassphrase": conf.get("key_passphrase", None),
+            },
+            "debug": settings.DEBUG,
+            # Service Provider Data that we are deploying.
+            "sp": {
+                # Identifier of the SP entity  (must be a URI)
+                "entityId": conf["entity_id"],
+                # Specifies info about where and how the <AuthnResponse> message MUST be
+                # returned to the requester, in this case our SP.
+                "assertionConsumerService": {
+                    "url": conf["base_url"] + conf["acs_path"],
+                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+                },
+                "attributeConsumingService": attribute_consuming_services[0],
+                "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+                "x509cert": open(conf["cert_file"], "r").read(),
+                "privateKey": open(conf["key_file"], "r").read(),
+                "privateKeyPassphrase": conf.get("key_passphrase", None),
+            },
+            "idp": idp_settings,
+        }
+
     def create_config(self, config_dict):
         config_dict["security"].update(
             {
@@ -365,7 +434,7 @@ class eHerkenningClient(BaseSaml2Client):
                 "metadataCacheDuration": "",
                 "requestedAuthnContextComparison": "minimum",
                 "requestedAuthnContext": [
-                    self.conf["service_loa"],
+                    self.conf["services"][0]["service_loa"],
                 ],
             }
         )

@@ -1,5 +1,5 @@
-import time
 import urllib
+from typing import List
 
 from django.conf import settings
 from django.core.cache import cache
@@ -36,6 +36,36 @@ def create_saml2_request(base_url, request):
         # 'lowercase_urlencoding': True,
         "query_string": request.META["QUERY_STRING"],
     }
+
+
+def get_service_name(conf: dict) -> str:
+    _service_name = conf.get("service_name")
+    return (
+        _service_name["en"] if isinstance(_service_name, dict) else _service_name
+    )
+
+
+def get_service_description(conf: dict) -> str:
+    _service_description = conf.get("service_description", "")
+    return (
+        _service_description["en"]
+        if isinstance(_service_description, dict)
+        else _service_description
+    )
+
+
+def get_requested_attributes(conf: dict) -> List[dict]:
+    requested_attributes = []
+    for requested_attribute in conf.get('requested_attributes', []):
+        if isinstance(requested_attribute, dict):
+            requested_attributes.append(requested_attribute)
+        else:
+            requested_attributes.append({
+                'name': requested_attribute,
+                'required': True,
+            })
+
+    return requested_attributes
 
 
 class BaseSaml2Client:
@@ -172,26 +202,9 @@ class BaseSaml2Client:
             metadata_content, entity_id=conf["service_entity_id"]
         )["idp"]
 
-        _service_name = conf.get("service_name")
-        service_name = (
-            _service_name["en"] if isinstance(_service_name, dict) else _service_name
-        )
-        _service_description = conf.get("service_description", "")
-        service_description = (
-            _service_description["en"]
-            if isinstance(_service_description, dict)
-            else _service_description
-        )
-
-        requested_attributes = []
-        for requested_attribute in conf.get('requested_attributes', []):
-            if isinstance(requested_attribute, dict):
-                requested_attributes.append(requested_attribute)
-            else:
-                requested_attributes.append({
-                    'name': requested_attribute,
-                    'required': True,
-                })
+        service_name = get_service_name(conf)
+        service_description = get_service_description(conf)
+        requested_attributes = get_requested_attributes(conf)
 
         return {
             "strict": True,
