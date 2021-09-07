@@ -102,12 +102,12 @@ class BaseSaml2Client:
         metadata_file = open(self.get_saml_metadata_path(), "xb")
         metadata_file.write(metadata_content)
 
-    def create_authn_request(self, request, return_to=None, **kwargs):
+    def create_authn_request(self, request, return_to=None, attr_consuming_service_index=None, **kwargs):
         saml2_request = create_saml2_request(self.conf["base_url"], request)
         saml2_auth = OneLogin_Saml2_Auth(
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
-        url, parameters = saml2_auth.login_post(return_to=return_to, **kwargs)
+        url, parameters = saml2_auth.login_post(return_to=return_to, attr_consuming_service_index=attr_consuming_service_index, **kwargs)
 
         # Save the request ID so we can verify that we've sent
         # it when we receive the Artifact/ACS response.

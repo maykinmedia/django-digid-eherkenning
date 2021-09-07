@@ -413,7 +413,7 @@ class eHerkenningClient(BaseSaml2Client):
                     "url": conf["base_url"] + conf["acs_path"],
                     "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                 },
-                "attributeConsumingService": attribute_consuming_services[0],
+                "attributeConsumingServices": attribute_consuming_services,
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
                 "x509cert": open(conf["cert_file"], "r").read(),
                 "privateKey": open(conf["key_file"], "r").read(),
@@ -440,7 +440,7 @@ class eHerkenningClient(BaseSaml2Client):
         )
         return super().create_config(config_dict)
 
-    def create_authn_request(self, request, return_to=None):
+    def create_authn_request(self, request, return_to=None, attr_consuming_service_index=None, **kwargs):
         return super().create_authn_request(
             request,
             return_to=return_to,
@@ -448,4 +448,5 @@ class eHerkenningClient(BaseSaml2Client):
             is_passive=False,
             set_nameid_policy=False,
             name_id_value_req=None,
+            attr_consuming_service_index=attr_consuming_service_index,
         )

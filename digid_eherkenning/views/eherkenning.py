@@ -1,6 +1,7 @@
+from typing import Optional
+
 from django.conf import settings
 from django.contrib import auth, messages
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.translation import gettext as _
@@ -24,6 +25,9 @@ class eHerkenningLoginView(TemplateView):
         redirect_to = self.request.GET.get("next", "")
         return get_redirect_url(self.request, redirect_to)
 
+    def get_attribute_consuming_service_index(self) -> Optional[str]:
+        attribute_consuming_service_index = self.request.GET.get("attr_consuming_service_index")
+        return attribute_consuming_service_index
     #
     # TODO: It might be a good idea to change this to a post-verb.
     # I can't think of any realy attack-vectors, but seems like a good
@@ -32,7 +36,10 @@ class eHerkenningLoginView(TemplateView):
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
         client = eHerkenningClient()
-        location, parameters = client.create_authn_request(self.request)
+        location, parameters = client.create_authn_request(
+            self.request,
+            attr_consuming_service_index=self.get_attribute_consuming_service_index()
+        )
 
         context_data.update(
             {
