@@ -6,13 +6,11 @@ from uuid import uuid4
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
-from django.core.exceptions import ImproperlyConfigured
 
 from defusedxml.lxml import tostring
 from lxml.builder import ElementMaker
 from lxml.etree import Element
 from OpenSSL import crypto
-from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
