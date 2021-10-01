@@ -202,6 +202,8 @@ class BaseSaml2Client:
                 "soapClientKey": conf["key_file"],
                 "soapClientCert": conf["cert_file"],
                 "soapClientPassphrase": conf.get("key_passphrase", None),
+                "signatureAlgorithm": conf.get("signature_algorithm"),
+                "digestAlgorithm": conf.get("digest_algorithm"),
             },
             "debug": settings.DEBUG,
             # Service Provider Data that we are deploying.
