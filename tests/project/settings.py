@@ -206,6 +206,22 @@ EHERKENNING = conf = {
     "service_entity_id": "urn:etoegang:HM:00000003520354760000:entities:9632",
     "entity_id": "urn:etoegang:DV:0000000000000000001:entities:0002",
     "login_url": reverse_lazy("admin:login"),
+    #
+    # ** Optional settings **
+    #
+
+    # "want_assertions_signed": True,
+    # "want_assertions_encrypted": True,
+    # "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+    # "technical_contact_person_telephone": "11111111111",
+    # "technical_contact_person_email": "test@example.com",
+    # "organization": {
+    #     "nl": {
+    #         "name": "maykin",
+    #         "displayname": "Maykin Media",
+    #         "url": "https://www.maykinmedia.nl"
+    #     }
+    # },
 }
 
 
