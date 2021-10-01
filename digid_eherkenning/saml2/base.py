@@ -55,7 +55,12 @@ def get_service_description(conf: dict) -> str:
 
 
 def get_requested_attributes(conf: dict) -> List[dict]:
-    requested_attributes = []
+    # There needs to be a RequestedAttribute element where the name is the ServiceID
+    # https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
+    requested_attributes = [{
+        "name": conf["entity_id"],
+        "required": False
+    }]
     for requested_attribute in conf.get('requested_attributes', []):
         if isinstance(requested_attribute, dict):
             requested_attributes.append(requested_attribute)
@@ -206,11 +211,12 @@ class BaseSaml2Client:
         service_description = get_service_description(conf)
         requested_attributes = get_requested_attributes(conf)
 
-        return {
+        setting_dict = {
             "strict": True,
             "security": {
                 "signMetadata": True,
                 "authnRequestsSigned": True,
+                "wantAssertionsEncrypted": conf.get("want_assertions_encrypted", False),
                 "wantAssertionsSigned": conf.get("want_assertions_signed", False),
                 "soapClientKey": conf["key_file"],
                 "soapClientCert": conf["cert_file"],
@@ -251,6 +257,22 @@ class BaseSaml2Client:
             },
             "idp": idp_settings,
         }
+
+        telephone = conf.get("technical_contact_person_telephone")
+        email = conf.get("technical_contact_person_email")
+        if telephone or email:
+            setting_dict["contactPerson"] = {
+                "technical": {
+                    "telephoneNumber": telephone,
+                    "emailAddress": email
+                }
+            }
+
+        organisation = conf.get("organization")
+        if organisation:
+            setting_dict["organization"] = organisation
+
+        return setting_dict
 
 
 class AuthnRequestStorage:
