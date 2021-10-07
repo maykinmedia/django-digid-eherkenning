@@ -233,7 +233,7 @@ class BaseSaml2Client:
                 # attributeConsumingService. nameFormat, attributeValue and
                 # friendlyName can be ommited
                 "attributeConsumingService": {
-                    "index": conf["attribute_consuming_service_index"],
+                    "index": conf.get("attribute_consuming_service_index", "1"),
                     "serviceName": service_name,
                     "serviceDescription": service_description,
                     "requestedAttributes": [

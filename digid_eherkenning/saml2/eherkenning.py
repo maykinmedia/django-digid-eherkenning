@@ -379,31 +379,10 @@ class eHerkenningClient(BaseSaml2Client):
         dc_file.close()
 
     def create_config_dict(self, conf):
-        try:
-            metadata_content = open(conf["metadata_file"], "r").read()
-        except FileNotFoundError:
-            raise ImproperlyConfigured(
-                f"The file: {conf['metadata_file']} could not be found. Please "
-                "specify an existing metadata in the conf['metadata_file'] setting."
-            )
-
-        idp_settings = OneLogin_Saml2_IdPMetadataParser.parse(
-            metadata_content, entity_id=conf["service_entity_id"]
-        )["idp"]
+        config_dict = super().create_config_dict(conf)
 
         attribute_consuming_services = create_attribute_consuming_services(conf["services"])
-
-        return {
-            "strict": True,
-            "security": {
-                "signMetadata": True,
-                "authnRequestsSigned": True,
-                "soapClientKey": conf["key_file"],
-                "soapClientCert": conf["cert_file"],
-                "soapClientPassphrase": conf.get("key_passphrase", None),
-            },
-            "debug": settings.DEBUG,
-            # Service Provider Data that we are deploying.
+        config_dict.update({
             "sp": {
                 # Identifier of the SP entity  (must be a URI)
                 "entityId": conf["entity_id"],
@@ -419,8 +398,8 @@ class eHerkenningClient(BaseSaml2Client):
                 "privateKey": open(conf["key_file"], "r").read(),
                 "privateKeyPassphrase": conf.get("key_passphrase", None),
             },
-            "idp": idp_settings,
-        }
+        })
+        return config_dict
 
     def create_config(self, config_dict):
         config_dict["security"].update(
