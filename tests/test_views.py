@@ -3,6 +3,7 @@ from base64 import b64decode, b64encode
 from hashlib import sha1
 from unittest import skip
 from unittest.mock import patch
+from furl import furl
 
 from django.conf import settings
 from django.contrib import auth
@@ -99,7 +100,6 @@ class DigidLoginViewTests(TestCase):
                 "Destination": "https://preprod1.digid.nl/saml/idp/request_authentication",
                 "ProtocolBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                 "AssertionConsumerServiceURL": "https://sp.example.nl/digid/acs/",
-                "AttributeConsumingServiceIndex": "1",
             },
         )
 
@@ -655,7 +655,6 @@ class eHerkenningLoginViewTests(TestCase):
                 "Destination": "https://eh01.staging.iwelcome.nl/broker/sso/1.13",
                 "ProtocolBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                 "AssertionConsumerServiceURL": "https://example.com/eherkenning/acs/",
-                "AttributeConsumingServiceIndex": "1",
             },
         )
 
@@ -728,6 +727,37 @@ class eHerkenningLoginViewTests(TestCase):
             ).decode("utf-8"),
         )
 
+    @freeze_time("2020-04-09T08:31:46Z")
+    @patch("onelogin.saml2.utils.uuid4")
+    def test_login_with_attribute_consuming_service_index(self, uuid_mock):
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
+        url = furl(reverse("eherkenning:login")).set(
+            {
+                "attr_consuming_service_index": "2"
+            }
+        )
+
+        response = self.client.get(url)
+
+        saml_request = b64decode(
+            response.context["form"].initial["SAMLRequest"].encode("utf-8")
+        )
+
+        tree = etree.fromstring(saml_request)
+
+        self.assertEqual(
+            tree.attrib,
+            {
+                "ID": "ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f",
+                "Version": "2.0",
+                "ForceAuthn": "true",
+                "IssueInstant": "2020-04-09T08:31:46Z",
+                "Destination": "https://eh01.staging.iwelcome.nl/broker/sso/1.13",
+                "ProtocolBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+                "AssertionConsumerServiceURL": "https://example.com/eherkenning/acs/",
+                "AttributeConsumingServiceIndex": "2",
+            },
+        )
 
 @freeze_time("2020-04-09T08:31:46Z")
 class eHerkenningAssertionConsumerServiceViewTests(TestCase):

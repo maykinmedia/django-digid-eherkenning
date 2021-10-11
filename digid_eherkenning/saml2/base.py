@@ -1,5 +1,5 @@
-import time
 import urllib
+from typing import List
 
 from django.conf import settings
 from django.core.cache import cache
@@ -38,6 +38,36 @@ def create_saml2_request(base_url, request):
     }
 
 
+def get_service_name(conf: dict) -> str:
+    _service_name = conf.get("service_name")
+    return (
+        _service_name["en"] if isinstance(_service_name, dict) else _service_name
+    )
+
+
+def get_service_description(conf: dict) -> str:
+    _service_description = conf.get("service_description", "")
+    return (
+        _service_description["en"]
+        if isinstance(_service_description, dict)
+        else _service_description
+    )
+
+
+def get_requested_attributes(conf: dict) -> List[dict]:
+    requested_attributes = []
+    for requested_attribute in conf.get('requested_attributes', []):
+        if isinstance(requested_attribute, dict):
+            requested_attributes.append(requested_attribute)
+        else:
+            requested_attributes.append({
+                'name': requested_attribute,
+                'required': True,
+            })
+
+    return requested_attributes
+
+
 class BaseSaml2Client:
     cache_key_prefix = "saml2_"
     cache_timeout = 60 * 60  # 1 hour
@@ -72,12 +102,12 @@ class BaseSaml2Client:
         metadata_file = open(self.get_saml_metadata_path(), "xb")
         metadata_file.write(metadata_content)
 
-    def create_authn_request(self, request, return_to=None, **kwargs):
+    def create_authn_request(self, request, return_to=None, attr_consuming_service_index=None, **kwargs):
         saml2_request = create_saml2_request(self.conf["base_url"], request)
         saml2_auth = OneLogin_Saml2_Auth(
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
-        url, parameters = saml2_auth.login_post(return_to=return_to, **kwargs)
+        url, parameters = saml2_auth.login_post(return_to=return_to, attr_consuming_service_index=attr_consuming_service_index, **kwargs)
 
         # Save the request ID so we can verify that we've sent
         # it when we receive the Artifact/ACS response.
@@ -172,26 +202,9 @@ class BaseSaml2Client:
             metadata_content, entity_id=conf["service_entity_id"]
         )["idp"]
 
-        _service_name = conf.get("service_name")
-        service_name = (
-            _service_name["en"] if isinstance(_service_name, dict) else _service_name
-        )
-        _service_description = conf.get("service_description", "")
-        service_description = (
-            _service_description["en"]
-            if isinstance(_service_description, dict)
-            else _service_description
-        )
-
-        requested_attributes = []
-        for requested_attribute in conf.get('requested_attributes', []):
-            if isinstance(requested_attribute, dict):
-                requested_attributes.append(requested_attribute)
-            else:
-                requested_attributes.append({
-                    'name': requested_attribute,
-                    'required': True,
-                })
+        service_name = get_service_name(conf)
+        service_description = get_service_description(conf)
+        requested_attributes = get_requested_attributes(conf)
 
         return {
             "strict": True,
@@ -220,7 +233,7 @@ class BaseSaml2Client:
                 # attributeConsumingService. nameFormat, attributeValue and
                 # friendlyName can be ommited
                 "attributeConsumingService": {
-                    "index": conf["attribute_consuming_service_index"],
+                    "index": conf.get("attribute_consuming_service_index", "1"),
                     "serviceName": service_name,
                     "serviceDescription": service_description,
                     "requestedAttributes": [

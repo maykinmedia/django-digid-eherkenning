@@ -1,10 +1,5 @@
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from django.utils import timezone
 from django.utils.module_loading import import_string
-
-from ...saml2.digid import DigiDClient
-from ...saml2.eherkenning import create_service_catalogus, eHerkenningClient
 
 
 class Command(BaseCommand):
@@ -20,7 +15,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        date_string = timezone.now().date().isoformat()
 
         client_classes = [import_string(c) for c in options.get('client_classes')]
 
