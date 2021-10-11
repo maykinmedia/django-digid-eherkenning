@@ -15,7 +15,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-
         client_classes = [import_string(c) for c in options.get('client_classes')]
 
         for ClientClass in client_classes:

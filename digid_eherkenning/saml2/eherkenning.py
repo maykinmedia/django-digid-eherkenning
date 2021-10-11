@@ -6,13 +6,11 @@ from uuid import uuid4
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
-from django.core.exceptions import ImproperlyConfigured
 
 from defusedxml.lxml import tostring
 from lxml.builder import ElementMaker
 from lxml.etree import Element
 from OpenSSL import crypto
-from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
@@ -328,13 +326,12 @@ def create_service_catalogus(conf, validate=True):
     return catalogus
 
 
-def create_attribute_consuming_services(services: list) -> list:
-
+def create_attribute_consuming_services(services: list, entity_id: str) -> list:
     attribute_consuming_services = []
     for service in services:
         service_name = get_service_name(service)
         service_description = get_service_description(service)
-        requested_attributes = get_requested_attributes(service)
+        requested_attributes = get_requested_attributes(service, entity_id)
         
         attribute_consuming_services.append({
             "index": service["attribute_consuming_service_index"],
@@ -381,7 +378,7 @@ class eHerkenningClient(BaseSaml2Client):
     def create_config_dict(self, conf):
         config_dict = super().create_config_dict(conf)
 
-        attribute_consuming_services = create_attribute_consuming_services(conf["services"])
+        attribute_consuming_services = create_attribute_consuming_services(conf["services"], conf["entity_id"])
         config_dict.update({
             "sp": {
                 # Identifier of the SP entity  (must be a URI)
