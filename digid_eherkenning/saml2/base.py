@@ -54,11 +54,14 @@ def get_service_description(conf: dict) -> str:
     )
 
 
-def get_requested_attributes(conf: dict) -> List[dict]:
+def get_requested_attributes(conf: dict, entity_id: str = None) -> List[dict]:
+    if not (conf.get("entity_id") or entity_id):
+        raise ImproperlyConfigured("No entity ID configured.")
+
     # There needs to be a RequestedAttribute element where the name is the ServiceID
     # https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
     requested_attributes = [{
-        "name": conf["entity_id"],
+        "name": conf.get("entity_id") or entity_id,
         "required": False
     }]
     for requested_attribute in conf.get('requested_attributes', []):
