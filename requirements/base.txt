@@ -3,5 +3,5 @@ django-choices>=1.6.0
 defusedxml>=0.5.0
 lxml>=4.4.0
 # The branch where our changes are maintained is 'maykin'
--e git+https://github.com/maykinmedia/python3-saml.git@4fd80b0cb991b4fcc427e7b3d08e8450ca858083#egg=python3_saml
+-e git+https://github.com/maykinmedia/python3-saml.git@a79c79a14ddfc5e6096036a2869d0ad2fcb70749#egg=python3_saml
 pyopenssl>=19.1.0
