@@ -1,3 +1,5 @@
+from typing import List
+
 import binascii
 from base64 import b64encode
 from io import BytesIO
@@ -14,7 +16,7 @@ from OpenSSL import crypto
 
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
-from .base import BaseSaml2Client, get_service_name, get_service_description, get_requested_attributes
+from .base import BaseSaml2Client, get_service_name, get_service_description
 
 namespaces = {
     "xs": "http://www.w3.org/2001/XMLSchema",
@@ -168,8 +170,10 @@ def create_service_definition(
                 ra_kwargs['isRequired'] = 'true' if requested_attribute['required'] else 'false'
 
             ra_args = []
-            if 'purpose_statements' in requested_attribute:
+            if not 'purpose_statements' in requested_attribute:
                 ra_args += create_language_elements("PurposeStatement", service_name)
+            else:
+                ra_args += create_language_elements("PurposeStatement", requested_attribute["purpose_statements"])
 
             ra_kwargs['Name'] = requested_attribute['name']
             args.append(
@@ -326,24 +330,44 @@ def create_service_catalogus(conf, validate=True):
     return catalogus
 
 
-def create_attribute_consuming_services(services: list) -> list:
+def get_metadata_eherkenning_requested_attributes(conf: dict, service_id: str) -> List[dict]:
+    # There needs to be a RequestedAttribute element where the name is the ServiceID
+    # https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
+    requested_attributes = [{
+        "name": service_id,
+        "isRequired": False
+    }]
+    for requested_attribute in conf.get('requested_attributes', []):
+        if isinstance(requested_attribute, dict):
+            requested_attributes.append({
+                "name": requested_attribute["name"],
+                "isRequired": requested_attribute["required"]
+            })
+        else:
+            requested_attributes.append({
+                'name': requested_attribute,
+                'isRequired': True,
+            })
+
+    return requested_attributes
+
+
+def create_attribute_consuming_services(conf: dict) -> list:
     attribute_consuming_services = []
-    for service in services:
+
+    for service in conf["services"]:
+        service_id = "urn:etoegang:DV:{}:services:{}".format(
+            conf["oin"], service["attribute_consuming_service_index"]
+        )
         service_name = get_service_name(service)
         service_description = get_service_description(service)
-        requested_attributes = get_requested_attributes(service)
+        requested_attributes = get_metadata_eherkenning_requested_attributes(service, service_id)
         
         attribute_consuming_services.append({
             "index": service["attribute_consuming_service_index"],
             "serviceName": service_name,
             "serviceDescription": service_description,
-            "requestedAttributes": [
-                {
-                    "name": attr['name'],
-                    "isRequired": True if attr['required'] else False,
-                }
-                for attr in requested_attributes
-            ],
+            "requestedAttributes": requested_attributes,
             "language": service.get("language", "nl")
         })
     return attribute_consuming_services
@@ -379,7 +403,7 @@ class eHerkenningClient(BaseSaml2Client):
     def create_config_dict(self, conf):
         config_dict = super().create_config_dict(conf)
 
-        attribute_consuming_services = create_attribute_consuming_services(conf["services"])
+        attribute_consuming_services = create_attribute_consuming_services(conf)
         config_dict.update({
             "sp": {
                 # Identifier of the SP entity  (must be a URI)
