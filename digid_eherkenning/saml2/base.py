@@ -103,6 +103,7 @@ class BaseSaml2Client:
         metadata_content = self.create_metadata()
         metadata_file = open(self.get_saml_metadata_path(), "xb")
         metadata_file.write(metadata_content)
+        metadata_file.close()
 
     def create_authn_request(self, request, return_to=None, attr_consuming_service_index=None, **kwargs):
         saml2_request = create_saml2_request(self.conf["base_url"], request)
@@ -233,8 +234,8 @@ class BaseSaml2Client:
                     "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                 },
                 # If you need to specify requested attributes, set a
-                # attributeConsumingService. nameFormat, attributeValue and
-                # friendlyName can be ommited
+                # attributeConsumingService per service. nameFormat, attributeValue and
+                # friendlyName can be omitted
                 "attributeConsumingService": {
                     "index": conf.get("attribute_consuming_service_index", "1"),
                     "serviceName": service_name,
