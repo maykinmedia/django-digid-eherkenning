@@ -207,3 +207,75 @@ class CreateDienstCatalogusTests(SimpleTestCase):
         self.assertIsNotNone(
             service_instance_nodes[1].find(".//esc:Classifiers", namespaces=namespace)
         )
+
+    def test_catalogus_with_requested_attributes_with_purpose_statement(self):
+        conf = settings.EHERKENNING.copy()
+        conf.setdefault("acs_path", reverse("eherkenning:acs"))
+        conf["services"][0]["requested_attributes"] = [{
+            "name": "Test Attribute",
+            "required": False,
+            "purpose_statements": {
+                "nl": "Voor testen.",
+                "en": "For testing.",
+            }
+        }]
+        conf["services"] = conf["services"][:-1]
+
+        catalogus = create_service_catalogus(conf)
+
+        tree = etree.XML(catalogus)
+        namespace = {
+            "esc": "urn:etoegang:1.13:service-catalog",
+        }
+
+        requested_attribute_nodes = tree.findall(
+            ".//esc:RequestedAttribute",
+            namespaces=namespace,
+        )
+        self.assertEqual(1, len(requested_attribute_nodes))
+
+        purpose_statement_nodes = tree.findall(
+            ".//esc:PurposeStatement",
+            namespaces=namespace,
+        )
+        self.assertEqual(2, len(purpose_statement_nodes))
+        self.assertEqual("Voor testen.", purpose_statement_nodes[0].text)
+        self.assertEqual("For testing.", purpose_statement_nodes[1].text)
+        self.assertEqual("nl", purpose_statement_nodes[0].attrib["{http://www.w3.org/XML/1998/namespace}lang"])
+        self.assertEqual("en", purpose_statement_nodes[1].attrib["{http://www.w3.org/XML/1998/namespace}lang"])
+
+    def test_catalogus_with_requested_attributes_without_purpose_statement(self):
+        conf = settings.EHERKENNING.copy()
+        conf.setdefault("acs_path", reverse("eherkenning:acs"))
+        conf["services"][0]["requested_attributes"] = [{
+            "name": "Test Attribute",
+            "required": False,
+        }]
+        conf["services"][0]["service_name"] = {
+            "nl": "Voorbeeld dienst",
+            "en": "Example service",
+        }
+        conf["services"] = conf["services"][:-1]
+
+        catalogus = create_service_catalogus(conf)
+
+        tree = etree.XML(catalogus)
+        namespace = {
+            "esc": "urn:etoegang:1.13:service-catalog",
+        }
+
+        requested_attribute_nodes = tree.findall(
+            ".//esc:RequestedAttribute",
+            namespaces=namespace,
+        )
+        self.assertEqual(1, len(requested_attribute_nodes))
+
+        purpose_statement_nodes = tree.findall(
+            ".//esc:PurposeStatement",
+            namespaces=namespace,
+        )
+        self.assertEqual(2, len(purpose_statement_nodes))
+        self.assertEqual("Voorbeeld dienst", purpose_statement_nodes[0].text)
+        self.assertEqual("Example service", purpose_statement_nodes[1].text)
+        self.assertEqual("nl", purpose_statement_nodes[0].attrib["{http://www.w3.org/XML/1998/namespace}lang"])
+        self.assertEqual("en", purpose_statement_nodes[1].attrib["{http://www.w3.org/XML/1998/namespace}lang"])

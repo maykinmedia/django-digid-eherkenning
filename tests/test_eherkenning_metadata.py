@@ -10,7 +10,7 @@ class EHerkenningMetadataTests(TestCase):
         conf = settings.EHERKENNING.copy()
         conf.setdefault("acs_path", reverse("eherkenning:acs"))
         conf["services"][0]["requested_attributes"] = [{
-            "name": "urn:etoegang:DV:00000001809266660000:services:9050",
+            "name": "Test Attribute",
             "required": False
         }]
         conf["services"] = conf["services"][:-1]
@@ -27,20 +27,25 @@ class EHerkenningMetadataTests(TestCase):
             ".//md:AttributeConsumingService",
             namespaces=namespace,
         )
-        requested_attribute_node = attribute_consuming_service_node.find(
+        requested_attribute_nodes = attribute_consuming_service_node.findall(
             ".//md:RequestedAttribute",
             namespaces=namespace,
         )
+        self.assertEqual(2, len(requested_attribute_nodes))
 
-        self.assertIsNotNone(requested_attribute_node)
-        self.assertEqual("urn:etoegang:DV:00000001809266660000:services:9050", requested_attribute_node.attrib["Name"])
+        default_requested_attribute_node = requested_attribute_nodes[0]
+        self.assertEqual("urn:etoegang:DV:00000000000000000000:services:1", default_requested_attribute_node.attrib["Name"])
+        self.assertNotIn("isRequired", default_requested_attribute_node.attrib)
+
+        requested_attribute_node = requested_attribute_nodes[1]
+        self.assertEqual("Test Attribute", requested_attribute_node.attrib["Name"])
         self.assertNotIn("isRequired", requested_attribute_node.attrib)
 
     def test_attribute_consuming_services_with_required_requested_attribute(self):
         conf = settings.EHERKENNING.copy()
         conf.setdefault("acs_path", reverse("eherkenning:acs"))
         conf["services"][0]["requested_attributes"] = [{
-            "name": "urn:etoegang:DV:00000001809266660000:services:9050",
+            "name": "Test Attribute",
             "required": True
         }]
         conf["services"] = conf["services"][:-1]
@@ -58,13 +63,18 @@ class EHerkenningMetadataTests(TestCase):
             ".//md:AttributeConsumingService",
             namespaces=namespace,
         )
-        requested_attribute_node = attribute_consuming_service_node.find(
+        requested_attribute_nodes = attribute_consuming_service_node.findall(
             ".//md:RequestedAttribute",
             namespaces=namespace,
         )
+        self.assertEqual(2, len(requested_attribute_nodes))
 
-        self.assertIsNotNone(requested_attribute_node)
-        self.assertEqual("urn:etoegang:DV:00000001809266660000:services:9050", requested_attribute_node.attrib["Name"])
+        default_requested_attribute_node = requested_attribute_nodes[0]
+        self.assertEqual("urn:etoegang:DV:00000000000000000000:services:1", default_requested_attribute_node.attrib["Name"])
+        self.assertNotIn("isRequired", default_requested_attribute_node.attrib)
+
+        requested_attribute_node = requested_attribute_nodes[1]
+        self.assertEqual("Test Attribute", requested_attribute_node.attrib["Name"])
         self.assertEqual("true", requested_attribute_node.attrib["isRequired"])
 
     def test_attribute_consuming_services_dutch(self):
@@ -93,6 +103,11 @@ class EHerkenningMetadataTests(TestCase):
             ".//md:ServiceDescription",
             namespaces=namespace,
         )
+        requested_attribute_node = attribute_consuming_service_node.find(
+            ".//md:RequestedAttribute",
+            namespaces=namespace,
+        )
 
+        self.assertEqual("urn:etoegang:DV:00000000000000000000:services:1", requested_attribute_node.attrib["Name"])
         self.assertEqual("nl", service_name_node.attrib["{http://www.w3.org/XML/1998/namespace}lang"])
         self.assertEqual("nl", service_description_node.attrib["{http://www.w3.org/XML/1998/namespace}lang"])
