@@ -279,3 +279,79 @@ class CreateDienstCatalogusTests(SimpleTestCase):
         self.assertEqual("Example service", purpose_statement_nodes[1].text)
         self.assertEqual("nl", purpose_statement_nodes[0].attrib["{http://www.w3.org/XML/1998/namespace}lang"])
         self.assertEqual("en", purpose_statement_nodes[1].attrib["{http://www.w3.org/XML/1998/namespace}lang"])
+
+    def test_makelaar_oin_is_configuratble(self):
+        conf = {
+            "oin": "00000000000000000000",
+            "organisation_name": "Example",
+            "services": [
+                {
+                    "service_uuid": "005f18b8-0114-4a1d-963a-ee8e80a08f3f",
+                    "service_name": "Example eHerkenning",
+                    "service_loa": "urn:etoegang:core:assurance-class:loa3",
+                    "attribute_consuming_service_index": "1",
+                    "service_instance_uuid": "54efe0fe-c1a7-42da-9612-d84bf3c8fb07",
+                    "service_description": "Description eHerkenning",
+                    "service_url": "",
+                    "privacy_policy_url": "",
+                    "herkenningsmakelaars_id": "00000000000000000123",
+                    "requested_attributes": [],
+                    "entity_concerned_types_allowed": [
+                        {
+                            "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
+                        },
+                    ],
+                },
+                {
+                    "service_uuid": "2e167de1-8bef-4d5a-ab48-8fa020e9e631",
+                    "service_name": "Example eIDAS",
+                    "service_loa": "urn:etoegang:core:assurance-class:loa3",
+                    "attribute_consuming_service_index": "2",
+                    "service_instance_uuid": "9ba1b0ee-c0d3-437e-87ac-f577098c7e15",
+                    "service_description": "Description eIDAS",
+                    "service_url": "",
+                    "privacy_policy_url": "",
+                    "herkenningsmakelaars_id": "00000000000000000123",
+                    "requested_attributes": [],
+                    "entity_concerned_types_allowed": [
+                        {
+                            "name": "urn:etoegang:1.9:EntityConcernedID:Pseudo",
+                        },
+                    ],
+                    "classifiers": ["eIDAS-inbound"],
+                },
+            ],
+            "service_index": "1",
+            "key_file": os.path.join(
+                settings.BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key"
+            ),
+            "cert_file": os.path.join(
+                settings.BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem"
+            ),
+            # Also used as entity ID
+            "base_url": "https://example.com",
+            "metadata_file": os.path.join(
+                settings.BASE_DIR, "files", "eherkenning", "metadata"
+            ),
+            "service_entity_id": "urn:etoegang:HM:00000000000000000123:entities:0001",
+            "entity_id": "urn:etoegang:DV:0000000000000000001:entities:0002",
+            "login_url": reverse("admin:login"),
+        }
+
+        catalogus = create_service_catalogus(conf, validate=False)
+
+        # Parse XML
+        tree = etree.XML(catalogus)
+        namespace = {
+            "esc": "urn:etoegang:1.13:service-catalog",
+            "md": "urn:oasis:names:tc:SAML:2.0:metadata",
+        }
+
+        makelaar_id_nodes = tree.findall(
+            ".//esc:HerkenningsmakelaarId",
+            namespaces=namespace,
+        )
+
+        for node in makelaar_id_nodes:
+            self.assertEqual("00000000000000000123", node.text)
+
