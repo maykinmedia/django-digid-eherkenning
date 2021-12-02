@@ -135,7 +135,13 @@ def create_service_provider(
 
 
 def create_service_definition(
-    service_uuid, service_name, service_description, loa, entity_concerned_types_allowed, requested_attributes
+    service_uuid,
+    service_name,
+    service_description,
+    loa,
+    entity_concerned_types_allowed,
+    requested_attributes,
+    makelaar_oin
 ):
 
     service_name_elements = create_language_elements("ServiceName", service_name)
@@ -149,7 +155,7 @@ def create_service_definition(
         *service_name_elements,
         *service_description_elements,
         SAML("AuthnContextClassRef", loa),
-        ESC("HerkenningsmakelaarId", "00000003244440010000"),
+        ESC("HerkenningsmakelaarId", makelaar_oin),
     ]
 
     for entity in entity_concerned_types_allowed:
@@ -298,7 +304,8 @@ def create_service_catalogus(conf, validate=True):
             service_description,
             service_loa,
             entity_concerned_types_allowed,
-            requested_attributes
+            requested_attributes,
+            herkenningsmakelaars_id,
         )
         service_instance = create_service_instance(
             service_id,
