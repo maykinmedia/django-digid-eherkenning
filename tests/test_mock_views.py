@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings, modify_settings
 from django.urls import reverse, reverse_lazy
 
+from furl import furl
+
 
 class DigidMockTestCase(TestCase):
     def assertNoDigidURLS(self, response):
@@ -127,6 +129,30 @@ class PasswordLoginViewTests(DigidMockTestCase):
         self.assertContains(response, "Je bent ingelogged als gebruiker")
         self.assertContains(response, "<code>{}</code>".format(str(user)))
         self.assertContains(response, "<code>123456789</code>")
+
+    def test_post_redirect_retains_acs_querystring_params(self):
+        url = reverse("digid-mock:password")
+        params = {
+            "acs": f"{reverse('digid:acs')}?foo=bar",
+            "next": reverse("test-success"),
+            "cancel": reverse("test-index"),
+        }
+        url = f"{url}?{urlencode(params)}"
+
+        data = {
+            "auth_name": "123456789",
+            "auth_pass": "bar",
+        }
+        # post our password to the IDP
+        response = self.client.post(url, data, follow=False)
+
+        # it will redirect to our ACS
+        expected_redirect = furl(reverse("digid:acs")).set({
+            "foo": "bar",
+            "bsn": "123456789",
+            "next": reverse('test-success'),
+        })
+        self.assertRedirects(response, str(expected_redirect), fetch_redirect_response=False)
 
     def test_backend_rejects_non_numerical_name(self):
         url = reverse("digid-mock:password")

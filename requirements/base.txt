@@ -5,3 +5,4 @@ lxml>=4.4.0
 # The branch where our changes are maintained is 'maykin'
 -e git+https://github.com/maykinmedia/python3-saml.git@a79c79a14ddfc5e6096036a2869d0ad2fcb70749#egg=python3_saml
 pyopenssl>=19.1.0
+furl==2.1.3
