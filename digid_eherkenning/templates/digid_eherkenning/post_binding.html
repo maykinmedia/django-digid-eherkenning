@@ -1,13 +1,10 @@
+{% load staticfiles %}
 <html>
     <head>
         <title>Ga naar DigID</title>
     </head>
     <body>
-        <script type="text/javascript">
-            window.onload = function(){
-                document.login.submit();
-            };
-        </script>
+        <script src="{% static 'login_submit.js' %}"></script>
         <form method="post" action="{{ url }}" name="login">
             {{ form.as_p }}
             <input type="submit" value="Ga naar DigID" />
