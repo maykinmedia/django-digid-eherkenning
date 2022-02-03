@@ -47,6 +47,27 @@ Additionally add the URLs for the mock IDP service to run in the same runserver 
 
 For settings to control mock behaviour see digid_eherkenning/mock/config.py
 
+Generating the DigiD metadata
+=============================
+
+The metadata for DigiD can be generated with the following command:
+
+```bash
+python manage.py generate_digid_metadata --want_assertions_encrypted --want_assertions_signed \
+--key_file /path/test.key --cert_file /path/test.certificate \
+--signature_algorithm "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" --digest_algorithm "http://www.w3.org/2001/04/xmlenc#sha256" \
+--entity_id http://test-url.nl --base_url http://test-url.nl --service_name "Test name" \
+--service_description "Test description" --attribute_consuming_service_index 9050
+--technical_contact_person_telephone 06123123123 --technical_contact_person_email test@test.nl
+--organization_name "Test organisation" --organization_url http://test-organisation.nl
+```
+
+For information about each option, use
+
+```bash
+python manage.py generate_digid_metadata --help
+```
+
 
 Other SAML2 implementations
 ===========================
