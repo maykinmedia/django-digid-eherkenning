@@ -13,7 +13,7 @@ NAME_SPACES = {
 }
 
 
-class DigidMetadataTests(TestCase):
+class DigidMetadataManagementCommandTests(TestCase):
     def test_generate_metadata_all_options_specified(self):
         stdout = StringIO()
 
