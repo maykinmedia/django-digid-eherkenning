@@ -84,6 +84,17 @@ For information about each option, use
 python manage.py generate_eherkenning_metadata --help
 ```
 
+To generate the dienstcatalogus:
+
+```bash
+python manage.py generate_eherkenning_dienstcatalogus  \
+--key_file /path/test.key --cert_file /path/test.certificate \
+--entity_id http://test-url.nl --base_url http://test-url.nl --service_name "Test name" \
+--service_description "Test description" --eh_attribute_consuming_service_index 9052 \
+--eidas_attribute_consuming_service_index 9053 --oin 00000001112223330000 \
+--privacy_policy http://test-url.nl/privacy --makelaar_id 00000003332223330000 --organization_name "Test Organisation"
+```
+
 
 Other SAML2 implementations
 ===========================
