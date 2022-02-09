@@ -39,7 +39,7 @@ def create_saml2_request(base_url, request):
 
 
 def get_service_name(conf: dict) -> str:
-    _service_name = conf.get("service_name")
+    _service_name = conf.get("service_name", "")
     return (
         _service_name["en"] if isinstance(_service_name, dict) else _service_name
     )
