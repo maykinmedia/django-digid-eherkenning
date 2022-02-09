@@ -50,6 +50,12 @@ class Command(SamlMetadataBaseCommand):
             help="The OIN of the company providing the service.",
             default=None,
         )
+        parser.add_argument(
+            "--no_eidas",
+            action="store_true",
+            help="If True, then the service catalogue will contain only the eHerkenning service. Defaults to False.",
+            default=False,
+        )
 
     def get_filename(self):
         date_string = timezone.now().date().isoformat()
@@ -148,6 +154,11 @@ class Command(SamlMetadataBaseCommand):
                     "url": options["organization_url"],
                 }
             }
+
+        if options["no_eidas"]:
+            setting_dict["sp"]["attributeConsumingServices"] = setting_dict["sp"][
+                "attributeConsumingServices"
+            ][:-1]
 
         saml2_settings = OneLogin_Saml2_Settings(setting_dict, sp_validation_only=True)
         return saml2_settings.get_sp_metadata()

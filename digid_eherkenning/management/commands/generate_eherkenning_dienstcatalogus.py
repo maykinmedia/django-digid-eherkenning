@@ -103,6 +103,9 @@ def generate_dienst_catalogus(options):
         ],
     }
 
+    if options["no_eidas"]:
+        settings["services"] = settings["services"][:-1]
+
     return create_service_catalogus(settings)
 
 
@@ -186,6 +189,12 @@ class Command(BaseCommand):
             action="store",
             help="Attribute consuming service index for the eHerkenning service, defaults to 9052",
             default="9052",
+        )
+        parser.add_argument(
+            "--no_eidas",
+            action="store_true",
+            help="If True, then the service catalogue will contain only the eHerkenning service. Defaults to False.",
+            default=False,
         )
         parser.add_argument(
             "--eidas_attribute_consuming_service_index",
