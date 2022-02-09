@@ -385,3 +385,62 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
         self.assertIsNone(organisation_name_node)
         self.assertIsNone(organisation_display_node)
         self.assertIsNone(organisation_url_node)
+
+    def test_no_eidas_service(self):
+        stdout = StringIO()
+
+        call_command(
+            "generate_eherkenning_metadata",
+            stdout=stdout,
+            **{
+                "want_assertions_encrypted": True,
+                "want_assertions_signed": True,
+                "key_file": settings.DIGID["key_file"],
+                "cert_file": settings.DIGID["cert_file"],
+                "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+                "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
+                "entity_id": "http://test-entity.id",
+                "base_url": "http://test-entity.id",
+                "eh_attribute_consuming_service_index": "9050",
+                "oin": "00000001112223330000",
+                "no_eidas": True,
+                "service_name": "Test Service Name",
+                "service_description": "Test Service Description",
+                "technical_contact_person_telephone": "06123123123",
+                "technical_contact_person_email": "test@test.nl",
+                "organization_name": "Test organisation",
+                "organization_url": "http://test-organisation.nl",
+                "test": True,
+            }
+        )
+
+        stdout.seek(0)
+        output = stdout.read()
+        entity_descriptor_node = etree.XML(output)
+
+        attribute_consuming_service_nodes = entity_descriptor_node.findall(
+            ".//md:AttributeConsumingService",
+            namespaces=NAME_SPACES,
+        )
+        self.assertEqual(1, len(attribute_consuming_service_nodes))
+
+        eh_attribute_consuming_service_node = attribute_consuming_service_nodes[0]
+
+        self.assertEqual(
+            "urn:etoegang:DV:00000001112223330000:services:9050",
+            eh_attribute_consuming_service_node.find(
+                ".//md:RequestedAttribute", namespaces=NAME_SPACES
+            ).attrib["Name"],
+        )
+        self.assertEqual(
+            "Test Service Name",
+            eh_attribute_consuming_service_node.find(
+                ".//md:ServiceName", namespaces=NAME_SPACES
+            ).text,
+        )
+        self.assertEqual(
+            "Test Service Description",
+            eh_attribute_consuming_service_node.find(
+                ".//md:ServiceDescription", namespaces=NAME_SPACES
+            ).text,
+        )
