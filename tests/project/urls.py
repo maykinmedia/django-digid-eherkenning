@@ -1,8 +1,8 @@
 from django.contrib import admin
-from django.conf.urls import url, include
+from django.urls import include, path
 
 urlpatterns = [
-    url("digid/", include("digid_eherkenning.digid_urls")),
-    url("eherkenning/", include("digid_eherkenning.eherkenning_urls")),
-    url("admin/", admin.site.urls),
+    path("digid/", include("digid_eherkenning.digid_urls")),
+    path("eherkenning/", include("digid_eherkenning.eherkenning_urls")),
+    path("admin/", admin.site.urls),
 ]
