@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from onelogin.saml2.utils import OneLogin_Saml2_ValidationError
 
 from .choices import SectorType
+from .exceptions import eHerkenningNoRSINError
 from .saml2.digid import DigiDClient
 from .saml2.eherkenning import eHerkenningClient
 from .utils import get_client_ip
@@ -27,7 +28,7 @@ class BaseBackend(ModelBackend):
             "A technical error occurred from %(ip)s during %(service)s login."
         ),
         "login_success": _(
-            "User %(user)s%(new_account)s from %(ip)s logged in using %(service)s"
+            "User %(user)s%(user_info)s from %(ip)s logged in using %(service)s"
         ),
     }
 
@@ -38,7 +39,10 @@ class BaseBackend(ModelBackend):
         """
         General technical errors, are logged using this method.
         """
-        logger.exception(message)
+        if exception is not None:
+            logger.exception(message)
+        else:
+            logger.error(message)
 
     def log_auth_failed(self, request, message, exception=None):
         """
@@ -82,7 +86,7 @@ class BSNBackendMixin:
 
         success_message = self.error_messages["login_success"] % {
             "user": str(user),
-            "new_account": _(" (new account)") if created else "",
+            "user_info": _(" (new account)") if created else "",
             "ip": get_client_ip(request),
             "service": self.service_name,
         }
@@ -156,14 +160,70 @@ class DigiDBackend(BSNBackendMixin, BaseSaml2Backend):
 
 class eHerkenningBackend(BaseSaml2Backend):
     service_name = "eHerkenning"
-    error_messages = dict(
-        BaseSaml2Backend.error_messages,
-        **{
-            "eherkenning_no_rsin": _(
-                "Login failed due to no RSIN being returned by eHerkenning."
-            )
+
+    def get_legal_subject_id(self, attributes, name_qualifier):
+        rsin = ""
+        for attribute_value in attributes.get("urn:etoegang:core:LegalSubjectID", []):
+            if not isinstance(attribute_value, dict):
+                continue
+            name_id = attribute_value["NameID"]
+            if name_id and name_id["NameQualifier"] == name_qualifier:
+                rsin = name_id["value"]
+        return rsin
+
+    def get_legal_subject_kvk(self, attributes):
+        return self.get_legal_subject_id(
+            attributes, "urn:etoegang:1.9:EntityConcernedID:KvKnr"
+        )
+
+    def get_legal_subject_rsin(self, attributes):
+        return self.get_legal_subject_id(
+            attributes, "urn:etoegang:1.9:EntityConcernedID:RSIN"
+        )
+
+    def get_company_name(self, attributes):
+        company_names = attributes.get(
+            "urn:etoegang:1.11:attribute-represented:CompanyName", []
+        )
+
+        return " ".join(company_names)
+
+    def get_kvk_number(self, attributes):
+        kvk_numbers = attributes.get(
+            "urn:etoegang:1.11:attribute-represented:KvKnr", []
+        )
+
+        if len(kvk_numbers) > 1:
+            logger.error("More than 1 KVK-number returned.")
+        if len(kvk_numbers) == 0:
+            logger.error("No KVK-number returned.")
+            return ""
+
+        return kvk_numbers[0]
+
+    def get_or_create_user(self, request, saml_response, saml_attributes):
+        rsin = self.get_legal_subject_rsin(saml_attributes)
+        if rsin == "":
+            error_message = "Login failed due to no RSIN being returned by eHerkenning."
+            raise eHerkenningNoRSINError(error_message)
+
+        created = False
+        try:
+            user = UserModel.eherkenning_objects.get_by_rsin(rsin)
+        except UserModel.DoesNotExist:
+            user = UserModel.eherkenning_objects.eherkenning_create(rsin)
+            created = True
+
+        success_message = self.error_messages["login_success"] % {
+            "user": str(user),
+            "user_info": " (new account)" if created else "",
+            "ip": get_client_ip(request),
+            "service": self.service_name,
         }
-    )
+
+        self.log_success(request, success_message)
+
+        return user, created
 
     def authenticate(self, request, eherkenning=None, saml_art=None):
         if saml_art is None:
@@ -185,37 +245,7 @@ class eHerkenningBackend(BaseSaml2Backend):
             self.handle_validation_error(request)
             return
 
-        rsin = None
-        for attribute_value in attributes["urn:etoegang:core:LegalSubjectID"]:
-            if not isinstance(attribute_value, dict):
-                continue
-            name_id = attribute_value["NameID"]
-            if (
-                name_id
-                and name_id["NameQualifier"]
-                == "urn:etoegang:1.9:EntityConcernedID:RSIN"
-            ):
-                rsin = name_id["value"]
-
-        if rsin == "":
-            self.log_error(request, self.error_messages["eherkenning_no_rsin"])
-            return
-
-        created = False
-        try:
-            user = UserModel.eherkenning_objects.get_by_rsin(rsin)
-        except UserModel.DoesNotExist:
-            user = UserModel.eherkenning_objects.eherkenning_create(rsin)
-            created = True
-
-        success_message = self.error_messages["login_success"] % {
-            "user": str(user),
-            "new_account": " (new account)" if created else "",
-            "ip": get_client_ip(request),
-            "service": self.service_name,
-        }
-
-        self.log_success(request, success_message)
+        user, created = self.get_or_create_user(request, response, attributes)
 
         session_age = client.conf.get("session_age", None)
         if session_age is not None:

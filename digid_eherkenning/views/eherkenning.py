@@ -1,11 +1,13 @@
+from typing import Optional
+
 from django.conf import settings
 from django.contrib import auth, messages
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView, View
 
+from ..exceptions import SAML2Error, eHerkenningNoRSINError
 from ..forms import SAML2Form
 from ..saml2.eherkenning import eHerkenningClient
 from .base import get_redirect_url
@@ -23,6 +25,12 @@ class eHerkenningLoginView(TemplateView):
         redirect_to = self.request.GET.get("next", "")
         return get_redirect_url(self.request, redirect_to)
 
+    def get_attribute_consuming_service_index(self) -> Optional[str]:
+        attribute_consuming_service_index = self.request.GET.get(
+            "attr_consuming_service_index"
+        )
+        return attribute_consuming_service_index
+
     #
     # TODO: It might be a good idea to change this to a post-verb.
     # I can't think of any realy attack-vectors, but seems like a good
@@ -31,7 +39,10 @@ class eHerkenningLoginView(TemplateView):
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
         client = eHerkenningClient()
-        location, parameters = client.create_authn_request(self.request)
+        location, parameters = client.create_authn_request(
+            self.request,
+            attr_consuming_service_index=self.get_attribute_consuming_service_index(),
+        )
 
         context_data.update(
             {
@@ -69,16 +80,32 @@ class eHerkenningAssertionConsumerServiceView(View):
         redirect_to = self.request.GET.get("RelayState")
         return get_redirect_url(self.request, redirect_to)
 
+    def handle_error(self, request, message):
+        messages.error(request, message)
+        login_url = self.get_login_url()
+        return HttpResponseRedirect(login_url)
+
     def get(self, request):
-        user = auth.authenticate(
-            request=request, eherkenning=True, saml_art=request.GET.get("SAMLart")
-        )
-        if user is None:
-            messages.error(
+        try:
+            user = auth.authenticate(
+                request=request, eherkenning=True, saml_art=request.GET.get("SAMLart")
+            )
+        except eHerkenningNoRSINError:
+            return self.handle_error(
+                request,
+                _(
+                    "No RSIN returned by eHerkenning. Login to eHerkenning did not succeed."
+                ),
+            )
+        except SAML2Error:
+            return self.handle_error(
                 request, _("Login to eHerkenning did not succeed. Please try again.")
             )
-            login_url = self.get_login_url()
-            return HttpResponseRedirect(login_url)
+
+        if user is None:
+            return self.handle_error(
+                request, _("Login to eHerkenning did not succeed. Please try again.")
+            )
 
         auth.login(request, user)
 

@@ -12,6 +12,7 @@ __pycache__
 # Coverage reports
 /reports/
 /htmlcov/
+.coverage
 
 # Environment
 local.py
@@ -21,3 +22,9 @@ local.py
 
 tests/db.sqlite3
 /digid_eherkenning/db.sqlite3
+.tox
+.pytest_cache
+
+# packaging
+*.egg-info
+/dist/

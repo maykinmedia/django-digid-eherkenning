@@ -1,41 +1,30 @@
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from django.utils import timezone
-
-from ...saml2.digid import DigiDClient
-from ...saml2.eherkenning import create_service_catalogus, eHerkenningClient
+from django.utils.module_loading import import_string
 
 
 class Command(BaseCommand):
     help = "Create the various SAML metadata files."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "-c",
+            "--classes",
+            dest="client_classes",
+            default=[
+                "digid_eherkenning.saml2.digid.DigiDClient",
+                "digid_eherkenning.saml2.eherkenning.eHerkenningClient",
+            ],
+            nargs="*",
+            type=str,
+            help="SAML2 client class to generate metadata for",
+        )
+
     def handle(self, *args, **options):
-        date_string = timezone.now().date().isoformat()
+        client_classes = [import_string(c) for c in options.get("client_classes")]
 
-        if hasattr(settings, "EHERKENNING"):
-            eherkenning_client = eHerkenningClient()
-            metadata_content = eherkenning_client.create_metadata()
-            metadata_filename = f"eherkenning-metadata-{date_string}.xml"
+        for ClientClass in client_classes:
+            client = ClientClass()
             try:
-                metadata_file = open(metadata_filename, "xb")
-            except FileExistsError:
-                raise CommandError(f"The file {metadata_filename} already exists.")
-            metadata_file.write(metadata_content)
-
-            service_catalogus = create_service_catalogus(settings.EHERKENNING)
-            dc_filename = f"eherkenning-dienstencatalogus-{date_string}.xml"
-            try:
-                dc_file = open(dc_filename, "xb")
-            except FileExistsError:
-                raise CommandError(f"The file {dc_filename} already exists.")
-            dc_file.write(service_catalogus)
-
-        if hasattr(settings, "DIGID"):
-            digid_client = DigiDClient()
-            metadata_content = eherkenning_client.create_metadata()
-            metadata_filename = f"digid-metadata-{date_string}.xml"
-            try:
-                metadata_file = open(metadata_filename, "xb")
-            except FileExistsError:
-                raise CommandError(f"The file {metadata_filename} already exists.")
-            metadata_file.write(metadata_content)
+                client.write_metadata()
+            except FileExistsError as e:
+                raise CommandError(f"The file {e.filename} already exists.")

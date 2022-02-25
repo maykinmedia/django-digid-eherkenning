@@ -1,8 +1,12 @@
 include *.rst
+include *.md
 include LICENSE
 recursive-include digid_eherkenning *.html
 recursive-include digid_eherkenning *.txt
 recursive-include digid_eherkenning *.po
+recursive-include digid_eherkenning *.po
+recursive-include digid_eherkenning/static *
+recursive-include digid_eherkenning/xsd *
 global-exclude __pycache__
 global-exclude *.py[co]
 

@@ -52,11 +52,6 @@ node {
     }
 
     stage ("Install frontend requirements") {
-//         sh """
-//             npm ci
-//             ./node_modules/gulp/bin/gulp.js build
-//            """
-
         withEnv(["SECRET_KEY=test_key"]) {
             sh """
                 . ${envDir}/bin/activate
@@ -119,25 +114,9 @@ node {
         }
     }
 
-//     stage ("Test frontend") {
-//         def testsError = null
-//
-//         try {
-//             sh "xvfb-run -a --server-args='-screen 0, 1920x1200x16' ./node_modules/gulp/bin/gulp.js test"
-//         }
-//         catch(err) {
-//             testsError = err
-//             currentBuild.result = "FAILURE"
-//         }
-//         finally {
-//             sh "./node_modules/gulp/bin/gulp.js lint"
-//             junit "reports/jstests/junit.xml"
-//
-//             if (testsError) {
-//                 throw testsError
-//             }
-//         }
-//     }
+    stage("Python/Django support with tox") {
+        sh "pip install tox && tox"
+    }
 
     stage ("Quality") {
         step(

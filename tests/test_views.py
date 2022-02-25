@@ -12,6 +12,7 @@ from django.utils import timezone
 
 import responses
 from freezegun import freeze_time
+from furl import furl
 from lxml import etree
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
@@ -99,7 +100,6 @@ class DigidLoginViewTests(TestCase):
                 "Destination": "https://preprod1.digid.nl/saml/idp/request_authentication",
                 "ProtocolBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                 "AssertionConsumerServiceURL": "https://sp.example.nl/digid/acs/",
-                "AttributeConsumingServiceIndex": "1",
             },
         )
 
@@ -655,7 +655,6 @@ class eHerkenningLoginViewTests(TestCase):
                 "Destination": "https://eh01.staging.iwelcome.nl/broker/sso/1.13",
                 "ProtocolBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                 "AssertionConsumerServiceURL": "https://example.com/eherkenning/acs/",
-                "AttributeConsumingServiceIndex": "1",
             },
         )
 
@@ -726,6 +725,36 @@ class eHerkenningLoginViewTests(TestCase):
             etree.tostring(
                 etree.fromstring(expected_signature), pretty_print=True
             ).decode("utf-8"),
+        )
+
+    @freeze_time("2020-04-09T08:31:46Z")
+    @patch("onelogin.saml2.utils.uuid4")
+    def test_login_with_attribute_consuming_service_index(self, uuid_mock):
+        uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
+        url = furl(reverse("eherkenning:login")).set(
+            {"attr_consuming_service_index": "2"}
+        )
+
+        response = self.client.get(url)
+
+        saml_request = b64decode(
+            response.context["form"].initial["SAMLRequest"].encode("utf-8")
+        )
+
+        tree = etree.fromstring(saml_request)
+
+        self.assertEqual(
+            tree.attrib,
+            {
+                "ID": "ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f",
+                "Version": "2.0",
+                "ForceAuthn": "true",
+                "IssueInstant": "2020-04-09T08:31:46Z",
+                "Destination": "https://eh01.staging.iwelcome.nl/broker/sso/1.13",
+                "ProtocolBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+                "AssertionConsumerServiceURL": "https://example.com/eherkenning/acs/",
+                "AttributeConsumingServiceIndex": "2",
+            },
         )
 
 
@@ -803,6 +832,17 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
         #     '</ds:KeyInfo>'
         #     '</ds:Signature>'
         # )
+
+        # eHerkenning has a Advice element with more elements than this. But these elements are what
+        # broke python3-saml and for which I had to introduce "disableSignatureWrappingProtection" security setting.
+        self.advice = (
+            "<saml:Advice>"
+            '<saml:Assertion ID="bla" IssueInstant="2020-04-09T08:31:46Z" Version="2.0">'
+            "<saml:Issuer>urn:etoegang:HM:00000003520354760000:entities:9632</saml:Issuer>"
+            + self.bogus_signature.format(id="bla")
+            + "</saml:Assertion>"
+            "</saml:Advice>"
+        )
         self.assertion = (
             '<saml:Assertion ID="_ae28e39f-bf7a-32d5-9653-3ad07c0e911e" IssueInstant="2020-04-09T08:31:46Z" Version="2.0" xmlns:xacml-saml="urn:oasis:xacml:2.0:saml:assertion:schema:os">'
             "<saml:Issuer>urn:etoegang:HM:00000003520354760000:entities:9632</saml:Issuer>"
@@ -818,7 +858,8 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
             "<saml:Audience>urn:etoegang:DV:0000000000000000001:entities:0002</saml:Audience>"
             "</saml:AudienceRestriction>"
             "</saml:Conditions>"
-            '<saml:AuthnStatement AuthnInstant="2020-05-06T10:50:14Z">'
+            + self.advice
+            + '<saml:AuthnStatement AuthnInstant="2020-05-06T10:50:14Z">'
             "<saml:AuthnContext>"
             "<saml:AuthnContextClassRef>urn:etoegang:core:assurance-class:loa3</saml:AuthnContextClassRef>"
             "<saml:AuthenticatingAuthority>urn:etoegang:EB:00000004000000149000:entities:9009</saml:AuthenticatingAuthority>"
@@ -991,6 +1032,38 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     # TODO: Add authnfailed tests here as well.
 
     @responses.activate
+    def test_no_rsin(self):
+        artifact_response_soap = etree.fromstring(self.artifact_response_soap)
+
+        # Remove the RSIN. In this scenario it is not returned by eHerkenning.
+        encrypted_id = get_saml_element(
+            artifact_response_soap,
+            "//saml:EncryptedID",
+        )
+        encrypted_id.getparent().remove(encrypted_id)
+
+        responses.add(
+            responses.POST,
+            "https://eh02.staging.iwelcome.nl/broker/ars/1.13",
+            body=etree.tostring(artifact_response_soap),
+            status=200,
+        )
+
+        url = (
+            reverse("eherkenning:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
+        )
+
+        response = self.client.get(url, follow=True)
+
+        messages = [str(m) for m in response.context["messages"]]
+        self.assertIn(
+            "No RSIN returned by eHerkenning. Login to eHerkenning did not succeed.",
+            messages,
+        )
+
+    @responses.activate
     def test_user_cancels(self):
         """
         Test that when a user cancels this is logged properly.
@@ -1002,7 +1075,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
         # when user cancels.
         assertion = get_saml_element(
             artifact_response_soap,
-            "//saml:Assertion",
+            "//samlp:Response/saml:Assertion",
         )
         assertion.getparent().remove(assertion)
 

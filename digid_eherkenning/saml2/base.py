@@ -1,17 +1,17 @@
-import time
 import urllib
+from typing import List
 
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
-from django.urls import reverse
 from django.utils import timezone
 
-from digid_eherkenning.utils import get_client_ip
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from onelogin.saml2.utils import OneLogin_Saml2_ValidationError
+
+from digid_eherkenning.utils import get_client_ip
 
 
 def create_saml2_request(base_url, request):
@@ -38,6 +38,38 @@ def create_saml2_request(base_url, request):
     }
 
 
+def get_service_name(conf: dict) -> str:
+    _service_name = conf.get("service_name", "")
+    return _service_name["en"] if isinstance(_service_name, dict) else _service_name
+
+
+def get_service_description(conf: dict) -> str:
+    _service_description = conf.get("service_description", "")
+    return (
+        _service_description["en"]
+        if isinstance(_service_description, dict)
+        else _service_description
+    )
+
+
+def get_requested_attributes(conf: dict) -> List[dict]:
+    # There needs to be a RequestedAttribute element where the name is the ServiceID
+    # https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
+    requested_attributes = []
+    for requested_attribute in conf.get("requested_attributes", []):
+        if isinstance(requested_attribute, dict):
+            requested_attributes.append(requested_attribute)
+        else:
+            requested_attributes.append(
+                {
+                    "name": requested_attribute,
+                    "required": True,
+                }
+            )
+
+    return requested_attributes
+
+
 class BaseSaml2Client:
     cache_key_prefix = "saml2_"
     cache_timeout = 60 * 60  # 1 hour
@@ -55,12 +87,36 @@ class BaseSaml2Client:
     def create_metadata(self):
         return self.saml2_settings.get_sp_metadata()
 
-    def create_authn_request(self, request, return_to=None, **kwargs):
+    def get_saml_metadata_path(self):
+        """
+        File is written to the current working directory by default.
+        """
+        date_string = timezone.now().date().isoformat()
+        return f"{self.cache_key_prefix}-metadata-{date_string}.xml"
+
+    def write_metadata(self):
+        """
+        Write SAML metadata to the path specified by get_saml_metadata_path.
+
+        :raises FileExistsError
+        """
+        metadata_content = self.create_metadata()
+        metadata_file = open(self.get_saml_metadata_path(), "xb")
+        metadata_file.write(metadata_content)
+        metadata_file.close()
+
+    def create_authn_request(
+        self, request, return_to=None, attr_consuming_service_index=None, **kwargs
+    ):
         saml2_request = create_saml2_request(self.conf["base_url"], request)
         saml2_auth = OneLogin_Saml2_Auth(
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
-        url, parameters = saml2_auth.login_post(return_to=return_to, **kwargs)
+        url, parameters = saml2_auth.login_post(
+            return_to=return_to,
+            attr_consuming_service_index=attr_consuming_service_index,
+            **kwargs,
+        )
 
         # Save the request ID so we can verify that we've sent
         # it when we receive the Artifact/ACS response.
@@ -75,6 +131,19 @@ class BaseSaml2Client:
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
         response = saml2_auth.artifact_resolve(saml_art)
+
+        self.verify_saml2_response(response, get_client_ip(request))
+
+        return response
+
+    def handle_post_response(self, request):
+        saml2_request = create_saml2_request(self.conf["base_url"], request)
+
+        saml2_auth = OneLogin_Saml2_Auth(
+            saml2_request, old_settings=self.saml2_settings, custom_base_path=None
+        )
+
+        response = saml2_auth.post_response()
 
         self.verify_saml2_response(response, get_client_ip(request))
 
@@ -142,24 +211,22 @@ class BaseSaml2Client:
             metadata_content, entity_id=conf["service_entity_id"]
         )["idp"]
 
-        _service_name = conf.get("service_name")
-        service_name = (
-            _service_name["en"] if isinstance(_service_name, dict) else _service_name
-        )
-        _service_description = conf.get("service_description", "")
-        service_description = (
-            _service_description["en"]
-            if isinstance(_service_description, dict)
-            else _service_description
-        )
+        service_name = get_service_name(conf)
+        service_description = get_service_description(conf)
+        requested_attributes = get_requested_attributes(conf)
 
-        return {
+        setting_dict = {
             "strict": True,
             "security": {
                 "signMetadata": True,
                 "authnRequestsSigned": True,
+                "wantAssertionsEncrypted": conf.get("want_assertions_encrypted", False),
+                "wantAssertionsSigned": conf.get("want_assertions_signed", False),
                 "soapClientKey": conf["key_file"],
                 "soapClientCert": conf["cert_file"],
+                "soapClientPassphrase": conf.get("key_passphrase", None),
+                "signatureAlgorithm": conf.get("signature_algorithm"),
+                "digestAlgorithm": conf.get("digest_algorithm"),
             },
             "debug": settings.DEBUG,
             # Service Provider Data that we are deploying.
@@ -173,26 +240,40 @@ class BaseSaml2Client:
                     "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                 },
                 # If you need to specify requested attributes, set a
-                # attributeConsumingService. nameFormat, attributeValue and
-                # friendlyName can be ommited
+                # attributeConsumingService per service. nameFormat, attributeValue and
+                # friendlyName can be omitted
                 "attributeConsumingService": {
-                    "index": conf["attribute_consuming_service_index"],
+                    "index": conf.get("attribute_consuming_service_index", "1"),
                     "serviceName": service_name,
                     "serviceDescription": service_description,
                     "requestedAttributes": [
                         {
-                            "name": attr,
-                            "isRequired": True,
+                            "name": attr["name"],
+                            "isRequired": True if attr["required"] else False,
                         }
-                        for attr in conf.get("requested_attributes")
+                        for attr in requested_attributes
                     ],
                 },
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
                 "x509cert": open(conf["cert_file"], "r").read(),
                 "privateKey": open(conf["key_file"], "r").read(),
+                "privateKeyPassphrase": conf.get("key_passphrase", None),
             },
             "idp": idp_settings,
         }
+
+        telephone = conf.get("technical_contact_person_telephone")
+        email = conf.get("technical_contact_person_email")
+        if telephone or email:
+            setting_dict["contactPerson"] = {
+                "technical": {"telephoneNumber": telephone, "emailAddress": email}
+            }
+
+        organisation = conf.get("organization")
+        if organisation:
+            setting_dict["organization"] = organisation
+
+        return setting_dict
 
 
 class AuthnRequestStorage:

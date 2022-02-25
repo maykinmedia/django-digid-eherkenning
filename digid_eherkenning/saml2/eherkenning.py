@@ -1,7 +1,7 @@
 import binascii
-import copy
 from base64 import b64encode
 from io import BytesIO
+from typing import List
 from uuid import uuid4
 
 from django.conf import settings
@@ -10,14 +10,12 @@ from django.utils import timezone
 
 from defusedxml.lxml import tostring
 from lxml.builder import ElementMaker
-from onelogin.saml2.auth import OneLogin_Saml2_Auth
-from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
-from onelogin.saml2.settings import OneLogin_Saml2_Settings
+from lxml.etree import Element
 from OpenSSL import crypto
 
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
-from .base import BaseSaml2Client, create_saml2_request
+from .base import BaseSaml2Client, get_service_description, get_service_name
 
 namespaces = {
     "xs": "http://www.w3.org/2001/XMLSchema",
@@ -118,8 +116,11 @@ def create_signature(id):
 
 
 def create_service_provider(
-    service_provider_id, organization_display_name, service_definition, service_instance
-):
+    service_provider_id: str,
+    organization_display_name: str,
+    service_definitions: list,
+    service_instances: list,
+) -> Element:
     ns = namespaces["esc"]
     org_name_elements = create_language_elements(
         "OrganizationDisplayName", organization_display_name
@@ -128,15 +129,21 @@ def create_service_provider(
     args = [
         ESC("ServiceProviderID", service_provider_id),
         *org_name_elements,
-        service_definition,
-        service_instance,
+        *service_definitions,
+        *service_instances,
     ]
     kwargs = {f"{{{ns}}}IsPublic": "true"}
     return ESC("ServiceProvider", *args, **kwargs)
 
 
 def create_service_definition(
-    service_uuid, service_name, service_description, loa, entity_concerned_types_allowed
+    service_uuid,
+    service_name,
+    service_description,
+    loa,
+    entity_concerned_types_allowed,
+    requested_attributes,
+    makelaar_oin,
 ):
 
     service_name_elements = create_language_elements("ServiceName", service_name)
@@ -150,13 +157,44 @@ def create_service_definition(
         *service_name_elements,
         *service_description_elements,
         SAML("AuthnContextClassRef", loa),
-        ESC("HerkenningsmakelaarId", "00000003244440010000"),
+        ESC("HerkenningsmakelaarId", makelaar_oin),
     ]
 
     for entity in entity_concerned_types_allowed:
+        assert isinstance(entity, dict)
+
+        kwargs = {}
+        set_number = entity.get("set_number")
+        if set_number:
+            kwargs["setNumber"] = set_number
         args.append(
-            ESC("EntityConcernedTypesAllowed", entity),
+            ESC("EntityConcernedTypesAllowed", entity["name"], **kwargs),
         )
+
+    for requested_attribute in requested_attributes:
+        if isinstance(requested_attribute, dict):
+            ra_kwargs = {}
+            if "required" in requested_attribute:
+                ra_kwargs["isRequired"] = (
+                    "true" if requested_attribute["required"] else "false"
+                )
+
+            ra_args = []
+            if not "purpose_statements" in requested_attribute:
+                ra_args += create_language_elements("PurposeStatement", service_name)
+            else:
+                ra_args += create_language_elements(
+                    "PurposeStatement", requested_attribute["purpose_statements"]
+                )
+
+            ra_kwargs["Name"] = requested_attribute["name"]
+            args.append(
+                ESC("RequestedAttribute", *ra_args, **ra_kwargs),
+            )
+        else:
+            args.append(
+                ESC("RequestedAttribute", Name=requested_attribute),
+            )
 
     kwargs = {f"{{{ns}}}IsPublic": "true"}
     return ESC("ServiceDefinition", *args, **kwargs)
@@ -169,6 +207,7 @@ def create_service_instance(
     service_url,
     privacy_policy_url,
     herkenningsmakelaars_id,
+    classifiers,
     key_descriptor,
 ):
     ns = namespaces["esc"]
@@ -186,10 +225,19 @@ def create_service_instance(
         ESC("HerkenningsmakelaarId", herkenningsmakelaars_id),
         ESC("SSOSupport", "false"),
         ESC("ServiceCertificate", key_descriptor),
-        ESC("Classifiers", ESC("Classifier", "eIDAS-inbound")),
     ]
+    if len(classifiers) > 0:
+        args.append(create_classifiers_element(classifiers))
+
     kwargs = {f"{{{ns}}}IsPublic": "true"}
     return ESC("ServiceInstance", *args, **kwargs)
+
+
+def create_classifiers_element(classifiers: list) -> ElementMaker:
+    classifiers_elements = []
+    for classifier in classifiers:
+        classifiers_elements.append(ESC("Classifier", classifier))
+    return ESC("Classifiers", *classifiers_elements)
 
 
 def create_key_descriptor(x509_certificate_content):
@@ -216,7 +264,7 @@ def create_key_descriptor(x509_certificate_content):
     return MD("KeyDescriptor", *args, **kwargs)
 
 
-def create_service_catalogus(conf):
+def create_service_catalogus(conf, validate=True):
     """
     https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
     """
@@ -225,57 +273,124 @@ def create_service_catalogus(conf):
     sc_id = str(uuid4())
     service_provider_id = conf["oin"]
     organization_display_name = conf["organisation_name"]
-    # https://afsprakenstelsel.etoegang.nl/display/as/ServiceUUID
-    service_uuid = conf["service_uuid"]
-    service_name = conf["service_name"]
-    service_description = conf["service_description"]
-    # https://afsprakenstelsel.etoegang.nl/display/as/Level+of+assurance
-    service_loa = conf["service_loa"]
-    # https://afsprakenstelsel.etoegang.nl/display/as/ServiceID
-    service_id = "urn:etoegang:DV:{}:services:{}".format(
-        conf["oin"], conf["attribute_consuming_service_index"]
-    )
-    service_instance_uuid = conf["service_instance_uuid"]
 
-    service_url = conf.get(
-        "service_url",
-    )
-    privacy_policy_url = conf.get(
-        "privacy_policy_url",
-    )
-    herkenningsmakelaars_id = conf.get(
-        "herkenningsmakelaars_id",
-    )
-    entity_concerned_types_allowed = conf.get("entity_concerned_types_allowed")
+    service_definitions = []
+    service_instances = []
+    for service in conf["services"]:
+        key_descriptor = create_key_descriptor(x509_certificate_content)
 
-    signature = create_signature(sc_id)
-    key_descriptor = create_key_descriptor(x509_certificate_content)
-    service_provider = create_service_provider(
-        service_provider_id,
-        organization_display_name,
-        create_service_definition(
+        # https://afsprakenstelsel.etoegang.nl/display/as/ServiceUUID
+        service_uuid = service["service_uuid"]
+        service_name = service["service_name"]
+        service_description = service["service_description"]
+        # https://afsprakenstelsel.etoegang.nl/display/as/Level+of+assurance
+        service_loa = service["service_loa"]
+        # https://afsprakenstelsel.etoegang.nl/display/as/ServiceID
+        service_id = "urn:etoegang:DV:{}:services:{}".format(
+            conf["oin"], service["attribute_consuming_service_index"]
+        )
+        service_instance_uuid = service["service_instance_uuid"]
+
+        service_url = service.get(
+            "service_url",
+        )
+        privacy_policy_url = service.get(
+            "privacy_policy_url",
+        )
+        herkenningsmakelaars_id = service.get(
+            "herkenningsmakelaars_id",
+        )
+        entity_concerned_types_allowed = service.get("entity_concerned_types_allowed")
+        requested_attributes = service.get("requested_attributes", [])
+        classifiers = service.get("classifiers", [])
+
+        service_definition = create_service_definition(
             service_uuid,
             service_name,
             service_description,
             service_loa,
             entity_concerned_types_allowed,
-        ),
-        create_service_instance(
+            requested_attributes,
+            herkenningsmakelaars_id,
+        )
+        service_instance = create_service_instance(
             service_id,
             service_instance_uuid,
             service_uuid,
             service_url,
             privacy_policy_url,
             herkenningsmakelaars_id,
+            classifiers,
             key_descriptor,
-        ),
+        )
+
+        service_definitions.append(service_definition)
+        service_instances.append(service_instance)
+
+    signature = create_signature(sc_id)
+    service_provider = create_service_provider(
+        service_provider_id,
+        organization_display_name,
+        service_definitions,
+        service_instances,
     )
     xml = create_service_catalogue(sc_id, timezone.now(), signature, service_provider)
 
     catalogus = tostring(xml, pretty_print=True, xml_declaration=True, encoding="utf-8")
-    errors = validate_xml(BytesIO(catalogus), EHERKENNING_DS_XSD)
-    assert errors is None, errors
+    if validate:
+        errors = validate_xml(BytesIO(catalogus), EHERKENNING_DS_XSD)
+        assert errors is None, errors
     return catalogus
+
+
+def get_metadata_eherkenning_requested_attributes(
+    conf: dict, service_id: str
+) -> List[dict]:
+    # There needs to be a RequestedAttribute element where the name is the ServiceID
+    # https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
+    requested_attributes = [{"name": service_id, "isRequired": False}]
+    for requested_attribute in conf.get("requested_attributes", []):
+        if isinstance(requested_attribute, dict):
+            requested_attributes.append(
+                {
+                    "name": requested_attribute["name"],
+                    "isRequired": requested_attribute["required"],
+                }
+            )
+        else:
+            requested_attributes.append(
+                {
+                    "name": requested_attribute,
+                    "isRequired": True,
+                }
+            )
+
+    return requested_attributes
+
+
+def create_attribute_consuming_services(conf: dict) -> list:
+    attribute_consuming_services = []
+
+    for service in conf["services"]:
+        service_id = "urn:etoegang:DV:{}:services:{}".format(
+            conf["oin"], service["attribute_consuming_service_index"]
+        )
+        service_name = get_service_name(service)
+        service_description = get_service_description(service)
+        requested_attributes = get_metadata_eherkenning_requested_attributes(
+            service, service_id
+        )
+
+        attribute_consuming_services.append(
+            {
+                "index": service["attribute_consuming_service_index"],
+                "serviceName": service_name,
+                "serviceDescription": service_description,
+                "requestedAttributes": requested_attributes,
+                "language": service.get("language", "nl"),
+            }
+        )
+    return attribute_consuming_services
 
 
 class eHerkenningClient(BaseSaml2Client):
@@ -285,29 +400,72 @@ class eHerkenningClient(BaseSaml2Client):
     def __init__(self):
         conf = settings.EHERKENNING.copy()
         conf.setdefault("acs_path", reverse("eherkenning:acs"))
-        if "entity_concerned_types_allowed" in conf:
-            conf.setdefault(
-                "requested_attributes", conf["entity_concerned_types_allowed"]
-            )
 
         super().__init__(conf)
+
+    def write_metadata(self):
+        """
+        Write the dienstencatalogus, in addition to the saml2 metadata to the
+        current working directory.
+
+        :raises FileExistsError
+        """
+        super().write_metadata()
+
+        service_catalogus = create_service_catalogus(settings.EHERKENNING)
+
+        date_string = timezone.now().date().isoformat()
+        dc_filename = f"eherkenning-dienstencatalogus-{date_string}.xml"
+        dc_file = open(dc_filename, "xb")
+        dc_file.write(service_catalogus)
+        dc_file.close()
+
+    def create_config_dict(self, conf):
+        config_dict = super().create_config_dict(conf)
+
+        attribute_consuming_services = create_attribute_consuming_services(conf)
+        config_dict.update(
+            {
+                "sp": {
+                    # Identifier of the SP entity  (must be a URI)
+                    "entityId": conf["entity_id"],
+                    # Specifies info about where and how the <AuthnResponse> message MUST be
+                    # returned to the requester, in this case our SP.
+                    "assertionConsumerService": {
+                        "url": conf["base_url"] + conf["acs_path"],
+                        "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+                    },
+                    "attributeConsumingServices": attribute_consuming_services,
+                    "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+                    "x509cert": open(conf["cert_file"], "r").read(),
+                    "privateKey": open(conf["key_file"], "r").read(),
+                    "privateKeyPassphrase": conf.get("key_passphrase", None),
+                },
+            }
+        )
+        return config_dict
 
     def create_config(self, config_dict):
         config_dict["security"].update(
             {
+                # See comment in the python3-saml for in  OneLogin_Saml2_Response.validate_num_assertions (onelogin/saml2/response.py)
+                # for why we need this option.
+                "disableSignatureWrappingProtection": True,
                 # For eHerkenning, if the Metadata file expires, we sent them an update. So
                 # there is no need for an expiry date.
                 "metadataValidUntil": "",
                 "metadataCacheDuration": "",
                 "requestedAuthnContextComparison": "minimum",
                 "requestedAuthnContext": [
-                    self.conf["service_loa"],
+                    self.conf["services"][0]["service_loa"],
                 ],
             }
         )
         return super().create_config(config_dict)
 
-    def create_authn_request(self, request, return_to=None):
+    def create_authn_request(
+        self, request, return_to=None, attr_consuming_service_index=None, **kwargs
+    ):
         return super().create_authn_request(
             request,
             return_to=return_to,
@@ -315,4 +473,5 @@ class eHerkenningClient(BaseSaml2Client):
             is_passive=False,
             set_nameid_policy=False,
             name_id_value_req=None,
+            attr_consuming_service_index=attr_consuming_service_index,
         )
