@@ -1,124 +1,248 @@
+========================
+django-digid-eherkenning
+========================
 
-An example of a metadata file of the digid idp which I found.
+:Version: 0.2.0
+:Source: https://github.com/maykinmedia/django-digid-eherkenning
+:Keywords: django, authentication, digid, eherkenning, eidas, dutch, nl, netherlands
+:PythonVersion: 3.7+
 
-https://was-preprod1.digid.nl/saml/idp/metadata
+|build-status| |code-quality| |black| |coverage|
 
+|python-versions| |django-versions| |pypi-version|
+
+A Django app for DigiD/eHerkenning authentication flows
+
+.. contents::
+
+.. section-numbering::
+
+Features
+========
+
+* SAML-based DigiD authentication flow
+* SAML-based eHerkenning authentication flow
+* Custom Django authentication backend
+* Extensible
+
+Installation
+============
+
+Requirements
+------------
+
+* Python 3.7 or above
+* setuptools 30.3.0 or above
+* Django 2.2 or newer
+
+
+Install
+-------
+
+Install with pip:
+
+.. code-block:: bash
+
+    pip install git+https://github.com/maykinmedia/python3-saml@maykin#egg=python3-saml
+    pip install django-digid-eherkenning
+
+Add ``digid_eherkenning`` to the ``INSTALLED_APPS`` in your Django project's settings:
+
+.. code-block:: py
+
+    INSTALLED_APPS = [
+        ...,
+        "digid_eherkenning",
+        ...,
+    ]
+
+If you want to create local users as part of the authentication flow, add the
+authentication backend to the settings:
+
+.. code-block:: py
+
+    AUTHENTICATION_BACKENDS = [
+        ...,
+        "digid_eherkenning.backends.DigiDBackend",
+        ...,
+    ]
+
+Finally, at the URL patterns to your root ``urls.py``:
+
+.. code-block:: py
+
+    from django.urls import path, include
+
+
+    urlpatterns = [
+        ...,
+        path("digid/", include("digid_eherkenning.digid_urls")),
+        ...,
+    ]
 
 Usage
 =====
 
-Add digid_eherkenning to the INSTALLED_APPS in your Django project's settings.py.
+You can now display login URLs by reversing the appropriate URL:
 
-    INSTALLED_APPS = (
-        "digid_eherkenning",
-    )
+.. code-block:: py
 
-Add digid_eherkenning.backends.DigiDBackend to the AUTHENTICATION_BACKENDS in your Django project's settings.py.
+    reverse("digid:login")
 
-    AUTHENTICATION_BACKENDS = (
-        "digid_eherkenning.backends.DigiDBackend"
-    )
+or in templates:
 
-Add to the digid url patterns to urls.py
+.. code-block:: django
 
-    url(r'^digid/', include("digid_eherkenning.digid_urls")),
+    {% url 'digid:login' %}
 
 
-Usage of mock login flow
-========================
+Mock login flow
+---------------
 
-For development and demonstration purposes you can swap-in a mockup Digid login flow that accepts any BSN and doesn't require an actual DigiD metadata configuration.
+For development and demonstration purposes you can swap-in a mockup Digid login flow
+that accepts any BSN and doesn't require an actual DigiD metadata configuration.
 
-In the login view username field you can enter any integer up to 9 digits (and a random password) to be used as the BSN in the authentication backend.
+In the login view username field you can enter any integer up to 9 digits
+(and a random password) to be used as the BSN in the authentication backend.
 
 Swap the authentication backend for the mock version:
 
-    AUTHENTICATION_BACKENDS = (
-        "digid_eherkenning.backends.mock.DigiDBackend"
-    )
+.. code-block:: py
+
+    AUTHENTICATION_BACKENDS = [
+        "digid_eherkenning.backends.mock.DigiDBackend",
+    ]
 
 Swap the digid url patterns for the mock version:
 
-    url(r'^digid/', include("digid_eherkenning.mock.digid_urls")),
+.. code-block:: py
+
+    urlpatterns = [
+        ...,
+        path("digid/", include("digid_eherkenning.mock.digid_urls")),
+        ...,
+    ]
 
 Additionally add the URLs for the mock IDP service to run in the same runserver instance:
 
-    url(r'^digid/idp/', include("digid_eherkenning.mock.idp.digid_urls")),
+.. code-block:: py
 
-For settings to control mock behaviour see digid_eherkenning/mock/config.py
+    urlpatterns = [
+        ...,
+        path("digid/idp/", include("digid_eherkenning.mock.idp.digid_urls")),
+        ...,
+    ]
+
+For settings to control mock behaviour see ``digid_eherkenning/mock/config.py``.
 
 Generating the DigiD metadata
-=============================
+-----------------------------
 
 The metadata for DigiD can be generated with the following command:
 
-```bash
-python manage.py generate_digid_metadata --want_assertions_encrypted --want_assertions_signed \
---key_file /path/test.key --cert_file /path/test.certificate \
---signature_algorithm "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" --digest_algorithm "http://www.w3.org/2001/04/xmlenc#sha256" \
---entity_id http://test-url.nl --base_url http://test-url.nl --service_name "Test name" \
---service_description "Test description" --attribute_consuming_service_index 9050 \
---technical_contact_person_telephone 06123123123 --technical_contact_person_email test@test.nl \
---organization_name "Test organisation" --organization_url http://test-organisation.nl
-```
+.. code-block:: bash
+
+    python manage.py generate_digid_metadata \
+        --want_assertions_encrypted \
+        --want_assertions_signed \
+        --key_file /path/test.key \
+        --cert_file /path/test.certificate \
+        --signature_algorithm "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" \
+        --digest_algorithm "http://www.w3.org/2001/04/xmlenc#sha256" \
+        --entity_id http://test-url.nl \
+        --base_url http://test-url.nl \
+        --service_name "Test name" \
+        --service_description "Test description" \
+        --attribute_consuming_service_index 9050 \
+        --technical_contact_person_telephone 06123123123 \
+        --technical_contact_person_email test@test.nl \
+        --organization_name "Test organisation" \
+        --organization_url http://test-organisation.nl
 
 Generating eHerkenning/eIDAS metadata
-=====================================
+-------------------------------------
 
 The metadata for eHerkenning and eIDAS can be generated with the following command:
 
-```bash
-python manage.py generate_eherkenning_metadata --want_assertions_encrypted --want_assertions_signed \
---key_file /path/test.key --cert_file /path/test.certificate \
---signature_algorithm "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" --digest_algorithm "http://www.w3.org/2001/04/xmlenc#sha256" \
---entity_id http://test-url.nl --base_url http://test-url.nl --service_name "Test name" \
---service_description "Test description" --eh_attribute_consuming_service_index 9052 \
---eidas_attribute_consuming_service_index 9053 --oin 00000001112223330000 \
---technical_contact_person_telephone 06123123123 --technical_contact_person_email test@test.nl \
---organization_name "Test organisation" --organization_url http://test-organisation.nl
-```
+.. code-block:: bash
 
-For information about each option, use
+    python manage.py generate_eherkenning_metadata \
+        --want_assertions_encrypted \
+        --want_assertions_signed \
+        --key_file /path/test.key \
+        --cert_file /path/test.certificate \
+        --signature_algorithm "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" \
+        --digest_algorithm "http://www.w3.org/2001/04/xmlenc#sha256" \
+        --entity_id http://test-url.nl \
+        --base_url http://test-url.nl \
+        --service_name "Test name" \
+        --service_description "Test description" \
+        --eh_attribute_consuming_service_index 9052 \
+        --eidas_attribute_consuming_service_index 9053 \
+        --oin 00000001112223330000 \
+        --technical_contact_person_telephone 06123123123 \
+        --technical_contact_person_email test@test.nl \
+        --organization_name "Test organisation" \
+        --organization_url http://test-organisation.nl
 
-```bash
-python manage.py generate_eherkenning_metadata --help
-```
+For information about each option, use:
+
+.. code-block:: bash
+
+    python manage.py generate_eherkenning_metadata --help
 
 To generate the dienstcatalogus:
 
-```bash
-python manage.py generate_eherkenning_dienstcatalogus  \
---key_file /path/test.key --cert_file /path/test.certificate \
---entity_id http://test-url.nl --base_url http://test-url.nl --service_name "Test name" \
---service_description "Test description" --eh_attribute_consuming_service_index 9052 \
---eidas_attribute_consuming_service_index 9053 --oin 00000001112223330000 \
---privacy_policy http://test-url.nl/privacy --makelaar_id 00000003332223330000 --organization_name "Test Organisation"
-```
+.. code-block:: bash
+
+    python manage.py generate_eherkenning_dienstcatalogus  \
+        --key_file /path/test.key \
+        --cert_file /path/test.certificate \
+        --entity_id http://test-url.nl \
+        --base_url http://test-url.nl \
+        --service_name "Test name" \
+        --service_description "Test description" \
+        --eh_attribute_consuming_service_index 9052 \
+        --eidas_attribute_consuming_service_index 9053 \
+        --oin 00000001112223330000 \
+        --privacy_policy http://test-url.nl/privacy \
+        --makelaar_id 00000003332223330000 \
+        --organization_name "Test Organisation"
+
+Background information
+======================
+
+Information that was at some point relevant and may document certain choices can
+be found in ``information.md``.
+
+Bitbucket mirror
+================
+
+This project was originally on Bitbucket and closed source. The Bitbucket project still
+exists, but only as a mirror of the Github repository. All future development must
+happen on Github.
+
+Bitbucket mirror: https://bitbucket.org/maykinmedia/django-digid-eherkenning/
 
 
-Other SAML2 implementations
-===========================
+.. |build-status| image:: https://github.com/maykinmedia/django-digid-eherkenning/workflows/Run%20CI/badge.svg
+    :alt: Build status
+    :target: https://github.com/maykinmedia/django-digid-eherkenning/actions?query=workflow%3A%22Run+CI%22
 
-A bunch of implementation which use PySAML2. None of them implement the artifact resolution protocol which we need for eHerkenning/DigiD
+.. |code-quality| image:: https://github.com/maykinmedia/django-digid-eherkenning/workflows/Code%20quality%20checks/badge.svg
+     :alt: Code quality checks
+     :target: https://github.com/maykinmedia/django-digid-eherkenning/actions?query=workflow%3A%22Code+quality+checks%22
 
-https://github.com/IronCountySchoolDistrict/django-python3-saml/blob/06d6198ed6c2b9ebfbfe4d6782715d91b6a468d8/django_python3_saml/views.py
-https://github.com/knaperek/djangosaml2/blob/master/djangosaml2/views.py
-https://github.com/fangli/django-saml2-auth/blob/master/django_saml2_auth/urls.py
-https://github.com/OTA-Insight/djangosaml2idp/blob/master/djangosaml2idp/idp.py
-https://github.com/IdentityPython/pysaml2/blob/master/example/sp-wsgi/sp.py
-https://github.com/onelogin/python3-saml
+.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
 
-References
-==========
+.. |coverage| image:: https://codecov.io/gh/maykinmedia/django-digid-eherkenning/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/maykinmedia/django-digid-eherkenning
+    :alt: Coverage status
 
-eHerkenningAttributverstrekking: https://afsprakenstelsel.etoegang.nl/display/as/Attribuutverstrekking
-eHerkenningMetadata: https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
-eHerkenning: https://afsprakenstelsel.etoegang.nl/display/as/Interface+specifications+DV-HM
-eHerkenningDC: https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
-DigiD: https://www.logius.nl/sites/default/files/public/bestanden/diensten/DigiD/Koppelvlakspecificatie-SAML-DigiD.pdf
-DigiDCheck: logius.nl/sites/default/files/bestanden/website/DigiD Checklist Testen v7.0 (definitief).pdf
-SAML: http://www.oasis-open.org/committees/download.php/56776/sstc-saml-core-errata-2.0-wd-07.pdf
-SAMLBind: https://www.oasis-open.org/committees/download.php/56779/sstc-saml-bindings-errata-2.0-wd-06.pdf
-SAMLProf: https://www.oasis-open.org/committees/download.php/56782/sstc-saml-profiles-errata-2.0-wd-07.pdf
-SAMLMeta: https://www.oasis-open.org/committees/download.php/56785/sstc-saml-metadata-errata-2.0-wd-05.pdf
-XACML: https://docs.oasis-open.org/xacml/2.0/SAML-PROFILE/access_control-xacml-2.0-saml-profile-spec-os.html
+.. |python-versions| image:: https://img.shields.io/pypi/pyversions/django-digid-eherkenning.svg
+
+.. |django-versions| image:: https://img.shields.io/pypi/djversions/django-digid-eherkenning.svg
+
+.. |pypi-version| image:: https://img.shields.io/pypi/v/django-digid-eherkenning.svg
+    :target: https://pypi.org/project/django-digid-eherkenning/

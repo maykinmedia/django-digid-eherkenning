@@ -1,4 +1,5 @@
 include *.rst
+include *.md
 include LICENSE
 recursive-include digid_eherkenning *.html
 recursive-include digid_eherkenning *.txt
