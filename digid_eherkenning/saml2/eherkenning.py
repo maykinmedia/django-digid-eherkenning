@@ -1,8 +1,7 @@
-from typing import List
-
 import binascii
 from base64 import b64encode
 from io import BytesIO
+from typing import List
 from uuid import uuid4
 
 from django.conf import settings
@@ -16,7 +15,7 @@ from OpenSSL import crypto
 
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
-from .base import BaseSaml2Client, get_service_name, get_service_description
+from .base import BaseSaml2Client, get_service_description, get_service_name
 
 namespaces = {
     "xs": "http://www.w3.org/2001/XMLSchema",
@@ -117,7 +116,10 @@ def create_signature(id):
 
 
 def create_service_provider(
-    service_provider_id: str, organization_display_name: str, service_definitions: list, service_instances: list
+    service_provider_id: str,
+    organization_display_name: str,
+    service_definitions: list,
+    service_instances: list,
 ) -> Element:
     ns = namespaces["esc"]
     org_name_elements = create_language_elements(
@@ -141,7 +143,7 @@ def create_service_definition(
     loa,
     entity_concerned_types_allowed,
     requested_attributes,
-    makelaar_oin
+    makelaar_oin,
 ):
 
     service_name_elements = create_language_elements("ServiceName", service_name)
@@ -162,26 +164,30 @@ def create_service_definition(
         assert isinstance(entity, dict)
 
         kwargs = {}
-        set_number = entity.get('set_number')
+        set_number = entity.get("set_number")
         if set_number:
-            kwargs['setNumber'] = set_number
+            kwargs["setNumber"] = set_number
         args.append(
-            ESC("EntityConcernedTypesAllowed", entity['name'], **kwargs),
+            ESC("EntityConcernedTypesAllowed", entity["name"], **kwargs),
         )
 
     for requested_attribute in requested_attributes:
         if isinstance(requested_attribute, dict):
             ra_kwargs = {}
-            if 'required' in requested_attribute:
-                ra_kwargs['isRequired'] = 'true' if requested_attribute['required'] else 'false'
+            if "required" in requested_attribute:
+                ra_kwargs["isRequired"] = (
+                    "true" if requested_attribute["required"] else "false"
+                )
 
             ra_args = []
-            if not 'purpose_statements' in requested_attribute:
+            if not "purpose_statements" in requested_attribute:
                 ra_args += create_language_elements("PurposeStatement", service_name)
             else:
-                ra_args += create_language_elements("PurposeStatement", requested_attribute["purpose_statements"])
+                ra_args += create_language_elements(
+                    "PurposeStatement", requested_attribute["purpose_statements"]
+                )
 
-            ra_kwargs['Name'] = requested_attribute['name']
+            ra_kwargs["Name"] = requested_attribute["name"]
             args.append(
                 ESC("RequestedAttribute", *ra_args, **ra_kwargs),
             )
@@ -337,24 +343,27 @@ def create_service_catalogus(conf, validate=True):
     return catalogus
 
 
-def get_metadata_eherkenning_requested_attributes(conf: dict, service_id: str) -> List[dict]:
+def get_metadata_eherkenning_requested_attributes(
+    conf: dict, service_id: str
+) -> List[dict]:
     # There needs to be a RequestedAttribute element where the name is the ServiceID
     # https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
-    requested_attributes = [{
-        "name": service_id,
-        "isRequired": False
-    }]
-    for requested_attribute in conf.get('requested_attributes', []):
+    requested_attributes = [{"name": service_id, "isRequired": False}]
+    for requested_attribute in conf.get("requested_attributes", []):
         if isinstance(requested_attribute, dict):
-            requested_attributes.append({
-                "name": requested_attribute["name"],
-                "isRequired": requested_attribute["required"]
-            })
+            requested_attributes.append(
+                {
+                    "name": requested_attribute["name"],
+                    "isRequired": requested_attribute["required"],
+                }
+            )
         else:
-            requested_attributes.append({
-                'name': requested_attribute,
-                'isRequired': True,
-            })
+            requested_attributes.append(
+                {
+                    "name": requested_attribute,
+                    "isRequired": True,
+                }
+            )
 
     return requested_attributes
 
@@ -368,15 +377,19 @@ def create_attribute_consuming_services(conf: dict) -> list:
         )
         service_name = get_service_name(service)
         service_description = get_service_description(service)
-        requested_attributes = get_metadata_eherkenning_requested_attributes(service, service_id)
-        
-        attribute_consuming_services.append({
-            "index": service["attribute_consuming_service_index"],
-            "serviceName": service_name,
-            "serviceDescription": service_description,
-            "requestedAttributes": requested_attributes,
-            "language": service.get("language", "nl")
-        })
+        requested_attributes = get_metadata_eherkenning_requested_attributes(
+            service, service_id
+        )
+
+        attribute_consuming_services.append(
+            {
+                "index": service["attribute_consuming_service_index"],
+                "serviceName": service_name,
+                "serviceDescription": service_description,
+                "requestedAttributes": requested_attributes,
+                "language": service.get("language", "nl"),
+            }
+        )
     return attribute_consuming_services
 
 
@@ -411,23 +424,25 @@ class eHerkenningClient(BaseSaml2Client):
         config_dict = super().create_config_dict(conf)
 
         attribute_consuming_services = create_attribute_consuming_services(conf)
-        config_dict.update({
-            "sp": {
-                # Identifier of the SP entity  (must be a URI)
-                "entityId": conf["entity_id"],
-                # Specifies info about where and how the <AuthnResponse> message MUST be
-                # returned to the requester, in this case our SP.
-                "assertionConsumerService": {
-                    "url": conf["base_url"] + conf["acs_path"],
-                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+        config_dict.update(
+            {
+                "sp": {
+                    # Identifier of the SP entity  (must be a URI)
+                    "entityId": conf["entity_id"],
+                    # Specifies info about where and how the <AuthnResponse> message MUST be
+                    # returned to the requester, in this case our SP.
+                    "assertionConsumerService": {
+                        "url": conf["base_url"] + conf["acs_path"],
+                        "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+                    },
+                    "attributeConsumingServices": attribute_consuming_services,
+                    "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+                    "x509cert": open(conf["cert_file"], "r").read(),
+                    "privateKey": open(conf["key_file"], "r").read(),
+                    "privateKeyPassphrase": conf.get("key_passphrase", None),
                 },
-                "attributeConsumingServices": attribute_consuming_services,
-                "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
-                "x509cert": open(conf["cert_file"], "r").read(),
-                "privateKey": open(conf["key_file"], "r").read(),
-                "privateKeyPassphrase": conf.get("key_passphrase", None),
-            },
-        })
+            }
+        )
         return config_dict
 
     def create_config(self, config_dict):
@@ -448,7 +463,9 @@ class eHerkenningClient(BaseSaml2Client):
         )
         return super().create_config(config_dict)
 
-    def create_authn_request(self, request, return_to=None, attr_consuming_service_index=None, **kwargs):
+    def create_authn_request(
+        self, request, return_to=None, attr_consuming_service_index=None, **kwargs
+    ):
         return super().create_authn_request(
             request,
             return_to=return_to,

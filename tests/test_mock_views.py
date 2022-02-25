@@ -1,7 +1,7 @@
 from urllib.parse import urlencode
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase, override_settings, modify_settings
+from django.test import TestCase, modify_settings, override_settings
 from django.urls import reverse, reverse_lazy
 
 from furl import furl
@@ -147,12 +147,16 @@ class PasswordLoginViewTests(DigidMockTestCase):
         response = self.client.post(url, data, follow=False)
 
         # it will redirect to our ACS
-        expected_redirect = furl(reverse("digid:acs")).set({
-            "foo": "bar",
-            "bsn": "123456789",
-            "next": reverse('test-success'),
-        })
-        self.assertRedirects(response, str(expected_redirect), fetch_redirect_response=False)
+        expected_redirect = furl(reverse("digid:acs")).set(
+            {
+                "foo": "bar",
+                "bsn": "123456789",
+                "next": reverse("test-success"),
+            }
+        )
+        self.assertRedirects(
+            response, str(expected_redirect), fetch_redirect_response=False
+        )
 
     def test_backend_rejects_non_numerical_name(self):
         url = reverse("digid-mock:password")

@@ -26,8 +26,11 @@ class eHerkenningLoginView(TemplateView):
         return get_redirect_url(self.request, redirect_to)
 
     def get_attribute_consuming_service_index(self) -> Optional[str]:
-        attribute_consuming_service_index = self.request.GET.get("attr_consuming_service_index")
+        attribute_consuming_service_index = self.request.GET.get(
+            "attr_consuming_service_index"
+        )
         return attribute_consuming_service_index
+
     #
     # TODO: It might be a good idea to change this to a post-verb.
     # I can't think of any realy attack-vectors, but seems like a good
@@ -38,7 +41,7 @@ class eHerkenningLoginView(TemplateView):
         client = eHerkenningClient()
         location, parameters = client.create_authn_request(
             self.request,
-            attr_consuming_service_index=self.get_attribute_consuming_service_index()
+            attr_consuming_service_index=self.get_attribute_consuming_service_index(),
         )
 
         context_data.update(

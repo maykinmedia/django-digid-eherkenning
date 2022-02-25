@@ -167,29 +167,37 @@ class eHerkenningBackend(BaseSaml2Backend):
             if not isinstance(attribute_value, dict):
                 continue
             name_id = attribute_value["NameID"]
-            if (name_id and name_id["NameQualifier"] == name_qualifier):
+            if name_id and name_id["NameQualifier"] == name_qualifier:
                 rsin = name_id["value"]
         return rsin
 
     def get_legal_subject_kvk(self, attributes):
-        return self.get_legal_subject_id(attributes, "urn:etoegang:1.9:EntityConcernedID:KvKnr")
+        return self.get_legal_subject_id(
+            attributes, "urn:etoegang:1.9:EntityConcernedID:KvKnr"
+        )
 
     def get_legal_subject_rsin(self, attributes):
-        return self.get_legal_subject_id(attributes, "urn:etoegang:1.9:EntityConcernedID:RSIN")
+        return self.get_legal_subject_id(
+            attributes, "urn:etoegang:1.9:EntityConcernedID:RSIN"
+        )
 
     def get_company_name(self, attributes):
-        company_names = attributes.get("urn:etoegang:1.11:attribute-represented:CompanyName", [])
+        company_names = attributes.get(
+            "urn:etoegang:1.11:attribute-represented:CompanyName", []
+        )
 
-        return' '.join(company_names)
+        return " ".join(company_names)
 
     def get_kvk_number(self, attributes):
-        kvk_numbers = attributes.get("urn:etoegang:1.11:attribute-represented:KvKnr", [])
+        kvk_numbers = attributes.get(
+            "urn:etoegang:1.11:attribute-represented:KvKnr", []
+        )
 
         if len(kvk_numbers) > 1:
             logger.error("More than 1 KVK-number returned.")
         if len(kvk_numbers) == 0:
             logger.error("No KVK-number returned.")
-            return ''
+            return ""
 
         return kvk_numbers[0]
 

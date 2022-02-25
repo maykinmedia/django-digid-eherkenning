@@ -40,9 +40,7 @@ def create_saml2_request(base_url, request):
 
 def get_service_name(conf: dict) -> str:
     _service_name = conf.get("service_name", "")
-    return (
-        _service_name["en"] if isinstance(_service_name, dict) else _service_name
-    )
+    return _service_name["en"] if isinstance(_service_name, dict) else _service_name
 
 
 def get_service_description(conf: dict) -> str:
@@ -58,14 +56,16 @@ def get_requested_attributes(conf: dict) -> List[dict]:
     # There needs to be a RequestedAttribute element where the name is the ServiceID
     # https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
     requested_attributes = []
-    for requested_attribute in conf.get('requested_attributes', []):
+    for requested_attribute in conf.get("requested_attributes", []):
         if isinstance(requested_attribute, dict):
             requested_attributes.append(requested_attribute)
         else:
-            requested_attributes.append({
-                'name': requested_attribute,
-                'required': True,
-            })
+            requested_attributes.append(
+                {
+                    "name": requested_attribute,
+                    "required": True,
+                }
+            )
 
     return requested_attributes
 
@@ -105,12 +105,18 @@ class BaseSaml2Client:
         metadata_file.write(metadata_content)
         metadata_file.close()
 
-    def create_authn_request(self, request, return_to=None, attr_consuming_service_index=None, **kwargs):
+    def create_authn_request(
+        self, request, return_to=None, attr_consuming_service_index=None, **kwargs
+    ):
         saml2_request = create_saml2_request(self.conf["base_url"], request)
         saml2_auth = OneLogin_Saml2_Auth(
             saml2_request, old_settings=self.saml2_settings, custom_base_path=None
         )
-        url, parameters = saml2_auth.login_post(return_to=return_to, attr_consuming_service_index=attr_consuming_service_index, **kwargs)
+        url, parameters = saml2_auth.login_post(
+            return_to=return_to,
+            attr_consuming_service_index=attr_consuming_service_index,
+            **kwargs,
+        )
 
         # Save the request ID so we can verify that we've sent
         # it when we receive the Artifact/ACS response.
@@ -242,8 +248,8 @@ class BaseSaml2Client:
                     "serviceDescription": service_description,
                     "requestedAttributes": [
                         {
-                            "name": attr['name'],
-                            "isRequired": True if attr['required'] else False,
+                            "name": attr["name"],
+                            "isRequired": True if attr["required"] else False,
                         }
                         for attr in requested_attributes
                     ],
@@ -260,10 +266,7 @@ class BaseSaml2Client:
         email = conf.get("technical_contact_person_email")
         if telephone or email:
             setting_dict["contactPerson"] = {
-                "technical": {
-                    "telephoneNumber": telephone,
-                    "emailAddress": email
-                }
+                "technical": {"telephoneNumber": telephone, "emailAddress": email}
             }
 
         organisation = conf.get("organization")

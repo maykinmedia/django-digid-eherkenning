@@ -54,15 +54,23 @@ class EHerkenningClientTests(TestCase):
     def test_signature_digest_algorithm_settings_changed(self):
         conf = settings.EHERKENNING.copy()
         conf.setdefault("acs_path", reverse("eherkenning:acs"))
-        conf.update({
-            "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-            "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256"
-        })
+        conf.update(
+            {
+                "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+                "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
+            }
+        )
 
         eherkenning_client = eHerkenningClient()
         config_dict = eherkenning_client.create_config_dict(conf)
 
         self.assertIn("signatureAlgorithm", config_dict["security"])
         self.assertIn("digestAlgorithm", config_dict["security"])
-        self.assertEqual("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", config_dict["security"]["signatureAlgorithm"])
-        self.assertEqual("http://www.w3.org/2001/04/xmlenc#sha256", config_dict["security"]["digestAlgorithm"])
+        self.assertEqual(
+            "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+            config_dict["security"]["signatureAlgorithm"],
+        )
+        self.assertEqual(
+            "http://www.w3.org/2001/04/xmlenc#sha256",
+            config_dict["security"]["digestAlgorithm"],
+        )

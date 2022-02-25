@@ -7,15 +7,20 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '-c', '--classes', dest='client_classes',
-            default=['digid_eherkenning.saml2.digid.DigiDClient', 'digid_eherkenning.saml2.eherkenning.eHerkenningClient'],
-            nargs='*',
+            "-c",
+            "--classes",
+            dest="client_classes",
+            default=[
+                "digid_eherkenning.saml2.digid.DigiDClient",
+                "digid_eherkenning.saml2.eherkenning.eHerkenningClient",
+            ],
+            nargs="*",
             type=str,
-            help='SAML2 client class to generate metadata for'
+            help="SAML2 client class to generate metadata for",
         )
 
     def handle(self, *args, **options):
-        client_classes = [import_string(c) for c in options.get('client_classes')]
+        client_classes = [import_string(c) for c in options.get("client_classes")]
 
         for ClientClass in client_classes:
             client = ClientClass()
