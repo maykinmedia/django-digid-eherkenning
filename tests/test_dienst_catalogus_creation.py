@@ -415,6 +415,10 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
                 "service_description": "Test Service Description",
                 "makelaar_id": "00000003332221110000",
                 "privacy_policy": "http://test-privacy.nl",
+                "eh_service_uuid": "11111111-1111-1111-1111-111111111111",
+                "eh_service_instance_uuid": "22222222-2222-2222-2222-222222222222",
+                "eidas_service_uuid": "33333333-3333-3333-3333-333333333333",
+                "eidas_service_instance_uuid": "44444444-4444-4444-4444-444444444444",
                 "test": True,
             }
         )
@@ -474,7 +478,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             ".//esc:ServiceUUID",
             namespaces=NAME_SPACES,
         )
-        self.assertIsNotNone(uuid_node)
+        self.assertEqual("11111111-1111-1111-1111-111111111111", uuid_node.text)
 
         service_name_node = eherkenning_definition_node.find(
             ".//esc:ServiceName",
@@ -523,7 +527,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             ".//esc:ServiceUUID",
             namespaces=NAME_SPACES,
         )
-        self.assertIsNotNone(uuid_node)
+        self.assertEqual("33333333-3333-3333-3333-333333333333", uuid_node.text)
 
         service_name_node = eidas_definition_node.find(
             ".//esc:ServiceName",
@@ -576,6 +580,12 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             "urn:etoegang:DV:00000001112223330000:services:9050", service_id_node.text
         )
 
+        uuid_node = eherkenning_instance_node.find(
+            ".//esc:ServiceUUID",
+            namespaces=NAME_SPACES,
+        )
+        self.assertEqual("22222222-2222-2222-2222-222222222222", uuid_node.text)
+
         service_url_node = eherkenning_instance_node.find(
             ".//esc:ServiceURL",
             namespaces=NAME_SPACES,
@@ -619,6 +629,12 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
         self.assertEqual(
             "urn:etoegang:DV:00000001112223330000:services:9051", service_id_node.text
         )
+
+        uuid_node = eidas_instance_node.find(
+            ".//esc:ServiceUUID",
+            namespaces=NAME_SPACES,
+        )
+        self.assertEqual("44444444-4444-4444-4444-444444444444", uuid_node.text)
 
         service_url_node = eidas_instance_node.find(
             ".//esc:ServiceURL",
@@ -677,7 +693,6 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
                 "base_url": "http://test-entity.id",
                 "organization_name": "Test Organisation",
                 "eh_attribute_consuming_service_index": "9050",
-                "no_eidas": True,
                 "oin": "00000001112223330000",
                 "service_name": "Test Service Name",
                 "service_description": "Test Service Description",
@@ -742,3 +757,74 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             namespaces=NAME_SPACES,
         )
         self.assertEqual(0, len(classifier_node))
+
+    def test_no_eherkenning_service(self):
+        stdout = StringIO()
+
+        call_command(
+            "generate_eherkenning_dienstcatalogus",
+            stdout=stdout,
+            **{
+                "key_file": settings.DIGID["key_file"],
+                "cert_file": settings.DIGID["cert_file"],
+                "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+                "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
+                "entity_id": "http://test-entity.id",
+                "base_url": "http://test-entity.id",
+                "organization_name": "Test Organisation",
+                "eidas_attribute_consuming_service_index": "9050",
+                "oin": "00000001112223330000",
+                "service_name": "Test Service Name",
+                "service_description": "Test Service Description",
+                "makelaar_id": "00000003332221110000",
+                "privacy_policy": "http://test-privacy.nl",
+                "test": True,
+            }
+        )
+
+        stdout.seek(0)
+        output = stdout.read()
+        service_catalogue_node = etree.XML(output.encode("utf-8"))
+
+        service_instance_nodes = service_catalogue_node.findall(
+            ".//esc:ServiceInstance",
+            namespaces=NAME_SPACES,
+        )
+        self.assertEqual(1, len(service_instance_nodes))
+
+        eidas_instance_node = service_instance_nodes[0]
+
+        # Service instance eIDAS
+        classifier_node = eidas_instance_node.findall(
+            ".//esc:Classifier",
+            namespaces=NAME_SPACES,
+        )
+        self.assertEqual(1, len(classifier_node))
+        self.assertEqual("eIDAS-inbound", classifier_node[0].text)
+
+        service_name_node = service_catalogue_node.find(
+            ".//esc:ServiceName",
+            namespaces=NAME_SPACES,
+        )
+        self.assertEqual("Test Service Name (eIDAS)", service_name_node.text)
+
+    def test_no_service_index(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                "generate_eherkenning_dienstcatalogus",
+                **{
+                    "key_file": settings.DIGID["key_file"],
+                    "cert_file": settings.DIGID["cert_file"],
+                    "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+                    "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
+                    "entity_id": "http://test-entity.id",
+                    "base_url": "http://test-entity.id",
+                    "organization_name": "Test Organisation",
+                    "oin": "00000001112223330000",
+                    "service_name": "Test Service Name",
+                    "service_description": "Test Service Description",
+                    "makelaar_id": "00000003332221110000",
+                    "privacy_policy": "http://test-privacy.nl",
+                    "test": True,
+                }
+            )
