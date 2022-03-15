@@ -14,13 +14,17 @@ def generate_dienst_catalogus(options):
         "entity_id": options["entity_id"],
         "oin": options["oin"],
         "organisation_name": options["organization_name"],
-        "services": [
+        "services": [],
+    }
+
+    if options.get("eh_attribute_consuming_service_index"):
+        settings["services"].append(
             {
                 "attribute_consuming_service_index": options[
                     "eh_attribute_consuming_service_index"
                 ],
                 "service_loa": options["loa"],
-                "service_uuid": str(uuid4()),
+                "service_uuid": options.get("eh_service_uuid") or str(uuid4()),
                 "service_name": {
                     "nl": options["service_name"],
                     "en": options["service_name"],
@@ -29,7 +33,8 @@ def generate_dienst_catalogus(options):
                     "nl": options["service_description"],
                     "en": options["service_description"],
                 },
-                "service_instance_uuid": str(uuid4()),
+                "service_instance_uuid": options.get("eh_service_instance_uuid")
+                or str(uuid4()),
                 "service_url": options["base_url"],
                 # Either require and return RSIN and KVKNr (set 1) or require only KvKnr (set 2). The
                 # latter is needed for 'eenmanszaak'
@@ -61,13 +66,17 @@ def generate_dienst_catalogus(options):
                     "nl": options["privacy_policy"],
                 },
                 "herkenningsmakelaars_id": options["makelaar_id"],
-            },
+            }
+        )
+
+    if options.get("eidas_attribute_consuming_service_index"):
+        settings["services"].append(
             {
                 "attribute_consuming_service_index": options[
                     "eidas_attribute_consuming_service_index"
                 ],
                 "service_loa": options["loa"],
-                "service_uuid": str(uuid4()),
+                "service_uuid": options.get("eidas_service_uuid") or str(uuid4()),
                 "service_name": {
                     "nl": options["service_name"] + " (eIDAS)",
                     "en": options["service_name"] + " (eIDAS)",
@@ -76,7 +85,8 @@ def generate_dienst_catalogus(options):
                     "nl": options["service_description"],
                     "en": options["service_description"],
                 },
-                "service_instance_uuid": str(uuid4()),
+                "service_instance_uuid": options.get("eidas_service_instance_uuid")
+                or str(uuid4()),
                 "service_url": options["base_url"],
                 "entity_concerned_types_allowed": [
                     {
@@ -99,12 +109,8 @@ def generate_dienst_catalogus(options):
                 },
                 "herkenningsmakelaars_id": options["makelaar_id"],
                 "classifiers": ["eIDAS-inbound"],
-            },
-        ],
-    }
-
-    if options["no_eidas"]:
-        settings["services"] = settings["services"][:-1]
+            }
+        )
 
     return create_service_catalogus(settings)
 
@@ -188,20 +194,40 @@ class Command(BaseCommand):
             type=str,
             action="store",
             help="Attribute consuming service index for the eHerkenning service, defaults to 9052",
-            default="9052",
-        )
-        parser.add_argument(
-            "--no_eidas",
-            action="store_true",
-            help="If True, then the service catalogue will contain only the eHerkenning service. Defaults to False.",
-            default=False,
         )
         parser.add_argument(
             "--eidas_attribute_consuming_service_index",
             type=str,
             action="store",
             help="Attribute consuming service index for the eHerkenning service, defaults to 9053",
-            default="9053",
+        )
+        parser.add_argument(
+            "--eh_service_uuid",
+            type=str,
+            action="store",
+            help="UUID of the eHerkenning service",
+            default=None,
+        )
+        parser.add_argument(
+            "--eh_service_instance_uuid",
+            type=str,
+            action="store",
+            help="UUID of the eHerkenning service instance",
+            default=None,
+        )
+        parser.add_argument(
+            "--eidas_service_uuid",
+            type=str,
+            action="store",
+            help="UUID of the eIDAS service",
+            default=None,
+        )
+        parser.add_argument(
+            "--eidas_service_instance_uuid",
+            type=str,
+            action="store",
+            help="UUID of the eIDAS service instance",
+            default=None,
         )
         parser.add_argument(
             "--oin",
@@ -260,6 +286,14 @@ class Command(BaseCommand):
                 [f"--{option}" for option in missing_required_options]
             )
             raise CommandError(message)
+
+        if not options.get("eh_attribute_consuming_service_index") and not options.get(
+            "eidas_attribute_consuming_service_index"
+        ):
+            raise CommandError(
+                "eh_attribute_consuming_service_index or/and "
+                "eidas_attribute_consuming_service_index should be specified"
+            )
 
     def handle(self, *args, **options):
         self.check_options(options)

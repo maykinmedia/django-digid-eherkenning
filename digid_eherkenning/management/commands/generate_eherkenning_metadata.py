@@ -1,3 +1,4 @@
+from django.core.management import CommandError
 from django.urls import reverse
 from django.utils import timezone
 
@@ -34,14 +35,12 @@ class Command(SamlMetadataBaseCommand):
             type=str,
             action="store",
             help="Attribute consuming service index for the eHerkenning service, defaults to 9052",
-            default="9052",
         )
         parser.add_argument(
             "--eidas_attribute_consuming_service_index",
             type=str,
             action="store",
             help="Attribute consuming service index for the eHerkenning service, defaults to 9053",
-            default="9053",
         )
         parser.add_argument(
             "--oin",
@@ -50,16 +49,20 @@ class Command(SamlMetadataBaseCommand):
             help="The OIN of the company providing the service.",
             default=None,
         )
-        parser.add_argument(
-            "--no_eidas",
-            action="store_true",
-            help="If True, then the service catalogue will contain only the eHerkenning service. Defaults to False.",
-            default=False,
-        )
 
     def get_filename(self):
         date_string = timezone.now().date().isoformat()
         return f"eherkenning-metadata-{date_string}.xml"
+
+    def check_options(self, options: dict) -> None:
+        super().check_options(options)
+
+        if not options.get("eh_attribute_consuming_service_index") and not options.get(
+            "eidas_attribute_consuming_service_index"
+        ):
+            raise CommandError(
+                "eh_attribute_consuming_service_index or/and eidas_attribute_consuming_service_index should be specified"
+            )
 
     def generate_metadata(self, options):
         setting_dict = {
@@ -94,50 +97,57 @@ class Command(SamlMetadataBaseCommand):
                     "url": furl(options["base_url"] + reverse("eherkenning:acs")).url,
                     "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                 },
-                "attributeConsumingServices": [
-                    {
-                        "index": options["eh_attribute_consuming_service_index"],
-                        "serviceName": options["service_name"],
-                        "serviceDescription": options["service_description"],
-                        "requestedAttributes": [
-                            {
-                                "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
-                                % {
-                                    "oin": options["oin"],
-                                    "index": options[
-                                        "eh_attribute_consuming_service_index"
-                                    ],
-                                },
-                                "isRequired": False,
-                            }
-                        ],
-                        "language": "nl",
-                    },
-                    {
-                        "index": options["eidas_attribute_consuming_service_index"],
-                        "serviceName": options["service_name"] + " (eIDAS)",
-                        "serviceDescription": options["service_description"],
-                        "requestedAttributes": [
-                            {
-                                "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
-                                % {
-                                    "oin": options["oin"],
-                                    "index": options[
-                                        "eidas_attribute_consuming_service_index"
-                                    ],
-                                },
-                                "isRequired": False,
-                            }
-                        ],
-                        "language": "nl",
-                    },
-                ],
+                "attributeConsumingServices": [],
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
                 "x509cert": open(options["cert_file"], "r").read(),
                 "privateKey": open(options["key_file"], "r").read(),
                 "privateKeyPassphrase": options["key_passphrase"],
             },
         }
+
+        if options.get("eh_attribute_consuming_service_index"):
+            setting_dict["sp"]["attributeConsumingServices"].append(
+                {
+                    "index": options["eh_attribute_consuming_service_index"],
+                    "serviceName": options["service_name"],
+                    "serviceDescription": options["service_description"],
+                    "requestedAttributes": [
+                        {
+                            "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
+                            % {
+                                "oin": options["oin"],
+                                "index": options[
+                                    "eh_attribute_consuming_service_index"
+                                ],
+                            },
+                            "isRequired": False,
+                        }
+                    ],
+                    "language": "nl",
+                }
+            )
+
+        if options.get("eidas_attribute_consuming_service_index"):
+            setting_dict["sp"]["attributeConsumingServices"].append(
+                {
+                    "index": options["eidas_attribute_consuming_service_index"],
+                    "serviceName": options["service_name"] + " (eIDAS)",
+                    "serviceDescription": options["service_description"],
+                    "requestedAttributes": [
+                        {
+                            "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
+                            % {
+                                "oin": options["oin"],
+                                "index": options[
+                                    "eidas_attribute_consuming_service_index"
+                                ],
+                            },
+                            "isRequired": False,
+                        }
+                    ],
+                    "language": "nl",
+                }
+            )
 
         telephone = options["technical_contact_person_telephone"]
         email = options["technical_contact_person_email"]
@@ -154,11 +164,6 @@ class Command(SamlMetadataBaseCommand):
                     "url": options["organization_url"],
                 }
             }
-
-        if options["no_eidas"]:
-            setting_dict["sp"]["attributeConsumingServices"] = setting_dict["sp"][
-                "attributeConsumingServices"
-            ][:-1]
 
         saml2_settings = OneLogin_Saml2_Settings(setting_dict, sp_validation_only=True)
         return saml2_settings.get_sp_metadata()
