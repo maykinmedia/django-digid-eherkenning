@@ -217,6 +217,12 @@ To generate the dienstcatalogus:
         --makelaar_id 00000003332223330000 \
         --organization_name "Test Organisation"
 
+.. note::
+
+   Options ``eh_service_uuid``, ``eh_service_instance_uuid``, ``eidas_service_uuid`` and ``eidas_service_instance_uuid``
+   are optional. It is important that every organisation has services with different UUIDs!
+   If these variables are not provided, these UUIDs will be automatically generated.
+
 It is also possible to generate a dienstcatalogus with ONLY the eHerkenning or ONLY the eIDAS service.
 To do this, specify only one of ``eh_attribute_consuming_service_index`` or ``eidas_attribute_consuming_service_index``
 options.
