@@ -185,6 +185,10 @@ The metadata for eHerkenning and eIDAS can be generated with the following comma
         --organization_name "Test organisation" \
         --organization_url http://test-organisation.nl
 
+It is also possible to generate the metadata for ONLY eHerkenning or ONLY eIDAS.
+To do this, specify only one of ``eh_attribute_consuming_service_index`` or ``eidas_attribute_consuming_service_index``
+options.
+
 For information about each option, use:
 
 .. code-block:: bash
@@ -203,11 +207,19 @@ To generate the dienstcatalogus:
         --service_name "Test name" \
         --service_description "Test description" \
         --eh_attribute_consuming_service_index 9052 \
+        --eh_service_uuid  "11111111-1111-1111-1111-111111111111" \
+        --eh_service_instance_uuid  "22222222-2222-2222-2222-222222222222" \
+        --eidas_service_uuid  "33333333-3333-3333-3333-333333333333" \
+        --eidas_service_instance_uuid  "44444444-4444-4444-4444-444444444444" \
         --eidas_attribute_consuming_service_index 9053 \
         --oin 00000001112223330000 \
         --privacy_policy http://test-url.nl/privacy \
         --makelaar_id 00000003332223330000 \
         --organization_name "Test Organisation"
+
+It is also possible to generate a dienstcatalogus with ONLY the eHerkenning or ONLY the eIDAS service.
+To do this, specify only one of ``eh_attribute_consuming_service_index`` or ``eidas_attribute_consuming_service_index``
+options.
 
 Background information
 ======================
