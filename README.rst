@@ -209,6 +209,21 @@ To generate the dienstcatalogus:
         --makelaar_id 00000003332223330000 \
         --organization_name "Test Organisation"
 
+Specific broker settings
+========================
+
+From 1st of April 2022 certain eHerkenning brokers like OneWelcome and Signicat, require that the artifact resolution
+request has the content-type header ``text/xml`` instead of ``application/soap+xml``. This can be configured by including
+the following parameter in the ``EHERKENNING`` django setting:
+
+.. code-block:: python
+
+    EHERKENNING = {
+        ...
+        "artifact_resolve_content_type": "text/xml",
+        ...
+    }
+
 Background information
 ======================
 
