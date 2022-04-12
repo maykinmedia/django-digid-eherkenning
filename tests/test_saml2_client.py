@@ -74,3 +74,28 @@ class EHerkenningClientTests(TestCase):
             "http://www.w3.org/2001/04/xmlenc#sha256",
             config_dict["security"]["digestAlgorithm"],
         )
+
+    def test_artifact_resolve_content_type_settings_default(self):
+        conf = settings.EHERKENNING.copy()
+        conf.setdefault("acs_path", reverse("eherkenning:acs"))
+
+        eherkenning_client = eHerkenningClient()
+        config_dict = eherkenning_client.create_config_dict(conf)
+
+        self.assertIn("resolveArtifactBindingContentType", config_dict["idp"])
+        self.assertIn("application/soap+xml", config_dict["idp"]["resolveArtifactBindingContentType"])
+
+    def test_artifact_resolve_content_type_settings(self):
+        conf = settings.EHERKENNING.copy()
+        conf.setdefault("acs_path", reverse("eherkenning:acs"))
+        conf.update(
+            {
+                "artifact_resolve_content_type": "text/xml",
+            }
+        )
+
+        eherkenning_client = eHerkenningClient()
+        config_dict = eherkenning_client.create_config_dict(conf)
+
+        self.assertIn("resolveArtifactBindingContentType", config_dict["idp"])
+        self.assertIn("text/xml", config_dict["idp"]["resolveArtifactBindingContentType"])
