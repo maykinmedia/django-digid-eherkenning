@@ -83,7 +83,10 @@ class EHerkenningClientTests(TestCase):
         config_dict = eherkenning_client.create_config_dict(conf)
 
         self.assertIn("resolveArtifactBindingContentType", config_dict["idp"])
-        self.assertIn("application/soap+xml", config_dict["idp"]["resolveArtifactBindingContentType"])
+        self.assertIn(
+            "application/soap+xml",
+            config_dict["idp"]["resolveArtifactBindingContentType"],
+        )
 
     def test_artifact_resolve_content_type_settings(self):
         conf = settings.EHERKENNING.copy()
@@ -98,4 +101,6 @@ class EHerkenningClientTests(TestCase):
         config_dict = eherkenning_client.create_config_dict(conf)
 
         self.assertIn("resolveArtifactBindingContentType", config_dict["idp"])
-        self.assertIn("text/xml", config_dict["idp"]["resolveArtifactBindingContentType"])
+        self.assertIn(
+            "text/xml", config_dict["idp"]["resolveArtifactBindingContentType"]
+        )
