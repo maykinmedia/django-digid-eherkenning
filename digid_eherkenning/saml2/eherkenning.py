@@ -443,6 +443,10 @@ class eHerkenningClient(BaseSaml2Client):
                 },
             }
         )
+
+        config_dict["idp"]["resolveArtifactBindingContentType"] = conf.get(
+            "artifact_resolve_content_type", "application/soap+xml"
+        )
         return config_dict
 
     def create_config(self, config_dict):
