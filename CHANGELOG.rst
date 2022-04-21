@@ -2,6 +2,12 @@
 Changelog
 =========
 
+0.3.1 (2022-04-21)
+==================
+* Removed Jenkins related files
+* The content-type header used during the resolve artifact request was made configurable.
+
+
 0.3.0 (2022-02-25)
 ==================
 
