@@ -1,10 +1,11 @@
 from django.conf import settings
 from django.contrib import auth, messages
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView, View
+
+from onelogin.saml2.utils import OneLogin_Saml2_ValidationError
 
 from ..forms import SAML2Form
 from ..saml2.digid import DigiDClient
@@ -57,8 +58,17 @@ class DigiDAssertionConsumerServiceView(View):
     """
 
     login_url = None
+    error_messages = {
+        "default": _(
+            "Er is een fout opgetreden in de communicatie met DigiD. "
+            "Probeert u het later nogmaals. Indien deze fout blijft "
+            "aanhouden, kijk dan op de website https://www.digid.nl "
+            "voor de laatste informatie."
+        ),
+        "cancelled": _("U heeft het inloggen met DigiD geannuleerd."),
+    }
 
-    def get_login_url(self):
+    def get_login_url(self, **kwargs):
         url = self.get_redirect_url()
         if url:
             return url
@@ -78,14 +88,22 @@ class DigiDAssertionConsumerServiceView(View):
         return get_redirect_url(self.request, redirect_to)
 
     def get(self, request):
+        errors = []
         user = auth.authenticate(
-            request=request, digid=True, saml_art=request.GET.get("SAMLart")
+            request=request,
+            digid=True,
+            saml_art=request.GET.get("SAMLart"),
+            errors=errors,
         )
         if user is None:
-            messages.error(
-                request, _("Login to DigiD did not succeed. Please try again.")
+            error_code = getattr(errors[0], "code", "") if errors else ""
+            error_type = (
+                "cancelled"
+                if error_code == OneLogin_Saml2_ValidationError.STATUS_CODE_AUTHNFAILED
+                else "default"
             )
-            login_url = self.get_login_url()
+            messages.error(request, self.error_messages[error_type])
+            login_url = self.get_login_url(error_type=error_type)
             return HttpResponseRedirect(login_url)
 
         auth.login(request, user)

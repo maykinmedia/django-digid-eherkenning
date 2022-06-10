@@ -105,7 +105,11 @@ class DigiDBackend(BSNBackendMixin, BaseSaml2Backend):
         }
     )
 
-    def authenticate(self, request, digid=None, saml_art=None):
+    def authenticate(self, request, digid=None, saml_art=None, errors=[]):
+        # Note: the fucntion has side-effect: it modifies 'errors' parameter
+        # It's a workaround to access auth errors outside the Backend
+        errors.clear()
+
         if saml_art is None:
             return
 
@@ -118,14 +122,16 @@ class DigiDBackend(BSNBackendMixin, BaseSaml2Backend):
 
         try:
             response = client.artifact_resolve(request, saml_art)
-        except OneLogin_Saml2_ValidationError:
+        except OneLogin_Saml2_ValidationError as e:
+            errors.append(e)
             self.handle_validation_error(request)
 
             return
 
         try:
             name_id = response.get_nameid()
-        except OneLogin_Saml2_ValidationError:
+        except OneLogin_Saml2_ValidationError as e:
+            errors.append(e)
             self.handle_validation_error(request)
 
             return
