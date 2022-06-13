@@ -60,12 +60,11 @@ class DigiDAssertionConsumerServiceView(View):
     login_url = None
     error_messages = {
         "default": _(
-            "Er is een fout opgetreden in de communicatie met DigiD. "
-            "Probeert u het later nogmaals. Indien deze fout blijft "
-            "aanhouden, kijk dan op de website https://www.digid.nl "
-            "voor de laatste informatie."
+            "An error occurred in the communication with DigiD. "
+            "Please try again later. If this error persists, please "
+            "check the website https://www.digid.nl for the latest information."
         ),
-        "cancelled": _("U heeft het inloggen met DigiD geannuleerd."),
+        "cancelled": _("You have cancelled logging in with DigiD."),
     }
 
     def get_login_url(self, **kwargs):

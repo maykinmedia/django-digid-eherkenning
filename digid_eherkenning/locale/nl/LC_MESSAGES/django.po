@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-23 17:22+0200\n"
+"POT-Creation-Date: 2022-06-13 19:33+0200\n"
 "PO-Revision-Date: 2020-06-23 16:55+0200\n"
 "Last-Translator: Alexander Schrijver <alexander@maykinmedia.nl>\n"
 "Language-Team: Maykin Media <info@maykinmedia.nl>\n"
@@ -12,13 +12,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: backends.py:24
+#: backends.py:25
 #, python-format
 msgid "The %(service)s login from %(ip)s did not succeed or was cancelled."
 msgstr "De %(service)s-login van %(ip)s is niet geslaagd of was geannuleerd."
 
 # python-format
-#: backends.py:27
+#: backends.py:28
 #, python-format
 msgid "A technical error occurred from %(ip)s during %(service)s login."
 msgstr ""
@@ -26,28 +26,36 @@ msgstr ""
 "%(ip)s."
 
 # python-format
-#: backends.py:30
-#, python-format
-msgid "User %(user)s%(new_account)s from %(ip)s logged in using %(service)s"
+#: backends.py:31
+#, fuzzy, python-format
+#| msgid "User %(user)s%(new_account)s from %(ip)s logged in using %(service)s"
+msgid "User %(user)s%(user_info)s from %(ip)s logged in using %(service)s"
 msgstr ""
 "Gebruiker %(user)s%(new_account)s is met %(service)s ingelogd vanaf %(ip)s."
 
-#: backends.py:75
-msgid "Login failed due to no BSN being returned by DigiD."
-msgstr "Login mislukt doordat er geen BSN is teruggegeven door DigiD."
-
-#: backends.py:133
+#: backends.py:89
 msgid " (new account)"
 msgstr " (nieuw account)"
 
-#: backends.py:149
-msgid "Login failed due to no RSIN being returned by eHerkenning."
-msgstr "Login mislukt doordat er geen RSIN is teruggegeven door eHerkenning."
+#: backends.py:104 mock/backends.py:19
+msgid "Login failed due to no BSN being returned by DigiD."
+msgstr "Login mislukt doordat er geen BSN is teruggegeven door DigiD."
 
-#: views/digid.py:86
-msgid "Login to DigiD did not succeed. Please try again."
-msgstr "DigiD-login mislukt. Probeer het nogmaals"
+#: mock/views/digid.py:96 views/digid.py:63
+msgid ""
+"An error occurred in the communication with DigiD. Please try again later. "
+"If this error persists, please check the website https://www.digid.nl for "
+"the latest information."
+msgstr ""
+"Er is een fout opgetreden in de communicatie met DigiD. "
+"Probeert u het later nogmaals. Indien deze fout blijft "
+"aanhouden, kijk dan op de website https://www.digid.nl "
+"voor de laatste informatie."
 
-#: views/eherkenning.py:78
+#: views/digid.py:67
+msgid "You have cancelled logging in with DigiD."
+msgstr "U heeft het inloggen met DigiD geannuleerd."
+
+#: views/eherkenning.py:102 views/eherkenning.py:107
 msgid "Login to eHerkenning did not succeed. Please try again."
 msgstr "eHerkenning-login mislukt. Probeer het nogmaals"

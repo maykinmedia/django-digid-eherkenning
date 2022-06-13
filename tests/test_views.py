@@ -385,10 +385,9 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(
             list(response.context["messages"])[0].message,
             _(
-                "Er is een fout opgetreden in de communicatie met DigiD. "
-                "Probeert u het later nogmaals. Indien deze fout blijft "
-                "aanhouden, kijk dan op de website https://www.digid.nl "
-                "voor de laatste informatie."
+                "An error occurred in the communication with DigiD. "
+                "Please try again later. If this error persists, please "
+                "check the website https://www.digid.nl for the latest information."
             ),
         )
 
@@ -428,10 +427,9 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(
             list(response.context["messages"])[0].message,
             _(
-                "Er is een fout opgetreden in de communicatie met DigiD. "
-                "Probeert u het later nogmaals. Indien deze fout blijft "
-                "aanhouden, kijk dan op de website https://www.digid.nl "
-                "voor de laatste informatie."
+                "An error occurred in the communication with DigiD. "
+                "Please try again later. If this error persists, please "
+                "check the website https://www.digid.nl for the latest information."
             ),
         )
 
@@ -691,7 +689,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
         self.assertEqual(
             list(response.context["messages"])[0].message,
-            _("U heeft het inloggen met DigiD geannuleerd."),
+            _("You have cancelled logging in with DigiD."),
         )
 
         # Make sure no user is created.

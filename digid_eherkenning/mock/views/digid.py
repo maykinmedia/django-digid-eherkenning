@@ -93,10 +93,9 @@ class DigiDAssertionConsumerServiceMockView(View):
         user = auth.authenticate(request=request, bsn=request.GET.get("bsn"))
         if user is None:
             message = _(
-                "Er is een fout opgetreden in de communicatie met DigiD. "
-                "Probeert u het later nogmaals. Indien deze fout blijft "
-                "aanhouden, kijk dan op de website https://www.digid.nl "
-                "voor de laatste informatie."
+                "An error occurred in the communication with DigiD. "
+                "Please try again later. If this error persists, please "
+                "check the website https://www.digid.nl for the latest information."
             )
             messages.error(request, message)
             login_url = self.get_login_url()
