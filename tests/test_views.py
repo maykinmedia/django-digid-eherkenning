@@ -9,6 +9,7 @@ from django.contrib import auth
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 import responses
 from freezegun import freeze_time
@@ -383,7 +384,11 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
         self.assertEqual(
             list(response.context["messages"])[0].message,
-            "Login to DigiD did not succeed. Please try again.",
+            _(
+                "An error occurred in the communication with DigiD. "
+                "Please try again later. If this error persists, please "
+                "check the website https://www.digid.nl for the latest information."
+            ),
         )
 
         # Make sure no user is created.
@@ -421,7 +426,11 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
         self.assertEqual(
             list(response.context["messages"])[0].message,
-            "Login to DigiD did not succeed. Please try again.",
+            _(
+                "An error occurred in the communication with DigiD. "
+                "Please try again later. If this error persists, please "
+                "check the website https://www.digid.nl for the latest information."
+            ),
         )
 
         # Make sure no user is created.
@@ -628,6 +637,63 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(self.client.session.get_expiry_age(), 900)
+
+    @responses.activate
+    def test_user_cancels(self):
+        """
+        Test that when a user cancels this is logged properly.
+        """
+        root_element = etree.fromstring(self.artifact_response_soap)
+
+        # Remove Assertion element. It will not be returned
+        # when user cancels.
+        assertion = get_saml_element(
+            root_element,
+            "//saml:Assertion",
+        )
+        assertion.getparent().remove(assertion)
+
+        status_code = get_saml_element(
+            root_element, "//samlp:Response/samlp:Status/samlp:StatusCode"
+        )
+        status_code.set("Value", "urn:oasis:names:tc:SAML:2.0:status:Responder")
+
+        status_code.insert(
+            0,
+            etree.Element(
+                "{urn:oasis:names:tc:SAML:2.0:protocol}StatusCode",
+                Value="urn:oasis:names:tc:SAML:2.0:status:AuthnFailed",
+            ),
+        )
+
+        responses.add(
+            responses.POST,
+            "https://was-preprod1.digid.nl/saml/idp/resolve_artifact",
+            body=etree.tostring(root_element),
+            status=200,
+        )
+
+        url = (
+            reverse("digid:acs")
+            + "?"
+            + urllib.parse.urlencode({"SAMLart": self.artifact})
+        )
+        with self.assertLogs("digid_eherkenning.backends", level="INFO") as log_watcher:
+            response = self.client.get(url, follow=True)
+
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "The DigiD login from 127.0.0.1 did not succeed or was cancelled.", logs
+        )
+
+        self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
+        self.assertEqual(
+            list(response.context["messages"])[0].message,
+            _("You have cancelled logging in with DigiD."),
+        )
+
+        # Make sure no user is created.
+        self.assertEqual(User.objects.count(), 0)
 
 
 class eHerkenningLoginViewTests(TestCase):

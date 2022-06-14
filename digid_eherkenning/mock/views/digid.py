@@ -92,9 +92,12 @@ class DigiDAssertionConsumerServiceMockView(View):
     def get(self, request):
         user = auth.authenticate(request=request, bsn=request.GET.get("bsn"))
         if user is None:
-            messages.error(
-                request, _("Login to DigiD did not succeed. Please try again.")
+            message = _(
+                "An error occurred in the communication with DigiD. "
+                "Please try again later. If this error persists, please "
+                "check the website https://www.digid.nl for the latest information."
             )
+            messages.error(request, message)
             login_url = self.get_login_url()
             return HttpResponseRedirect(login_url)
 
