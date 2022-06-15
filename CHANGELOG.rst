@@ -2,7 +2,12 @@
 Changelog
 =========
 
+0.3.3 (2022-06-14)
+==================
+* Included *.mo files in the package and therefore supported localization
+
 0.3.2 (2022-06-14)
+==================
 * Updated DigiD error messages to comply with Logius specifications
 
 0.3.1 (2022-04-21)
