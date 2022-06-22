@@ -2,7 +2,7 @@ from .digid import (  # noqa
     DigiDAssertionConsumerServiceView,
     DigiDLoginView,
     DigiDLogoutView,
-    DigidSingleLogoutView,
+    DigidSingleLogoutCallbackView,
 )
 from .eherkenning import (  # noqa
     eHerkenningAssertionConsumerServiceView,

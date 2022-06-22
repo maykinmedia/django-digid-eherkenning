@@ -8,5 +8,5 @@ urlpatterns = [
     path("login/", views.DigiDLoginView.as_view(), name="login"),
     path("acs/", views.DigiDAssertionConsumerServiceView.as_view(), name="acs"),
     path("logout/", views.DigiDLogoutView.as_view(), name="logout"),
-    path("slo/", views.DigidSingleLogoutView.as_view(), name="slo"),
+    path("slo/", views.DigidSingleLogoutCallbackView.as_view(), name="slo"),
 ]

@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.contrib import auth, messages
-from django.contrib.auth.views import LogoutView
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.translation import gettext as _
@@ -116,6 +115,6 @@ class DigiDLogoutView(View):
     pass
 
 
-class DigidSingleLogoutView(View):
+class DigidSingleLogoutCallbackView(View):
     # TODO callback view for SLO
     pass
