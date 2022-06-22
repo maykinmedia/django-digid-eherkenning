@@ -221,6 +221,11 @@ class Command(SamlMetadataBaseCommand):
                     "url": options["base_url"] + reverse("digid:acs"),
                     "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                 },
+                "singleLogoutService": {
+                    # URL Location where the <LogoutRequest> from the IdP will be sent (IdP-initiated logout)
+                    "url": options["base_url"] + reverse("digid:slo"),
+                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                },
                 # If you need to specify requested attributes, set a
                 # attributeConsumingService per service. nameFormat, attributeValue and
                 # friendlyName can be omitted

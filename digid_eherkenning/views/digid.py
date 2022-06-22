@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import auth, messages
+from django.contrib.auth.views import LogoutView
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.translation import gettext as _
@@ -108,3 +109,13 @@ class DigiDAssertionConsumerServiceView(View):
         auth.login(request, user)
 
         return HttpResponseRedirect(self.get_success_url())
+
+
+class DigiDLogoutView(View):
+    # TODO logout view for SLO
+    pass
+
+
+class DigidSingleLogoutView(View):
+    # TODO callback view for SLO
+    pass

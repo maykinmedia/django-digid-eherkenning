@@ -146,6 +146,15 @@ class DigidMetadataManagementCommandTests(TestCase):
         )
         self.assertEqual("06123123123", contact_telephone_node.text)
 
+        single_logout_service_node = entity_descriptor_node.find(
+            ".//md:SingleLogoutService",
+            namespaces=NAME_SPACES,
+        )
+        self.assertEqual(
+            "http://test-entity.id/digid/slo/",
+            single_logout_service_node.attrib["Location"],
+        )
+
     def test_missing_required_properties(self):
         with self.assertRaises(CommandError):
             call_command(
