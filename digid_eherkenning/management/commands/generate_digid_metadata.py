@@ -1,10 +1,13 @@
-from argparse import BooleanOptionalAction
-
 from django.core.management.base import BaseCommand, CommandError
 from django.urls import reverse
 from django.utils import timezone
 
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
+
+try:
+    from argparse import BooleanOptionalAction
+except ImportError:
+    from ..utils import BooleanOptionalAction
 
 
 class SamlMetadataBaseCommand(BaseCommand):
