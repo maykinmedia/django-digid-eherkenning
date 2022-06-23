@@ -37,6 +37,7 @@ class DigidMetadataManagementCommandTests(TestCase):
                 "organization_name": "Test organisation",
                 "organization_url": "http://test-organisation.nl",
                 "test": True,
+                "slo": True,
             }
         )
 
@@ -146,11 +147,25 @@ class DigidMetadataManagementCommandTests(TestCase):
         )
         self.assertEqual("06123123123", contact_telephone_node.text)
 
+        single_logout_service_node = entity_descriptor_node.find(
+            ".//md:SingleLogoutService",
+            namespaces=NAME_SPACES,
+        )
+        self.assertEqual(
+            "http://test-entity.id/digid/slo/",
+            single_logout_service_node.attrib["Location"],
+        )
+
     def test_missing_required_properties(self):
-        with self.assertRaises(CommandError):
+        with self.assertRaises(CommandError) as cm:
             call_command(
                 "generate_digid_metadata",
             )
+        self.assertEqual(
+            cm.exception.args[0],
+            "Missing the following required arguments: --key_file --cert_file "
+            "--entity_id --base_url --service_name --service_description --slo",
+        )
 
     def test_contact_telephone_no_email(self):
         stdout = StringIO()
@@ -169,6 +184,7 @@ class DigidMetadataManagementCommandTests(TestCase):
                 "service_description": "Test Service Description",
                 "technical_contact_person_telephone": "06123123123",
                 "test": True,
+                "slo": True,
             }
         )
 
@@ -205,6 +221,7 @@ class DigidMetadataManagementCommandTests(TestCase):
                 "service_description": "Test Service Description",
                 "organization_url": "http://test-organisation.nl",
                 "test": True,
+                "slo": True,
             }
         )
 
@@ -228,3 +245,33 @@ class DigidMetadataManagementCommandTests(TestCase):
         self.assertIsNone(organisation_name_node)
         self.assertIsNone(organisation_display_node)
         self.assertIsNone(organisation_url_node)
+
+    def test_slo_not_supported(self):
+        stdout = StringIO()
+
+        call_command(
+            "generate_digid_metadata",
+            stdout=stdout,
+            **{
+                "want_assertions_encrypted": True,
+                "want_assertions_signed": True,
+                "key_file": settings.DIGID["key_file"],
+                "cert_file": settings.DIGID["cert_file"],
+                "entity_id": "http://test-entity.id",
+                "base_url": "http://test-entity.id",
+                "service_name": "Test Service Name",
+                "service_description": "Test Service Description",
+                "test": True,
+                "slo": False,
+            }
+        )
+
+        stdout.seek(0)
+        output = stdout.read()
+        entity_descriptor_node = etree.XML(output)
+
+        single_logout_service_node = entity_descriptor_node.find(
+            ".//md:SingleLogoutService",
+            namespaces=NAME_SPACES,
+        )
+        self.assertIsNone(single_logout_service_node)

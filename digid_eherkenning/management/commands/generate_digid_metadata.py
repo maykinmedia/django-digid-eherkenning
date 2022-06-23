@@ -4,6 +4,11 @@ from django.utils import timezone
 
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
+try:
+    from argparse import BooleanOptionalAction
+except ImportError:
+    from ..utils import BooleanOptionalAction
+
 
 class SamlMetadataBaseCommand(BaseCommand):
     def add_arguments(self, parser):
@@ -124,11 +129,16 @@ class SamlMetadataBaseCommand(BaseCommand):
             help="If True the metadata is printed to stdout. Defaults to False",
             default=False,
         )
+        parser.add_argument(
+            "--slo",
+            action=BooleanOptionalAction,
+            help="If '--slo' is present, Single Logout is supported. To turn it off use '--no-slo'",
+        )
 
     def check_options(self, options: dict) -> None:
         missing_required_options = []
         for option in self.required_options:
-            if option not in options or not options[option]:
+            if option not in options or options[option] is None:
                 missing_required_options.append(option)
 
         if len(missing_required_options) > 0:
@@ -170,6 +180,7 @@ class Command(SamlMetadataBaseCommand):
         "base_url",
         "service_name",
         "service_description",
+        "slo",
     ]
 
     def add_arguments(self, parser):
@@ -241,6 +252,17 @@ class Command(SamlMetadataBaseCommand):
                 "privateKeyPassphrase": options["key_passphrase"],
             },
         }
+
+        if options["slo"]:
+            setting_dict["sp"].update(
+                {
+                    "singleLogoutService": {
+                        # URL Location where the <LogoutRequest> from the IdP will be sent (IdP-initiated logout)
+                        "url": options["base_url"] + reverse("digid:slo"),
+                        "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                    },
+                }
+            )
 
         telephone = options["technical_contact_person_telephone"]
         email = options["technical_contact_person_email"]

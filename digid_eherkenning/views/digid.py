@@ -108,3 +108,13 @@ class DigiDAssertionConsumerServiceView(View):
         auth.login(request, user)
 
         return HttpResponseRedirect(self.get_success_url())
+
+
+class DigiDLogoutView(View):
+    # TODO logout view for SLO
+    pass
+
+
+class DigidSingleLogoutCallbackView(View):
+    # TODO callback view for SLO
+    pass
