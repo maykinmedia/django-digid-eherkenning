@@ -157,7 +157,8 @@ The metadata for DigiD can be generated with the following command:
         --technical_contact_person_telephone 06123123123 \
         --technical_contact_person_email test@test.nl \
         --organization_name "Test organisation" \
-        --organization_url http://test-organisation.nl
+        --organization_url http://test-organisation.nl \
+        --slo
 
 Generating eHerkenning/eIDAS metadata
 -------------------------------------

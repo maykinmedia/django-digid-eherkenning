@@ -1,7 +1,7 @@
 from argparse import Action
 
 
-class BooleanOptionalAction(Action):
+class BooleanOptionalAction(Action):  # pragma: no cover
     """
     this class is copied from python3.9  for compatibility with python 3.7
 
