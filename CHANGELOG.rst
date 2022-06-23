@@ -2,6 +2,11 @@
 Changelog
 =========
 
+0.4.0 (2022-07-23)
+==================
+* Added ``slo`` required parameter for Digid metadata generation as a first step to support single logout.
+
+
 0.3.3 (2022-06-15)
 ==================
 * Update to include locale files for translations
