@@ -275,6 +275,18 @@ class BaseSaml2Client:
 
         return setting_dict
 
+    def create_logout_request(self, request, return_to=None, name_id=None):
+        """
+        :returns: Redirection URL for HTTP-redirect binding
+        """
+        # FIXME should we add signature?
+        saml2_request = create_saml2_request(self.conf["base_url"], request)
+        saml2_auth = OneLogin_Saml2_Auth(
+            saml2_request, old_settings=self.saml2_settings
+        )
+        url = saml2_auth.logout(return_to=return_to, name_id=name_id)
+        return url
+
 
 class AuthnRequestStorage:
     def __init__(self, cache_key_prefix, cache_timeout):

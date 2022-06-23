@@ -1,12 +1,19 @@
+from typing import Optional
+
 from django.conf import settings
 from django.contrib import auth, messages
+from django.contrib.auth import logout as auth_logout
+from django.contrib.auth.views import LogoutView
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
+from django.views.decorators.cache import never_cache
 from django.views.generic.base import TemplateView, View
 
 from onelogin.saml2.utils import OneLogin_Saml2_ValidationError
 
+from ..choices import SectorType
 from ..forms import SAML2Form
 from ..saml2.digid import DigiDClient
 from .base import get_redirect_url
@@ -110,9 +117,40 @@ class DigiDAssertionConsumerServiceView(View):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class DigiDLogoutView(View):
-    # TODO logout view for SLO
-    pass
+class DigiDLogoutView(LogoutView):
+    """
+    1. local logout from django app
+    2. Single logout with HTTP-redirect
+    """
+
+    @method_decorator(never_cache)
+    def dispatch(self, request, *args, **kwargs):
+        name_id = self.get_name_id(request)
+
+        if not name_id:
+            return super().dispatch(request, *args, **kwargs)
+
+        # local logout
+        auth_logout(request)
+
+        # single logout
+        client = DigiDClient()
+        return_to = self.get_next_page()
+        logout_url = client.create_logout_request(
+            request, return_to=return_to, name_id=name_id
+        )
+
+        return HttpResponseRedirect(logout_url)
+
+    @staticmethod
+    def get_name_id(request) -> Optional[str]:
+        """this method constructs 'name_id' using 'User.bsn' attribute"""
+        # FIXME perhaps it's better to use django session to store and retrieve name_id?
+        bsn = getattr(request.user, "bsn", None)
+        if not bsn:
+            return None
+
+        return f"{SectorType.bsn}:{request.user.bsn}"
 
 
 class DigidSingleLogoutCallbackView(View):
