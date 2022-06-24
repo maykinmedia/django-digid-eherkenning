@@ -31,21 +31,24 @@ class DigidLoginViewTests(TestCase):
         user = User.objects.create_user(
             username="testuser", password="test", bsn="12345670"
         )
-        c = self.client
-        c.force_login(user)
+        self.client.force_login(user)
 
-        response = c.get(reverse("digid:logout"))
+        response = self.client.get(reverse("digid:logout"))
 
         self.assertEqual(response.status_code, 302)
+        self.assertFalse("_auth_user_id" in self.client.session)
 
         logout_url = response.url
         f = furl(logout_url)
 
         self.assertEqual(f.origin, "https://preprod1.digid.nl")
         self.assertEqual(f.path, "/saml/idp/request_logout")
-        self.assertEqual(f.args.keys(), ["SAMLRequest", "RelayState"])
+        self.assertEqual(
+            f.args.keys(), ["SAMLRequest", "RelayState", "Signature", "SigAlg"]
+        )
         self.assertEqual(f.args["RelayState"], settings.LOGOUT_REDIRECT_URL)
 
+        # check SAML request
         saml_request = OneLogin_Saml2_Utils.decode_base64_and_inflate(
             f.args["SAMLRequest"]
         )
@@ -80,3 +83,7 @@ class DigidLoginViewTests(TestCase):
                 etree.fromstring(expected_request), pretty_print=True
             ).decode("utf-8"),
         )
+
+        # check signature algorithm
+        self.assertEqual(f.args["SigAlg"], settings.DIGID["signature_algorithm"])
+        self.assertIsNotNone(f.args["Signature"])
