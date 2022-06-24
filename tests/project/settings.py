@@ -57,6 +57,7 @@ ROOT_URLCONF = "tests.project.urls"
 # ROOT_URLCONF = "tests.project.mock_urls"
 
 LOGIN_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 
 TEMPLATES = [
     {

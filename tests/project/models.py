@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
 from .choices import UserLoginType
@@ -16,5 +16,6 @@ class User(AbstractUser):
     bsn = models.CharField(max_length=9)
     rsin = models.CharField(max_length=9)
 
+    objects = UserManager()
     digid_objects = DigidManager()
     eherkenning_objects = eHerkenningManager()
