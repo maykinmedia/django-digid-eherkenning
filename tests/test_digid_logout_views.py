@@ -7,6 +7,7 @@ from django.urls import reverse
 from freezegun import freeze_time
 from furl import furl
 from lxml import etree
+from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 from digid_eherkenning.choices import SectorType
@@ -85,5 +86,5 @@ class DigidLoginViewTests(TestCase):
         )
 
         # check signature algorithm
-        self.assertEqual(f.args["SigAlg"], settings.DIGID["signature_algorithm"])
+        self.assertEqual(f.args["SigAlg"], OneLogin_Saml2_Constants.RSA_SHA1)
         self.assertIsNotNone(f.args["Signature"])
