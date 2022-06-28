@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import auth, messages
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.views import LogoutView
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.decorators import method_decorator
@@ -128,7 +129,7 @@ class DigiDLogoutView(LogoutView):
         name_id = self.get_name_id(request)
 
         if not name_id:
-            return super().dispatch(request, *args, **kwargs)
+            raise PermissionDenied(_("You are not authenticated with Digid"))
 
         # local logout
         auth_logout(request)
@@ -145,7 +146,7 @@ class DigiDLogoutView(LogoutView):
     @staticmethod
     def get_name_id(request) -> Optional[str]:
         """this method constructs 'name_id' using 'User.bsn' attribute"""
-        # FIXME perhaps it's better to use django session to store and retrieve name_id?
+        # TODO perhaps it's better to use django session to store and retrieve name_id?
         bsn = getattr(request.user, "bsn", None)
         if not bsn:
             return None

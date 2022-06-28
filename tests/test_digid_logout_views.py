@@ -88,3 +88,14 @@ class DigidLoginViewTests(TestCase):
         # check signature algorithm
         self.assertEqual(f.args["SigAlg"], OneLogin_Saml2_Constants.RSA_SHA1)
         self.assertIsNotNone(f.args["Signature"])
+
+    def test_logout_without_bsn(self):
+        """
+        check that only users with nameId can logout
+        """
+        user = User.objects.create_user(username="testuser", password="test", bsn="")
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("digid:logout"))
+
+        self.assertEqual(response.status_code, 403)
