@@ -204,7 +204,6 @@ class Command(SamlMetadataBaseCommand):
             "security": {
                 "signMetadata": True,
                 "authnRequestsSigned": True,
-                "logoutRequestSigned": True,
                 "wantAssertionsEncrypted": options["want_assertions_encrypted"],
                 "wantAssertionsSigned": options["want_assertions_signed"],
                 # None sent for digi-id.
