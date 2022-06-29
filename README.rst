@@ -80,6 +80,40 @@ Finally, at the URL patterns to your root ``urls.py``:
         ...,
     ]
 
+Configuration
+-------------
+
+In the settings you can specify the required configuration in ``DIGID`` or ``EHERKENNING`` dictionary.
+This is an example of Digid settings:
+
+.. code-block:: py
+
+    DIGID = {
+        "base_url": "https://sp.example.nl",  # required
+        "entity_id": "sp.example.nl/digid",  # required
+        "metadata_file": "/path/to/metadata",  # required
+        "key_file": /path/to/key/file.key,  # required
+        "cert_file": /path/to/cert/file.pem,  # required
+        "service_entity_id": "https://example.digid.nl/saml/idp/metadata",  # required
+        "attribute_consuming_service_index": "1",
+        "service_name": "Example",
+        "requested_attributes": [],
+        "login_url": reverse_lazy("admin:login"),
+        "session_age": 15 * 60,
+        "want_assertions_encrypted": False,
+        "want_assertions_signed": False,
+        "signature_algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1",
+        "digest_algorithm": "",
+        "key_passphrase": "",
+        "technical_contact_person_telephone": "06123123123",
+        "technical_contact_person_email": "test@test.nl",
+        "organization": "Example organization",
+    }
+
+Note that ``signature_algorithm`` setting is used only for requests with HTTP Redirect binding.
+Login request with HTTP Post binding uses ``http://www.w3.org/2001/04/xmldsig-more#rsa-sha256`` algorithm.
+
+
 Usage
 =====
 

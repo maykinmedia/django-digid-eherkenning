@@ -7,6 +7,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
+from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from onelogin.saml2.utils import OneLogin_Saml2_ValidationError
@@ -220,12 +221,17 @@ class BaseSaml2Client:
             "security": {
                 "signMetadata": True,
                 "authnRequestsSigned": True,
+                "logoutRequestSigned": True,
                 "wantAssertionsEncrypted": conf.get("want_assertions_encrypted", False),
                 "wantAssertionsSigned": conf.get("want_assertions_signed", False),
                 "soapClientKey": conf["key_file"],
                 "soapClientCert": conf["cert_file"],
                 "soapClientPassphrase": conf.get("key_passphrase", None),
-                "signatureAlgorithm": conf.get("signature_algorithm"),
+                # algorithm for requests with HTTP-redirect binding.
+                # AuthnRequest with HTTP-POST uses RSA_SHA256, which is hardcoded in OneLogin_Saml2_Auth.login_post
+                "signatureAlgorithm": conf.get(
+                    "signature_algorithm", OneLogin_Saml2_Constants.RSA_SHA1
+                ),
                 "digestAlgorithm": conf.get("digest_algorithm"),
             },
             "debug": settings.DEBUG,
@@ -274,6 +280,17 @@ class BaseSaml2Client:
             setting_dict["organization"] = organisation
 
         return setting_dict
+
+    def create_logout_request(self, request, return_to=None, name_id=None):
+        """
+        :returns: Redirection URL for HTTP-redirect binding
+        """
+        saml2_request = create_saml2_request(self.conf["base_url"], request)
+        saml2_auth = OneLogin_Saml2_Auth(
+            saml2_request, old_settings=self.saml2_settings
+        )
+        url = saml2_auth.logout(return_to=return_to, name_id=name_id)
+        return url
 
 
 class AuthnRequestStorage:
