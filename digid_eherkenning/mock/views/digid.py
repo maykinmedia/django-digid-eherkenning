@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import auth, messages
+from django.contrib.auth.views import LogoutView
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.urls import reverse
@@ -104,3 +105,8 @@ class DigiDAssertionConsumerServiceMockView(View):
         auth.login(request, user)
 
         return HttpResponseRedirect(self.get_success_url())
+
+
+class DigiDLogoutMockView(LogoutView):
+    # in the future we can render a custom template to emulate Digid logout page
+    pass

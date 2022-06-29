@@ -186,3 +186,18 @@ class PasswordLoginViewTests(DigidMockTestCase):
         User = get_user_model()
         with self.assertRaises(User.DoesNotExist):
             User.digid_objects.get(bsn="foo")
+
+
+@override_settings(**OVERRIDE_SETTINGS)
+@modify_settings(**MODIFY_SETTINGS)
+class LogoutViewTests(TestCase):
+    def test_logout(self):
+        User = get_user_model()
+        user = User.objects.create_user(username="testuser", password="test")
+        self.client.force_login(user)
+
+        url = reverse("digid:logout")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse("_auth_user_id" in self.client.session)
