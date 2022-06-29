@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from django.conf import settings
@@ -18,6 +19,8 @@ from ..choices import SectorType
 from ..forms import SAML2Form
 from ..saml2.digid import DigiDClient
 from .base import get_redirect_url
+
+logger = logging.getLogger(__name__)
 
 
 class DigiDLoginView(TemplateView):
@@ -155,5 +158,19 @@ class DigiDLogoutView(LogoutView):
 
 
 class DigidSingleLogoutCallbackView(View):
-    # TODO callback view for SLO
-    pass
+    """
+    View processes:
+    1. Logout request from IdP when IdP initiates logout
+    2. Logout response from IdP when SP initiated logout
+    """
+
+    def get(self, request):
+        # FIXME
+        logger.info(
+            f"{request.method} get_data: {request.GET} post_data: {request.POST} "
+            f"query_string: {request.META['QUERY_STRING']}"
+        )
+
+    def post(self, request):
+        # FIXME
+        self.get(request)
