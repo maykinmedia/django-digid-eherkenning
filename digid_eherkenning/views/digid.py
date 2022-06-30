@@ -6,14 +6,14 @@ from django.contrib import auth, messages
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.views import LogoutView
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.generic.base import TemplateView, View
 
-from onelogin.saml2.utils import OneLogin_Saml2_ValidationError
+from onelogin.saml2.utils import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 
 from ..choices import SectorType
 from ..forms import SAML2Form
@@ -160,17 +160,29 @@ class DigiDLogoutView(LogoutView):
 class DigidSingleLogoutCallbackView(View):
     """
     View processes:
-    1. Logout request from IdP when IdP initiates logout
-    2. Logout response from IdP when SP initiated logout
+    1. Logout request from IdP when IdP initiates logout (step U3)
+    2. Logout response from IdP when SP initiates logout (step U5)
     """
 
-    def get(self, request):
-        # FIXME
+    def get(self, request, *args, **kwargs):
+        """handle Logout Response with HTTP Redirect binding (step U5)"""
         logger.info(
-            f"{request.method} get_data: {request.GET} post_data: {request.POST} "
-            f"query_string: {request.META['QUERY_STRING']}"
+            "Received Logout Request (POST) from IdP: request body=%s", request.GET
         )
+        client = DigiDClient()
 
-    def post(self, request):
-        # FIXME
-        self.get(request)
+        try:
+            client.handle_logout_response(request)
+        except OneLogin_Saml2_Error as e:
+            logger.error(
+                "A technical error occurred from Digid during Logout response: %s",
+                e.args[0],
+            )
+            return HttpResponseBadRequest()
+
+        return HttpResponse()
+
+    def post(self, request, *args, **kwargs):
+        logger.info(
+            "Received Logout Request (POST) from IdP: request body=%s", request.POST
+        )
