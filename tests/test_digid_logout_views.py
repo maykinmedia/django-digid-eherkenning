@@ -40,6 +40,10 @@ class DigidLogoutViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         # user is still logged in
         self.assertEqual(self.client.session["_auth_user_id"], str(user.id))
+        self.assertEqual(
+            self.client.session["logout_request_id"],
+            "ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f",
+        )
 
         logout_url = response.url
         f = furl(logout_url)

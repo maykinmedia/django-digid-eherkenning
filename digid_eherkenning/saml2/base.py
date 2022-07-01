@@ -292,6 +292,11 @@ class BaseSaml2Client:
             saml2_request, old_settings=self.saml2_settings
         )
         url = saml2_auth.logout(return_to=return_to, name_id=name_id)
+
+        # store request_id for validation during SLO callback
+        request_id = saml2_auth.get_last_request_id()
+        request.session["logout_request_id"] = request_id
+
         return url
 
     def handle_logout_response(
@@ -304,9 +309,11 @@ class BaseSaml2Client:
         saml2_auth = OneLogin_Saml2_Auth(
             saml2_request, old_settings=self.saml2_settings
         )
-        # todo add request_id
+        request_id = request.session.get("logout_request_id")
         saml2_auth.process_slo(
-            keep_local_session=keep_local_session, delete_session_cb=delete_session_cb
+            request_id=request_id,
+            keep_local_session=keep_local_session,
+            delete_session_cb=delete_session_cb,
         )
 
         errors = saml2_auth.get_errors()

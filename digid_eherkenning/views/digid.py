@@ -134,10 +134,6 @@ class DigiDLogoutView(LogoutView):
         if not name_id:
             raise PermissionDenied(_("You are not authenticated with Digid"))
 
-        # local logout
-        auth_logout(request)
-
-        # single logout
         client = DigiDClient()
         return_to = self.get_next_page()
         logout_url = client.create_logout_request(
