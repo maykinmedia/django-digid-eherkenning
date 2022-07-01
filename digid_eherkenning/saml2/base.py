@@ -294,7 +294,9 @@ class BaseSaml2Client:
         url = saml2_auth.logout(return_to=return_to, name_id=name_id)
         return url
 
-    def handle_logout_response(self, request) -> None:
+    def handle_logout_response(
+        self, request, keep_local_session=False, delete_session_cb=None
+    ) -> None:
         """
         process logout response from IdP with HTTP redirect binding
         """
@@ -303,10 +305,11 @@ class BaseSaml2Client:
             saml2_request, old_settings=self.saml2_settings
         )
         # todo add request_id
-        saml2_auth.process_slo()
+        saml2_auth.process_slo(
+            keep_local_session=keep_local_session, delete_session_cb=delete_session_cb
+        )
 
         errors = saml2_auth.get_errors()
-
         if errors:
             raise OneLogin_Saml2_Error(
                 ", ".join(errors),

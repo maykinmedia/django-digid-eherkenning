@@ -38,7 +38,8 @@ class DigidLogoutViewTests(TestCase):
         response = self.client.get(reverse("digid:logout"))
 
         self.assertEqual(response.status_code, 302)
-        self.assertFalse("_auth_user_id" in self.client.session)
+        # user is still logged in
+        self.assertEqual(self.client.session["_auth_user_id"], str(user.id))
 
         logout_url = response.url
         f = furl(logout_url)
@@ -108,8 +109,10 @@ class DigidLogoutCallbackTests(TestCase):
     def setUp(self):
         super().setUp()
 
-        # self.user = User.objects.create_user(username="testuser", password="test", bsn="12345670")
-        # self.client.force_login(self.user)
+        self.user = User.objects.create_user(
+            username="testuser", password="test", bsn="12345670"
+        )
+        self.client.force_login(self.user)
 
         # 2.4 Voorbeeldbericht bij Stap U5: Response Redirect
         # Dit is een http redirect bericht. De signing wordt in de URI meegezonden.
@@ -167,9 +170,11 @@ class DigidLogoutCallbackTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/")
+        # local logout is done
+        self.assertFalse("_auth_user_id" in self.client.session)
 
         logs = [r.getMessage() for r in log_watcher.records]
-        self.assertIn("User has successfully logged out of Digid", logs)
+        self.assertIn(f"User {self.user} has successfully logged out of Digid", logs)
 
     def test_logout_response_status_code_failed(self):
         #  modify status code
@@ -200,9 +205,11 @@ class DigidLogoutCallbackTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "/")
+        # local logout is not done
+        self.assertTrue("_auth_user_id" in self.client.session)
 
         logs = [r.getMessage() for r in log_watcher.records]
         self.assertIn(
-            "An error occurred during Logout response from Digid: logout_not_success",
+            "An error occurred during logout from Digid: logout_not_success",
             logs,
         )

@@ -123,8 +123,8 @@ class DigiDAssertionConsumerServiceView(View):
 
 class DigiDLogoutView(LogoutView):
     """
-    1. local logout from django app
-    2. Single logout with HTTP-redirect
+    Single logout with HTTP-redirect
+    Local logout is done in DigidSingleLogoutCallbackView
     """
 
     @method_decorator(never_cache)
@@ -174,17 +174,20 @@ class DigidSingleLogoutCallbackView(View):
 
     def get(self, request, *args, **kwargs):
         """handle Logout Response with HTTP Redirect binding (step U5)"""
+        user = request.user
         client = DigiDClient()
-
         try:
-            # TODO should we move destroying local session from logout view to here?
-            client.handle_logout_response(request)
+            client.handle_logout_response(
+                request,
+                keep_local_session=False,
+                delete_session_cb=lambda: auth_logout(request),
+            )
         except OneLogin_Saml2_Error as e:
-            error_message = "An error occurred during Logout response from Digid"
+            error_message = "An error occurred during logout from Digid"
             logger.error("%s: %s", error_message, e.args[0])
             messages.error(request, _(error_message))
         else:
-            logger.info("User has successfully logged out of Digid")
+            logger.info("User %s has successfully logged out of Digid", user)
 
         return HttpResponseRedirect(self.get_success_url())
 
