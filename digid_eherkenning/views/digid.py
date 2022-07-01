@@ -6,7 +6,7 @@ from django.contrib import auth, messages
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.views import LogoutView
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
@@ -164,23 +164,29 @@ class DigidSingleLogoutCallbackView(View):
     2. Logout response from IdP when SP initiates logout (step U5)
     """
 
+    def get_success_url(self):
+        url = self.get_redirect_url()
+        return url or resolve_url(settings.LOGOUT_REDIRECT_URL)
+
+    def get_redirect_url(self):
+        redirect_to = self.request.GET.get("RelayState")
+        return get_redirect_url(self.request, redirect_to)
+
     def get(self, request, *args, **kwargs):
         """handle Logout Response with HTTP Redirect binding (step U5)"""
-        logger.info(
-            "Received Logout Request (POST) from IdP: request body=%s", request.GET
-        )
         client = DigiDClient()
 
         try:
+            # TODO should we move destroying local session from logout view to here?
             client.handle_logout_response(request)
         except OneLogin_Saml2_Error as e:
-            logger.error(
-                "A technical error occurred from Digid during Logout response: %s",
-                e.args[0],
-            )
-            return HttpResponseBadRequest()
+            error_message = "An error occurred during Logout response from Digid"
+            logger.error("%s: %s", error_message, e.args[0])
+            messages.error(request, _(error_message))
+        else:
+            logger.info("User has successfully logged out of Digid")
 
-        return HttpResponse()
+        return HttpResponseRedirect(self.get_success_url())
 
     def post(self, request, *args, **kwargs):
         logger.info(
