@@ -3,11 +3,13 @@ from typing import Optional
 
 from django.conf import settings
 from django.contrib import auth, messages
-from django.contrib.auth import logout as auth_logout
+from django.contrib.auth import get_user_model, logout as auth_logout
 from django.contrib.auth.views import LogoutView
+from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import resolve_url
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
@@ -18,9 +20,12 @@ from onelogin.saml2.utils import OneLogin_Saml2_Error, OneLogin_Saml2_Validation
 from ..choices import SectorType
 from ..forms import SAML2Form
 from ..saml2.digid import DigiDClient
+from ..saml2.soap_logout_request import Soap_Logout_Request
 from .base import get_redirect_url
 
 logger = logging.getLogger(__name__)
+
+UserModel = get_user_model()
 
 
 class DigiDLoginView(TemplateView):
@@ -188,6 +193,41 @@ class DigidSingleLogoutCallbackView(View):
         return HttpResponseRedirect(self.get_success_url())
 
     def post(self, request, *args, **kwargs):
+        """handle Logout Response with SOAP binding (step U3)"""
+
         logger.info(
-            "Received Logout Request (POST) from IdP: request body=%s", request.POST
+            "Received Logout Request (POST) from IdP: request body=%s", request.body
         )
+
+        client = DigiDClient()
+        # todo catch validation errors
+        logout_response = client.handle_logout_request(
+            request,
+            keep_local_session=False,
+            delete_session_cb=lambda: self.logout_user(request),
+        )
+
+        return HttpResponse(logout_response, content_type="text/xml")
+
+    @staticmethod
+    def logout_user(request):
+        """
+        delete all sessions with the user identified in nameId of logout request
+        """
+        name_id = Soap_Logout_Request(request=request.body, settings={}).get_name_id()
+        sector_code, bsn = name_id.split(":")
+
+        try:
+            user = UserModel.digid_objects.get_by_bsn(bsn)
+        except UserModel.DoesNotExist:
+            logger.error(
+                "User with BSN %s doesn't exist and therefore can't be logged out", bsn
+            )
+            return
+
+        # delete all user sessions
+        for s in Session.objects.filter(expire_date__gte=timezone.now()):
+            if s.get_decoded().get("_auth_user_id") == user.id:
+                s.delete()
+
+        logger.info("User %s has forcefully logged out of Digid", user)

@@ -1,5 +1,5 @@
 import urllib
-from typing import List
+from typing import Callable, List
 
 from django.conf import settings
 from django.core.cache import cache
@@ -10,10 +10,13 @@ from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from onelogin.saml2.errors import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
+from onelogin.saml2.logout_response import OneLogin_Saml2_Logout_Response
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
-from digid_eherkenning.utils import get_client_ip
+from digid_eherkenning.utils import add_soap_envelop, get_client_ip
+
+from .soap_logout_request import Soap_Logout_Request
 
 
 def create_saml2_request(base_url, request):
@@ -37,6 +40,7 @@ def create_saml2_request(base_url, request):
         # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
         # 'lowercase_urlencoding': True,
         "query_string": request.META["QUERY_STRING"],
+        "body": request.body,
     }
 
 
@@ -322,6 +326,64 @@ class BaseSaml2Client:
                 ", ".join(errors),
                 OneLogin_Saml2_Error.SAML_LOGOUTRESPONSE_INVALID,
             )
+
+    def handle_logout_request(
+        self,
+        request,
+        keep_local_session: bool = False,
+        delete_session_cb: Callable = None,
+    ):
+        """
+        process request from IdP to the logout callback endpoint with SOAP binding
+        OneLogin_Saml2_Auth.process_slo can't be used here, because it doesn't support SOAP binding
+
+        :param keep_local_session: When false will destroy the local session, otherwise will destroy it
+        :param delete_session_cb: Callback function which destroys local sessions
+        :return: Logout response
+        """
+        saml2_request = create_saml2_request(self.conf["base_url"], request)
+        post_body = saml2_request.get("body")
+
+        # validate request
+        # TODO catch exceptions?
+        if not post_body:
+            raise OneLogin_Saml2_Error(
+                "SAML LogoutRequest not found. Only supported SOAP Binding",
+                OneLogin_Saml2_Error.SAML_LOGOUTMESSAGE_NOT_FOUND,
+            )
+
+        logout_request = Soap_Logout_Request(self.saml2_settings, post_body)
+        logout_request.validate()
+
+        # delete local session
+        if not keep_local_session:
+            OneLogin_Saml2_Utils.delete_local_session(delete_session_cb)
+
+        # construct response
+        in_response_to = logout_request.id
+        response_builder = OneLogin_Saml2_Logout_Response(self.saml2_settings)
+        response_builder.build(in_response_to)
+        logout_response = response_builder.get_xml()
+
+        security = self.saml2_settings.get_security_data()
+
+        # Algorithm hardcoded in the same way as in other backend communication: auth.artifact_resolve
+        if security["logoutResponseSigned"]:
+            logout_response = OneLogin_Saml2_Utils.add_sign(
+                logout_response,
+                self.saml2_settings.get_sp_key(),
+                self.saml2_settings.get_sp_cert(),
+                key_passphrase=self.saml2_settings.get_sp_key_passphrase(),
+                sign_algorithm=OneLogin_Saml2_Constants.RSA_SHA256,
+                digest_algorithm=OneLogin_Saml2_Constants.SHA256,
+            )
+
+        if isinstance(logout_response, bytes):
+            logout_response = logout_response.decode()
+
+        soap_logout_response = add_soap_envelop(logout_response)
+
+        return soap_logout_response
 
 
 class AuthnRequestStorage:
