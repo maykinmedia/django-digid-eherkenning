@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from django.conf import settings
@@ -5,19 +6,21 @@ from django.contrib import auth, messages
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.views import LogoutView
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.generic.base import TemplateView, View
 
-from onelogin.saml2.utils import OneLogin_Saml2_ValidationError
+from onelogin.saml2.utils import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 
 from ..choices import SectorType
 from ..forms import SAML2Form
 from ..saml2.digid import DigiDClient
 from .base import get_redirect_url
+
+logger = logging.getLogger(__name__)
 
 
 class DigiDLoginView(TemplateView):
@@ -120,8 +123,8 @@ class DigiDAssertionConsumerServiceView(View):
 
 class DigiDLogoutView(LogoutView):
     """
-    1. local logout from django app
-    2. Single logout with HTTP-redirect
+    Single logout with HTTP-redirect
+    Local logout is done in DigidSingleLogoutCallbackView
     """
 
     @method_decorator(never_cache)
@@ -131,10 +134,6 @@ class DigiDLogoutView(LogoutView):
         if not name_id:
             raise PermissionDenied(_("You are not authenticated with Digid"))
 
-        # local logout
-        auth_logout(request)
-
-        # single logout
         client = DigiDClient()
         return_to = self.get_next_page()
         logout_url = client.create_logout_request(
@@ -155,5 +154,40 @@ class DigiDLogoutView(LogoutView):
 
 
 class DigidSingleLogoutCallbackView(View):
-    # TODO callback view for SLO
-    pass
+    """
+    View processes:
+    1. Logout request from IdP when IdP initiates logout (step U3)
+    2. Logout response from IdP when SP initiates logout (step U5)
+    """
+
+    def get_success_url(self):
+        url = self.get_redirect_url()
+        return url or resolve_url(settings.LOGOUT_REDIRECT_URL)
+
+    def get_redirect_url(self):
+        redirect_to = self.request.GET.get("RelayState")
+        return get_redirect_url(self.request, redirect_to)
+
+    def get(self, request, *args, **kwargs):
+        """handle Logout Response with HTTP Redirect binding (step U5)"""
+        user = request.user
+        client = DigiDClient()
+        try:
+            client.handle_logout_response(
+                request,
+                keep_local_session=False,
+                delete_session_cb=lambda: auth_logout(request),
+            )
+        except OneLogin_Saml2_Error as e:
+            error_message = "An error occurred during logout from Digid"
+            logger.error("%s: %s", error_message, e.args[0])
+            messages.error(request, _(error_message))
+        else:
+            logger.info("User %s has successfully logged out of Digid", user)
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def post(self, request, *args, **kwargs):
+        logger.info(
+            "Received Logout Request (POST) from IdP: request body=%s", request.POST
+        )

@@ -8,9 +8,10 @@ from django.utils import timezone
 
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.constants import OneLogin_Saml2_Constants
+from onelogin.saml2.errors import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
-from onelogin.saml2.utils import OneLogin_Saml2_ValidationError
+from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 from digid_eherkenning.utils import get_client_ip
 
@@ -222,6 +223,7 @@ class BaseSaml2Client:
                 "signMetadata": True,
                 "authnRequestsSigned": True,
                 "logoutRequestSigned": True,
+                "logoutResponseSigned": True,
                 "wantAssertionsEncrypted": conf.get("want_assertions_encrypted", False),
                 "wantAssertionsSigned": conf.get("want_assertions_signed", False),
                 "soapClientKey": conf["key_file"],
@@ -290,7 +292,36 @@ class BaseSaml2Client:
             saml2_request, old_settings=self.saml2_settings
         )
         url = saml2_auth.logout(return_to=return_to, name_id=name_id)
+
+        # store request_id for validation during SLO callback
+        request_id = saml2_auth.get_last_request_id()
+        request.session["logout_request_id"] = request_id
+
         return url
+
+    def handle_logout_response(
+        self, request, keep_local_session=False, delete_session_cb=None
+    ) -> None:
+        """
+        process logout response from IdP with HTTP redirect binding
+        """
+        saml2_request = create_saml2_request(self.conf["base_url"], request)
+        saml2_auth = OneLogin_Saml2_Auth(
+            saml2_request, old_settings=self.saml2_settings
+        )
+        request_id = request.session.get("logout_request_id")
+        saml2_auth.process_slo(
+            request_id=request_id,
+            keep_local_session=keep_local_session,
+            delete_session_cb=delete_session_cb,
+        )
+
+        errors = saml2_auth.get_errors()
+        if errors:
+            raise OneLogin_Saml2_Error(
+                ", ".join(errors),
+                OneLogin_Saml2_Error.SAML_LOGOUTRESPONSE_INVALID,
+            )
 
 
 class AuthnRequestStorage:
