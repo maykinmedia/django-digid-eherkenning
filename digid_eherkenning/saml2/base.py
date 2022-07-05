@@ -352,7 +352,7 @@ class BaseSaml2Client:
         post_body = saml2_request.get("body")
 
         # validate request
-        if not post_body:
+        if not post_body or post_body.decode() == "{}":
             message = "SAML LogoutRequest body not found."
             logger.error("Logout request from Digid failed: %s", message)
             return generate_soap_fault_message(message)
@@ -362,12 +362,12 @@ class BaseSaml2Client:
         try:
             logout_request.validate()
         except (OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError) as exc:
-            logger.error("Logout request from Digid failed: %s", exc.message)
+            logger.error("Logout request from Digid failed: %s", exc)
             status = OneLogin_Saml2_Constants.STATUS_RESPONDER
-
-        # delete local session
-        if not keep_local_session:
-            OneLogin_Saml2_Utils.delete_local_session(delete_session_cb)
+        else:
+            # delete local session
+            if not keep_local_session:
+                OneLogin_Saml2_Utils.delete_local_session(delete_session_cb)
 
         # construct response
         in_response_to = logout_request.id

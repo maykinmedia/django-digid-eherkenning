@@ -64,8 +64,10 @@ def generate_soap_fault_message(error_message: str, code="SOAP-ENV:Client") -> s
         "<soap:Envelope "
         'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'
         "<soap:Body>"
+        "<soap:Fault>"
         "<faultcode>%(code)s</faultcode>"
         "<faultstring>%(detail)s</faultstring>"
+        "</soap:Fault>"
         "</soap:Body>"
         "</soap:Envelope>"
     )

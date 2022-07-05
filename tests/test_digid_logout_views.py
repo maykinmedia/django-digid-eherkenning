@@ -13,6 +13,7 @@ from onelogin.saml2.utils import OneLogin_Saml2_Utils
 from digid_eherkenning.choices import SectorType
 from digid_eherkenning.utils import remove_soap_envelope
 
+from .project.choices import UserLoginType
 from .project.models import User
 from .utils import get_saml_element
 
@@ -228,8 +229,12 @@ class DigidSloLogoutSOAPRequestTests(TestCase):
         super().setUp()
 
         self.user = User.objects.create_user(
-            username="testuser", password="test", bsn="12345670"
+            username="testuser",
+            password="test",
+            bsn="12345670",
+            login_type=UserLoginType.digid,
         )
+        self.client.force_login(self.user)
 
         # 2.2 Voorbeeldbericht bij Stap U3: LogoutRequest (SOAP)
         # In een Soap envelope.
@@ -313,6 +318,8 @@ class DigidSloLogoutSOAPRequestTests(TestCase):
             self.url, data=self.logout_request_soap, content_type="text/xml"
         )
 
+        self.assertEqual(response.status_code, 200)
+
         soap_tree = etree.fromstring(response.content)
         self.assertEqual(
             soap_tree.tag, "{http://schemas.xmlsoap.org/soap/envelope/}Envelope"
@@ -391,3 +398,131 @@ class DigidSloLogoutSOAPRequestTests(TestCase):
 
         # check session
         self.assertFalse("_auth_user_id" in self.client.session)
+
+    def test_logout_empty_request(self):
+        with self.assertLogs("digid_eherkenning.saml2", level="ERROR") as log_watcher:
+            response = self.client.post(self.url, content_type="text/xml")
+
+        self.assertEqual(response.status_code, 500)
+
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "Logout request from Digid failed: SAML LogoutRequest body not found.", logs
+        )
+
+        expected_response = (
+            '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'
+            "<soap:Body>"
+            "<soap:Fault>"
+            "<faultcode>SOAP-ENV:Client</faultcode>"
+            "<faultstring>SAML LogoutRequest body not found.</faultstring>"
+            "</soap:Fault>"
+            "</soap:Body>"
+            "</soap:Envelope>"
+        )
+        self.assertEqual(response.content.decode(), expected_response)
+
+        # check session
+        self.assertTrue("_auth_user_id" in self.client.session)
+
+    def test_logout_incorrect_issuer(self):
+        root_element = etree.fromstring(self.logout_request_soap)
+        issuer = get_saml_element(root_element, ".//saml:Issuer")
+        issuer.text = "Other issuer"
+
+        with self.assertLogs("digid_eherkenning.saml2", level="ERROR") as log_watcher:
+            response = self.client.post(
+                self.url,
+                data=etree.tostring(root_element, encoding="unicode"),
+                content_type="text/xml",
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        # check logs
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "Logout request from Digid failed: Invalid issuer in the Logout Request "
+            "(expected https://was-preprod1.digid.nl/saml/idp/metadata, got Other issuer)",
+            logs,
+        )
+
+        # check status
+        tree = remove_soap_envelope(response.content)
+        status_code = tree.xpath(
+            "samlp:Status/samlp:StatusCode", namespaces=OneLogin_Saml2_Constants.NSMAP
+        )[0]
+        self.assertEqual(
+            status_code.attrib["Value"], "urn:oasis:names:tc:SAML:2.0:status:Responder"
+        )
+
+        # check session
+        self.assertTrue("_auth_user_id" in self.client.session)
+
+    def test_logout_no_name_id(self):
+        root_element = etree.fromstring(self.logout_request_soap)
+        name_id = get_saml_element(root_element, ".//saml:NameID")
+        name_id.getparent().remove(name_id)
+
+        with self.assertLogs("digid_eherkenning.saml2", level="ERROR") as log_watcher:
+            response = self.client.post(
+                self.url,
+                data=etree.tostring(root_element, encoding="unicode"),
+                content_type="text/xml",
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        # check logs
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "Logout request from Digid failed: NameID not found in the Logout Request",
+            logs,
+        )
+
+        # check status
+        tree = remove_soap_envelope(response.content)
+        status_code = tree.xpath(
+            "samlp:Status/samlp:StatusCode", namespaces=OneLogin_Saml2_Constants.NSMAP
+        )[0]
+        self.assertEqual(
+            status_code.attrib["Value"], "urn:oasis:names:tc:SAML:2.0:status:Responder"
+        )
+
+        # check session
+        self.assertTrue("_auth_user_id" in self.client.session)
+
+    def test_logout_signature_incorrect_ref(self):
+        root_element = etree.fromstring(self.logout_request_soap)
+        signature_ref = root_element.find(
+            ".//{%s}Reference" % OneLogin_Saml2_Constants.NS_DS
+        )
+        signature_ref.set("URI", "12345")
+
+        with self.assertLogs("digid_eherkenning.saml2", level="ERROR") as log_watcher:
+            response = self.client.post(
+                self.url,
+                data=etree.tostring(root_element, encoding="unicode"),
+                content_type="text/xml",
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        # check logs
+        logs = [r.getMessage() for r in log_watcher.records]
+        self.assertIn(
+            "Logout request from Digid failed: Found an invalid Signed Element. Rejected",
+            logs,
+        )
+
+        # check status
+        tree = remove_soap_envelope(response.content)
+        status_code = tree.xpath(
+            "samlp:Status/samlp:StatusCode", namespaces=OneLogin_Saml2_Constants.NSMAP
+        )[0]
+        self.assertEqual(
+            status_code.attrib["Value"], "urn:oasis:names:tc:SAML:2.0:status:Responder"
+        )
+
+        # check session
+        self.assertTrue("_auth_user_id" in self.client.session)

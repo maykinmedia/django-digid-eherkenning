@@ -208,8 +208,12 @@ class DigidSingleLogoutSoapView(View):
             keep_local_session=False,
             delete_session_cb=lambda: self.logout_user(request),
         )
+        # SAML binding, section 3.2.3.3
+        status_code = 500 if "faultcode" in logout_response else 200
 
-        return HttpResponse(logout_response, content_type="text/xml")
+        return HttpResponse(
+            logout_response, status=status_code, content_type="text/xml"
+        )
 
     @staticmethod
     def logout_user(request):
@@ -229,7 +233,7 @@ class DigidSingleLogoutSoapView(View):
 
         # delete all user sessions
         for s in Session.objects.filter(expire_date__gte=timezone.now()):
-            if s.get_decoded().get("_auth_user_id") == user.id:
+            if str(s.get_decoded().get("_auth_user_id")) == str(user.id):
                 s.delete()
 
         logger.info("User %s has been forcefully logged out of Digid", user)
