@@ -158,11 +158,9 @@ class DigiDLogoutView(LogoutView):
         return f"{SectorType.bsn}:{request.user.bsn}"
 
 
-class DigidSingleLogoutCallbackView(View):
+class DigidSingleLogoutRedirectView(View):
     """
-    View processes:
-    1. Logout request from IdP when IdP initiates logout (step U3)
-    2. Logout response from IdP when SP initiates logout (step U5)
+    Logout response from IdP when SP initiates logout (step U5) with HTTP Redirect binding
     """
 
     def get_success_url(self):
@@ -174,7 +172,6 @@ class DigidSingleLogoutCallbackView(View):
         return get_redirect_url(self.request, redirect_to)
 
     def get(self, request, *args, **kwargs):
-        """handle Logout Response with HTTP Redirect binding (step U5)"""
         user = request.user
         client = DigiDClient()
         try:
@@ -192,6 +189,11 @@ class DigidSingleLogoutCallbackView(View):
 
         return HttpResponseRedirect(self.get_success_url())
 
+
+class DigidSingleLogoutSoapView(View):
+    """
+    Logout request from IdP when Idp initiates logout (step U3) with SOAP binding
+    """
     def post(self, request, *args, **kwargs):
         """handle Logout Response with SOAP binding (step U3)"""
 

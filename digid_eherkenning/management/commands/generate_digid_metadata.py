@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.urls import reverse
 from django.utils import timezone
 
-from onelogin.saml2.settings import OneLogin_Saml2_Settings
+from digid_eherkenning.saml2.settings import SamlSettings
 
 try:
     from argparse import BooleanOptionalAction
@@ -258,8 +258,12 @@ class Command(SamlMetadataBaseCommand):
                 {
                     "singleLogoutService": {
                         # URL Location where the <LogoutRequest> from the IdP will be sent (IdP-initiated logout)
-                        "url": options["base_url"] + reverse("digid:slo"),
-                        "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                        "url": options["base_url"] + reverse("digid:slo-soap"),
+                        "binding": "urn:oasis:names:tc:SAML:2.0:bindings:SOAP",
+                        # URL Location where the <LogoutResponse> from the IdP will sent (SP-initiated logout, reply)
+                        "responseUrl": options["base_url"]
+                        + reverse("digid:slo-redirect"),
+                        "responseBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
                     },
                 }
             )
@@ -280,5 +284,5 @@ class Command(SamlMetadataBaseCommand):
                 }
             }
 
-        saml2_settings = OneLogin_Saml2_Settings(setting_dict, sp_validation_only=True)
+        saml2_settings = SamlSettings(setting_dict, sp_validation_only=True)
         return saml2_settings.get_sp_metadata()
