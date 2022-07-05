@@ -194,6 +194,7 @@ class DigidSingleLogoutSoapView(View):
     """
     Logout request from IdP when Idp initiates logout (step U3) with SOAP binding
     """
+
     def post(self, request, *args, **kwargs):
         """handle Logout Response with SOAP binding (step U3)"""
 
