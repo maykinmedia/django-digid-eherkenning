@@ -200,7 +200,6 @@ class DigidSingleLogoutCallbackView(View):
         )
 
         client = DigiDClient()
-        # todo catch validation errors
         logout_response = client.handle_logout_request(
             request,
             keep_local_session=False,
@@ -230,4 +229,4 @@ class DigidSingleLogoutCallbackView(View):
             if s.get_decoded().get("_auth_user_id") == user.id:
                 s.delete()
 
-        logger.info("User %s has forcefully logged out of Digid", user)
+        logger.info("User %s has been forcefully logged out of Digid", user)

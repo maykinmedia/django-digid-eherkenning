@@ -1,3 +1,4 @@
+import logging
 import urllib
 from typing import Callable, List
 
@@ -14,9 +15,15 @@ from onelogin.saml2.logout_response import OneLogin_Saml2_Logout_Response
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
-from digid_eherkenning.utils import add_soap_envelop, get_client_ip
+from digid_eherkenning.utils import (
+    add_soap_envelop,
+    generate_soap_fault_message,
+    get_client_ip,
+)
 
 from .soap_logout_request import Soap_Logout_Request
+
+logger = logging.getLogger(__name__)
 
 
 def create_saml2_request(base_url, request):
@@ -332,7 +339,7 @@ class BaseSaml2Client:
         request,
         keep_local_session: bool = False,
         delete_session_cb: Callable = None,
-    ):
+    ) -> str:
         """
         process request from IdP to the logout callback endpoint with SOAP binding
         OneLogin_Saml2_Auth.process_slo can't be used here, because it doesn't support SOAP binding
@@ -345,15 +352,18 @@ class BaseSaml2Client:
         post_body = saml2_request.get("body")
 
         # validate request
-        # TODO catch exceptions?
         if not post_body:
-            raise OneLogin_Saml2_Error(
-                "SAML LogoutRequest not found. Only supported SOAP Binding",
-                OneLogin_Saml2_Error.SAML_LOGOUTMESSAGE_NOT_FOUND,
-            )
+            message = "SAML LogoutRequest body not found."
+            logger.error("Logout request from Digid failed: %s", message)
+            return generate_soap_fault_message(message)
 
+        status = OneLogin_Saml2_Constants.STATUS_SUCCESS
         logout_request = Soap_Logout_Request(self.saml2_settings, post_body)
-        logout_request.validate()
+        try:
+            logout_request.validate()
+        except (OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError) as exc:
+            logger.error("Logout request from Digid failed: %s", exc.message)
+            status = OneLogin_Saml2_Constants.STATUS_RESPONDER
 
         # delete local session
         if not keep_local_session:
@@ -362,7 +372,7 @@ class BaseSaml2Client:
         # construct response
         in_response_to = logout_request.id
         response_builder = OneLogin_Saml2_Logout_Response(self.saml2_settings)
-        response_builder.build(in_response_to)
+        response_builder.build(in_response_to, status=status)
         logout_response = response_builder.get_xml()
 
         security = self.saml2_settings.get_security_data()

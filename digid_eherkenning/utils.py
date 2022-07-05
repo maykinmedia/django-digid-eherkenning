@@ -33,7 +33,7 @@ def validate_xml(xml, xsd):
             xml.seek(0)
 
 
-def remove_soap_envelope(xml):
+def remove_soap_envelope(xml) -> etree.Element:
     """
     return xml inside SOAP Body
 
@@ -47,10 +47,26 @@ def remove_soap_envelope(xml):
     ].getchildren()[0]
 
 
-def add_soap_envelop(xml: str):
+def add_soap_envelop(xml: str) -> str:
     """
     wraps xml in the SOAP Envelop
 
     :param xml: is xml which should be put in SOAP Envelop
     """
     return OneLogin_Saml2_Templates.SOAP_ENVELOPE % {"soap_body": xml}
+
+
+def generate_soap_fault_message(error_message: str, code="SOAP-ENV:Client") -> str:
+    """
+    Generates SOAP Fault message
+    """
+    xml_template = (
+        "<soap:Envelope "
+        'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'
+        "<soap:Body>"
+        "<faultcode>%(code)s</faultcode>"
+        "<faultstring>%(detail)s</faultstring>"
+        "</soap:Body>"
+        "</soap:Envelope>"
+    )
+    return xml_template % {"code": code, "detail": error_message}
