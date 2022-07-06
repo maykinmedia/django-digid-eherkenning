@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView, View
 
 from onelogin.saml2.utils import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
@@ -190,6 +191,7 @@ class DigidSingleLogoutRedirectView(View):
         return HttpResponseRedirect(self.get_success_url())
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class DigidSingleLogoutSoapView(View):
     """
     Logout request from IdP when Idp initiates logout (step U3) with SOAP binding
