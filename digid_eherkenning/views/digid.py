@@ -5,11 +5,9 @@ from django.conf import settings
 from django.contrib import auth, messages
 from django.contrib.auth import get_user_model, logout as auth_logout
 from django.contrib.auth.views import LogoutView
-from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import resolve_url
-from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
@@ -22,6 +20,7 @@ from ..choices import SectorType
 from ..forms import SAML2Form
 from ..saml2.digid import DigiDClient
 from ..saml2.soap_logout_request import Soap_Logout_Request
+from ..utils import logout_user
 from .base import get_redirect_url
 
 logger = logging.getLogger(__name__)
@@ -208,7 +207,7 @@ class DigidSingleLogoutSoapView(View):
         logout_response = client.handle_logout_request(
             request,
             keep_local_session=False,
-            delete_session_cb=lambda: self.logout_user(request),
+            delete_session_cb=lambda: self.logout_digid_user(request),
         )
         # SAML binding, section 3.2.3.3
         status_code = 500 if "faultcode" in logout_response else 200
@@ -218,7 +217,7 @@ class DigidSingleLogoutSoapView(View):
         )
 
     @staticmethod
-    def logout_user(request):
+    def logout_digid_user(request):
         """
         delete all sessions with the user identified in nameId of logout request
         """
@@ -234,8 +233,5 @@ class DigidSingleLogoutSoapView(View):
             return
 
         # delete all user sessions
-        for s in Session.objects.filter(expire_date__gte=timezone.now()):
-            if str(s.get_decoded().get("_auth_user_id")) == str(user.id):
-                s.delete()
-
+        logout_user(user)
         logger.info("User %s has been forcefully logged out of Digid", user)

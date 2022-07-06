@@ -1,7 +1,12 @@
+from importlib import import_module
+
+from django.conf import settings
+
 from defusedxml.lxml import parse
 from lxml import etree
 from onelogin.saml2.xml_templates import OneLogin_Saml2_Templates
 from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
+from sessionprofile.models import SessionProfile
 
 
 def get_client_ip(request):
@@ -72,3 +77,16 @@ def generate_soap_fault_message(error_message: str, code="SOAP-ENV:Client") -> s
         "</soap:Envelope>"
     )
     return xml_template % {"code": code, "detail": error_message}
+
+
+def logout_user(user):
+    """
+    forcefully logout user from their sessions
+    """
+    session_profiles = SessionProfile.objects.filter(user=user)
+    SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
+    s = SessionStore()
+    for sp in session_profiles:
+        s.delete(sp.session_key)
+
+    session_profiles.delete()

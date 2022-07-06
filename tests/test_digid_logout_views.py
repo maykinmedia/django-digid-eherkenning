@@ -9,6 +9,7 @@ from furl import furl
 from lxml import etree
 from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
+from sessionprofile.models import SessionProfile
 
 from digid_eherkenning.choices import SectorType
 from digid_eherkenning.utils import remove_soap_envelope
@@ -235,6 +236,9 @@ class DigidSloLogoutSOAPRequestTests(TestCase):
             login_type=UserLoginType.digid,
         )
         self.client.force_login(self.user)
+        SessionProfile.objects.create(
+            user=self.user, session_key=self.client.session.session_key
+        )
 
         # 2.2 Voorbeeldbericht bij Stap U3: LogoutRequest (SOAP)
         # In een Soap envelope.
