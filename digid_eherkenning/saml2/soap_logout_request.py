@@ -107,7 +107,7 @@ class Soap_Logout_Request(object):
             cert,
             fingerprint,
             fingerprintalg,
-            xpath="/samlp:LogoutRequest/ds:Signature",
+            xpath="//ds:Signature",
             multicerts=multicerts,
             raise_exceptions=False,
         ):
