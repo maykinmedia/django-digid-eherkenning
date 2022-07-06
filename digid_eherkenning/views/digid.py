@@ -233,5 +233,13 @@ class DigidSingleLogoutSoapView(View):
             return
 
         # delete all user sessions
-        logout_user(user)
+        try:
+            logout_user(user)
+        except RuntimeError:
+            logger.error(
+                "The error occurred during forceful logout of User %s. "
+                "Check if 'sessionprofile' app is added into INSTALLED_APPS",
+                user,
+            )
+
         logger.info("User %s has been forcefully logged out of Digid", user)

@@ -6,7 +6,6 @@ from defusedxml.lxml import parse
 from lxml import etree
 from onelogin.saml2.xml_templates import OneLogin_Saml2_Templates
 from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
-from sessionprofile.models import SessionProfile
 
 
 def get_client_ip(request):
@@ -83,6 +82,8 @@ def logout_user(user):
     """
     forcefully logout user from their sessions
     """
+    from sessionprofile.models import SessionProfile
+
     session_profiles = SessionProfile.objects.filter(user=user)
     SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
     s = SessionStore()
