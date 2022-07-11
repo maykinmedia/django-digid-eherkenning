@@ -164,6 +164,6 @@ class Soap_Logout_Request(object):
         name_id = OneLogin_Saml2_XML.element_text(entries[0])
         if not name_id:
             raise OneLogin_Saml2_ValidationError(
-                "An empty NameID value is empty",
+                "The NameID value is empty",
                 OneLogin_Saml2_ValidationError.EMPTY_NAMEID,
             )
