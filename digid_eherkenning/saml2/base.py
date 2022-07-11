@@ -344,7 +344,9 @@ class BaseSaml2Client:
         process request from IdP to the logout callback endpoint with SOAP binding
         OneLogin_Saml2_Auth.process_slo can't be used here, because it doesn't support SOAP binding
 
-        :param keep_local_session: When false will destroy the local session, otherwise will destroy it
+        :param keep_local_session: When false will destroy the local session, otherwise
+        will not destroy the local session
+
         :param delete_session_cb: Callback function which destroys local sessions
         :return: Logout response
         """

@@ -12,11 +12,10 @@ class Soap_Logout_Request(object):
     """
 
     def __init__(self, settings, request):
-        self.__settings = settings
-        self.__logout_request = request
-        self.__error = []
+        self._settings = settings
+        self._logout_request = request
 
-        self.document = remove_soap_envelope(self.__logout_request)
+        self.document = remove_soap_envelope(self._logout_request)
         self.id = self.document.get("ID", None)
 
     def get_name_id(self):
@@ -37,7 +36,7 @@ class Soap_Logout_Request(object):
         # 1. check the presence of Signature
         sign_nodes = OneLogin_Saml2_XML.query(self.document, "//ds:Signature")
         if not sign_nodes:
-            if self.__settings.is_strict() and self.__settings.get_security_data().get(
+            if self._settings.is_strict() and self._settings.get_security_data().get(
                 "wantMessagesSigned", False
             ):
                 raise OneLogin_Saml2_ValidationError(
@@ -65,8 +64,8 @@ class Soap_Logout_Request(object):
             )
 
         # 3. check the presence of the certificate
-        idp_data = self.__settings.get_idp_data()
-        exists_x509cert = self.__settings.get_idp_cert() is not None
+        idp_data = self._settings.get_idp_data()
+        exists_x509cert = self._settings.get_idp_cert() is not None
         exists_multix509sign = bool(idp_data.get("x509certMulti", {}).get("signing"))
 
         if not (exists_x509cert or exists_multix509sign):
@@ -79,7 +78,7 @@ class Soap_Logout_Request(object):
         sig_method_nodes = OneLogin_Saml2_XML.query(sign_node, ".//ds:SignatureMethod")
         sig_method = sig_method_nodes[0].get("Algorithm") if sig_method_nodes else None
 
-        reject_deprecated_alg = self.__settings.get_security_data().get(
+        reject_deprecated_alg = self._settings.get_security_data().get(
             "rejectDeprecatedAlgorithm", False
         )
         if (
@@ -92,7 +91,7 @@ class Soap_Logout_Request(object):
             )
 
         # 5. check signature value
-        cert = self.__settings.get_idp_cert()
+        cert = self._settings.get_idp_cert()
         multicerts = (
             idp_data["x509certMulti"]["signing"] if exists_multix509sign else None
         )
@@ -132,7 +131,7 @@ class Soap_Logout_Request(object):
             )
 
     def validate_issuer(self):
-        idp_entity_id = self.__settings.get_idp_data()["entityId"]
+        idp_entity_id = self._settings.get_idp_data()["entityId"]
         issuer_nodes = OneLogin_Saml2_XML.query(self.document, "saml:Issuer")
 
         if not issuer_nodes:
