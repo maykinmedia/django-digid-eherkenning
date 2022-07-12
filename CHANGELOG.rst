@@ -2,7 +2,15 @@
 Changelog
 =========
 
-0.4.0 (2022-07-23)
+0.4.1 (2022-07-12)
+==================
+* Supported single logout:
+  * Added Digid logout view for Sp-initiated logout
+  * Added Didid callback view for Sp-initiated logout with HTTP-redirect binding
+  * Added Digid callback view for Idp-initiated logout with SOAP binding
+  * Generated metadata with two single logout endpoints
+
+0.4.0 (2022-06-23)
 ==================
 * Added ``slo`` required parameter for Digid metadata generation as a first step to support single logout.
 
