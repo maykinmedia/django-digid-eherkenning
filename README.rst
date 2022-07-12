@@ -46,13 +46,16 @@ Install with pip:
     pip install git+https://github.com/maykinmedia/python3-saml@maykin#egg=python3-saml
     pip install django-digid-eherkenning
 
-Add ``digid_eherkenning`` to the ``INSTALLED_APPS`` in your Django project's settings:
+Add ``digid_eherkenning`` to the ``INSTALLED_APPS`` in your Django project's settings.
+If you want to use Digid Single Logout you need to also add ``sessionprofile`` to the ``INSTALLED_APPS``.
+
 
 .. code-block:: py
 
     INSTALLED_APPS = [
         ...,
         "digid_eherkenning",
+        "sessionprofile",
         ...,
     ]
 
@@ -66,6 +69,20 @@ authentication backend to the settings:
         "digid_eherkenning.backends.DigiDBackend",
         ...,
     ]
+
+For Digid Single Logout you need also to include ``sessionprofile`` middleware into your settings.
+Note that ``SessionProfileMiddleware`` should be added before ``SessionMiddleware``.
+
+.. code-block:: py
+
+    AUTHENTICATION_BACKENDS = [
+        ...,
+        "sessionprofile.middleware.SessionProfileMiddleware",
+        ...,
+    ]
+
+
+
 
 Finally, at the URL patterns to your root ``urls.py``:
 

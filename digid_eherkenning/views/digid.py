@@ -3,7 +3,7 @@ from typing import Optional
 
 from django.conf import settings
 from django.contrib import auth, messages
-from django.contrib.auth import logout as auth_logout
+from django.contrib.auth import get_user_model, logout as auth_logout
 from django.contrib.auth.views import LogoutView
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseRedirect
@@ -11,16 +11,21 @@ from django.shortcuts import resolve_url
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView, View
 
+from onelogin.saml2.soap_logout_request import Soap_Logout_Request
 from onelogin.saml2.utils import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 
 from ..choices import SectorType
 from ..forms import SAML2Form
 from ..saml2.digid import DigiDClient
+from ..utils import logout_user
 from .base import get_redirect_url
 
 logger = logging.getLogger(__name__)
+
+UserModel = get_user_model()
 
 
 class DigiDLoginView(TemplateView):
@@ -153,11 +158,9 @@ class DigiDLogoutView(LogoutView):
         return f"{SectorType.bsn}:{request.user.bsn}"
 
 
-class DigidSingleLogoutCallbackView(View):
+class DigidSingleLogoutRedirectView(View):
     """
-    View processes:
-    1. Logout request from IdP when IdP initiates logout (step U3)
-    2. Logout response from IdP when SP initiates logout (step U5)
+    Logout response from IdP when SP initiates logout (step U5) with HTTP Redirect binding
     """
 
     def get_success_url(self):
@@ -169,7 +172,6 @@ class DigidSingleLogoutCallbackView(View):
         return get_redirect_url(self.request, redirect_to)
 
     def get(self, request, *args, **kwargs):
-        """handle Logout Response with HTTP Redirect binding (step U5)"""
         user = request.user
         client = DigiDClient()
         try:
@@ -187,7 +189,57 @@ class DigidSingleLogoutCallbackView(View):
 
         return HttpResponseRedirect(self.get_success_url())
 
+
+@method_decorator(csrf_exempt, name="dispatch")
+class DigidSingleLogoutSoapView(View):
+    """
+    Logout request from IdP when Idp initiates logout (step U3) with SOAP binding
+    """
+
     def post(self, request, *args, **kwargs):
+        """handle Logout Response with SOAP binding (step U3)"""
+
         logger.info(
-            "Received Logout Request (POST) from IdP: request body=%s", request.POST
+            "Received Logout Request (POST) from IdP: request body=%s", request.body
         )
+
+        client = DigiDClient()
+        logout_response = client.handle_logout_request(
+            request,
+            keep_local_session=False,
+            delete_session_cb=lambda: self.logout_digid_user(request),
+        )
+        # SAML binding, section 3.2.3.3
+        status_code = 500 if "faultcode" in logout_response else 200
+
+        return HttpResponse(
+            logout_response, status=status_code, content_type="text/xml"
+        )
+
+    @staticmethod
+    def logout_digid_user(request):
+        """
+        delete all sessions with the user identified in nameId of logout request
+        """
+        name_id = Soap_Logout_Request(request=request.body, settings={}).get_name_id()
+        sector_code, bsn = name_id.split(":")
+
+        try:
+            user = UserModel.digid_objects.get_by_bsn(bsn)
+        except UserModel.DoesNotExist:
+            logger.error(
+                "User with BSN %s doesn't exist and therefore can't be logged out", bsn
+            )
+            return
+
+        # delete all user sessions
+        try:
+            logout_user(user)
+        except RuntimeError:
+            logger.error(
+                "The error occurred during forceful logout of User %s. "
+                "Check if 'sessionprofile' app is added into INSTALLED_APPS",
+                user,
+            )
+
+        logger.info("User %s has been forcefully logged out of Digid", user)

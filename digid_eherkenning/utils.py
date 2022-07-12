@@ -1,3 +1,7 @@
+from importlib import import_module
+
+from django.conf import settings
+
 from defusedxml.lxml import parse
 from lxml import etree
 
@@ -29,3 +33,18 @@ def validate_xml(xml, xsd):
     finally:
         if hasattr(xml, "seek"):
             xml.seek(0)
+
+
+def logout_user(user):
+    """
+    forcefully logout user from their sessions
+    """
+    from sessionprofile.models import SessionProfile
+
+    session_profiles = SessionProfile.objects.filter(user=user)
+    SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
+    s = SessionStore()
+    for sp in session_profiles:
+        s.delete(sp.session_key)
+
+    session_profiles.delete()

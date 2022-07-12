@@ -147,13 +147,24 @@ class DigidMetadataManagementCommandTests(TestCase):
         )
         self.assertEqual("06123123123", contact_telephone_node.text)
 
-        single_logout_service_node = entity_descriptor_node.find(
+        slo_nodes = entity_descriptor_node.findall(
             ".//md:SingleLogoutService",
             namespaces=NAME_SPACES,
         )
+        self.assertEqual(len(slo_nodes), 2)
+        slo_soap, slo_redirect = slo_nodes
         self.assertEqual(
-            "http://test-entity.id/digid/slo/",
-            single_logout_service_node.attrib["Location"],
+            slo_soap.attrib["Location"], "http://test-entity.id/digid/slo/soap/"
+        )
+        self.assertEqual(
+            slo_soap.attrib["Binding"], "urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
+        )
+        self.assertEqual(
+            slo_redirect.attrib["Location"], "http://test-entity.id/digid/slo/redirect/"
+        )
+        self.assertEqual(
+            slo_redirect.attrib["Binding"],
+            "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
         )
 
     def test_missing_required_properties(self):
