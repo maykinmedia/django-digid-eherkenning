@@ -13,15 +13,11 @@ from onelogin.saml2.errors import OneLogin_Saml2_Error, OneLogin_Saml2_Validatio
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 from onelogin.saml2.logout_response import OneLogin_Saml2_Logout_Response
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
+from onelogin.saml2.soap_logout_request import Soap_Logout_Request
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
+from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
 
-from digid_eherkenning.utils import (
-    add_soap_envelop,
-    generate_soap_fault_message,
-    get_client_ip,
-)
-
-from .soap_logout_request import Soap_Logout_Request
+from digid_eherkenning.utils import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -357,7 +353,7 @@ class BaseSaml2Client:
         if not post_body or post_body.decode() == "{}":
             message = "SAML LogoutRequest body not found."
             logger.error("Logout request from Digid failed: %s", message)
-            return generate_soap_fault_message(message)
+            return OneLogin_Saml2_XML.generate_soap_fault_message(message)
 
         status = OneLogin_Saml2_Constants.STATUS_SUCCESS
         logout_request = Soap_Logout_Request(self.saml2_settings, post_body)
@@ -393,7 +389,7 @@ class BaseSaml2Client:
         if isinstance(logout_response, bytes):
             logout_response = logout_response.decode()
 
-        soap_logout_response = add_soap_envelop(logout_response)
+        soap_logout_response = OneLogin_Saml2_XML.add_soap_envelope(logout_response)
 
         return soap_logout_response
 

@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.urls import reverse
 from django.utils import timezone
 
-from digid_eherkenning.saml2.settings import SamlSettings
+from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
 try:
     from argparse import BooleanOptionalAction
@@ -284,5 +284,5 @@ class Command(SamlMetadataBaseCommand):
                 }
             }
 
-        saml2_settings = SamlSettings(setting_dict, sp_validation_only=True)
+        saml2_settings = OneLogin_Saml2_Settings(setting_dict, sp_validation_only=True)
         return saml2_settings.get_sp_metadata()

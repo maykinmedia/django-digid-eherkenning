@@ -14,12 +14,12 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView, View
 
+from onelogin.saml2.soap_logout_request import Soap_Logout_Request
 from onelogin.saml2.utils import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 
 from ..choices import SectorType
 from ..forms import SAML2Form
 from ..saml2.digid import DigiDClient
-from ..saml2.soap_logout_request import Soap_Logout_Request
 from ..utils import logout_user
 from .base import get_redirect_url
 

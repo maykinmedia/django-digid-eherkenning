@@ -9,10 +9,10 @@ from furl import furl
 from lxml import etree
 from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
+from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
 from sessionprofile.models import SessionProfile
 
 from digid_eherkenning.choices import SectorType
-from digid_eherkenning.utils import remove_soap_envelope
 
 from .project.choices import UserLoginType
 from .project.models import User
@@ -329,7 +329,7 @@ class DigidSloLogoutSOAPRequestTests(TestCase):
             soap_tree.tag, "{http://schemas.xmlsoap.org/soap/envelope/}Envelope"
         )
 
-        tree = remove_soap_envelope(response.content)
+        tree = OneLogin_Saml2_XML.remove_soap_envelope(response.content)
         self.assertEqual(
             tree.attrib,
             {
@@ -424,7 +424,9 @@ class DigidSloLogoutSOAPRequestTests(TestCase):
             "</soap:Body>"
             "</soap:Envelope>"
         )
-        self.assertEqual(response.content.decode(), expected_response)
+        self.assertEqual(
+            response.content.decode().replace("\n", "").strip(), expected_response
+        )
 
         # check session
         self.assertTrue("_auth_user_id" in self.client.session)
@@ -452,7 +454,7 @@ class DigidSloLogoutSOAPRequestTests(TestCase):
         )
 
         # check status
-        tree = remove_soap_envelope(response.content)
+        tree = OneLogin_Saml2_XML.remove_soap_envelope(response.content)
         status_code = tree.xpath(
             "samlp:Status/samlp:StatusCode", namespaces=OneLogin_Saml2_Constants.NSMAP
         )[0]
@@ -485,7 +487,7 @@ class DigidSloLogoutSOAPRequestTests(TestCase):
         )
 
         # check status
-        tree = remove_soap_envelope(response.content)
+        tree = OneLogin_Saml2_XML.remove_soap_envelope(response.content)
         status_code = tree.xpath(
             "samlp:Status/samlp:StatusCode", namespaces=OneLogin_Saml2_Constants.NSMAP
         )[0]
@@ -520,7 +522,7 @@ class DigidSloLogoutSOAPRequestTests(TestCase):
         )
 
         # check status
-        tree = remove_soap_envelope(response.content)
+        tree = OneLogin_Saml2_XML.remove_soap_envelope(response.content)
         status_code = tree.xpath(
             "samlp:Status/samlp:StatusCode", namespaces=OneLogin_Saml2_Constants.NSMAP
         )[0]
