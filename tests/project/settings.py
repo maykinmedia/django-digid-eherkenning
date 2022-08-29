@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "digid_eherkenning",
     "sessionprofile",
     "tests.project",
+    "simple_certmanager",
 ]
 
 MIDDLEWARE = [
@@ -133,7 +134,7 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
-
+PRIVATE_MEDIA_ROOT = os.path.join(BASE_DIR, "private_media")
 #
 # DigiD settings
 #

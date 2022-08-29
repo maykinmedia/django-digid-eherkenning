@@ -1,11 +1,9 @@
-from io import StringIO
-
-from django.conf import settings
-from django.core.management import call_command
-from django.core.management.base import CommandError
 from django.test import TestCase
 
 from lxml import etree
+
+from digid_eherkenning.saml2.digid import generate_digid_metadata
+from tests.mixins import DigidMetadataMixin
 
 NAME_SPACES = {
     "md": "urn:oasis:names:tc:SAML:2.0:metadata",
@@ -13,37 +11,23 @@ NAME_SPACES = {
 }
 
 
-class DigidMetadataManagementCommandTests(TestCase):
+class DigidMetadataTests(DigidMetadataMixin, TestCase):
     def test_generate_metadata_all_options_specified(self):
-        stdout = StringIO()
 
-        call_command(
-            "generate_digid_metadata",
-            stdout=stdout,
-            **{
-                "want_assertions_encrypted": True,
-                "want_assertions_signed": True,
-                "key_file": settings.DIGID["key_file"],
-                "cert_file": settings.DIGID["cert_file"],
-                "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-                "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
-                "entity_id": "http://test-entity.id",
-                "base_url": "http://test-entity.id",
-                "attribute_consuming_service_index": "9050",
-                "service_name": "Test Service Name",
-                "service_description": "Test Service Description",
-                "technical_contact_person_telephone": "06123123123",
-                "technical_contact_person_email": "test@test.nl",
-                "organization_name": "Test organisation",
-                "organization_url": "http://test-organisation.nl",
-                "test": True,
-                "slo": True,
-            }
+        self.digid_config.signature_algorithm = (
+            "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
         )
+        self.digid_config.digest_algorithm = "http://www.w3.org/2001/04/xmlenc#sha256"
+        self.digid_config.attribute_consuming_service_index = "9050"
+        self.digid_config.technical_contact_person_telephone = "06123123123"
+        self.digid_config.technical_contact_person_email = "test@test.nl"
+        self.digid_config.organization_name = "Test organisation"
+        self.digid_config.organization_url = "http://test-organisation.nl"
+        self.digid_config.save()
 
-        stdout.seek(0)
-        output = stdout.read()
-        entity_descriptor_node = etree.XML(output)
+        digid_metadata = generate_digid_metadata(self.digid_config)
+
+        entity_descriptor_node = etree.XML(digid_metadata)
 
         self.assertEqual(
             "http://test-entity.id", entity_descriptor_node.attrib["entityID"]
@@ -167,41 +151,12 @@ class DigidMetadataManagementCommandTests(TestCase):
             "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
         )
 
-    def test_missing_required_properties(self):
-        with self.assertRaises(CommandError) as cm:
-            call_command(
-                "generate_digid_metadata",
-            )
-        self.assertEqual(
-            cm.exception.args[0],
-            "Missing the following required arguments: --key_file --cert_file "
-            "--entity_id --base_url --service_name --service_description --slo",
-        )
-
     def test_contact_telephone_no_email(self):
-        stdout = StringIO()
+        self.digid_config.technical_contact_person_telephone = "06123123123"
+        self.digid_config.save()
 
-        call_command(
-            "generate_digid_metadata",
-            stdout=stdout,
-            **{
-                "want_assertions_encrypted": True,
-                "want_assertions_signed": True,
-                "key_file": settings.DIGID["key_file"],
-                "cert_file": settings.DIGID["cert_file"],
-                "entity_id": "http://test-entity.id",
-                "base_url": "http://test-entity.id",
-                "service_name": "Test Service Name",
-                "service_description": "Test Service Description",
-                "technical_contact_person_telephone": "06123123123",
-                "test": True,
-                "slo": True,
-            }
-        )
-
-        stdout.seek(0)
-        output = stdout.read()
-        entity_descriptor_node = etree.XML(output)
+        digid_metadata = generate_digid_metadata(self.digid_config)
+        entity_descriptor_node = etree.XML(digid_metadata)
 
         contact_email_node = entity_descriptor_node.find(
             ".//md:EmailAddress",
@@ -216,29 +171,11 @@ class DigidMetadataManagementCommandTests(TestCase):
         self.assertIsNone(contact_telephone_node)
 
     def test_organisation_url_no_service(self):
-        stdout = StringIO()
+        self.digid_config.organization_url = "http://test-organisation.nl"
+        self.digid_config.save()
 
-        call_command(
-            "generate_digid_metadata",
-            stdout=stdout,
-            **{
-                "want_assertions_encrypted": True,
-                "want_assertions_signed": True,
-                "key_file": settings.DIGID["key_file"],
-                "cert_file": settings.DIGID["cert_file"],
-                "entity_id": "http://test-entity.id",
-                "base_url": "http://test-entity.id",
-                "service_name": "Test Service Name",
-                "service_description": "Test Service Description",
-                "organization_url": "http://test-organisation.nl",
-                "test": True,
-                "slo": True,
-            }
-        )
-
-        stdout.seek(0)
-        output = stdout.read()
-        entity_descriptor_node = etree.XML(output)
+        digid_metadata = generate_digid_metadata(self.digid_config)
+        entity_descriptor_node = etree.XML(digid_metadata)
 
         organisation_name_node = entity_descriptor_node.find(
             ".//md:OrganizationName",
@@ -258,28 +195,12 @@ class DigidMetadataManagementCommandTests(TestCase):
         self.assertIsNone(organisation_url_node)
 
     def test_slo_not_supported(self):
-        stdout = StringIO()
+        self.digid_config.slo = False
+        self.digid_config.save()
 
-        call_command(
-            "generate_digid_metadata",
-            stdout=stdout,
-            **{
-                "want_assertions_encrypted": True,
-                "want_assertions_signed": True,
-                "key_file": settings.DIGID["key_file"],
-                "cert_file": settings.DIGID["cert_file"],
-                "entity_id": "http://test-entity.id",
-                "base_url": "http://test-entity.id",
-                "service_name": "Test Service Name",
-                "service_description": "Test Service Description",
-                "test": True,
-                "slo": False,
-            }
-        )
+        digid_metadata = generate_digid_metadata(self.digid_config)
 
-        stdout.seek(0)
-        output = stdout.read()
-        entity_descriptor_node = etree.XML(output)
+        entity_descriptor_node = etree.XML(digid_metadata)
 
         single_logout_service_node = entity_descriptor_node.find(
             ".//md:SingleLogoutService",

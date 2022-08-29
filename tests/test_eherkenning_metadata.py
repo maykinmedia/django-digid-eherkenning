@@ -1,8 +1,4 @@
-from io import StringIO
-
 from django.conf import settings
-from django.core.management import call_command
-from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -15,8 +11,12 @@ NAME_SPACES = {
     "ds": "http://www.w3.org/2000/09/xmldsig#",
 }
 
+from digid_eherkenning.saml2.eherkenning import generate_eherkenning_metadata
 
-class EHerkenningMetadataTests(TestCase):
+from .mixins import EherkenningMetadataMixin
+
+
+class EHerkenningClientTests(TestCase):
     def test_attribute_consuming_services_with_non_required_requested_attribute(self):
         conf = settings.EHERKENNING.copy()
         conf.setdefault("acs_path", reverse("eherkenning:acs"))
@@ -138,38 +138,22 @@ class EHerkenningMetadataTests(TestCase):
         )
 
 
-class EHerkenningMetadataManagementCommandTests(TestCase):
+class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
     def test_generate_metadata_all_options_specified(self):
-        stdout = StringIO()
-
-        call_command(
-            "generate_eherkenning_metadata",
-            stdout=stdout,
-            **{
-                "want_assertions_encrypted": True,
-                "want_assertions_signed": True,
-                "key_file": settings.DIGID["key_file"],
-                "cert_file": settings.DIGID["cert_file"],
-                "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-                "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
-                "entity_id": "http://test-entity.id",
-                "base_url": "http://test-entity.id",
-                "eh_attribute_consuming_service_index": "9050",
-                "eidas_attribute_consuming_service_index": "9051",
-                "oin": "00000001112223330000",
-                "service_name": "Test Service Name",
-                "service_description": "Test Service Description",
-                "technical_contact_person_telephone": "06123123123",
-                "technical_contact_person_email": "test@test.nl",
-                "organization_name": "Test organisation",
-                "organization_url": "http://test-organisation.nl",
-                "test": True,
-            }
+        self.eherkenning_config.signature_algorithm = (
+            "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
         )
+        self.eherkenning_config.digest_algorithm = (
+            "http://www.w3.org/2001/04/xmlenc#sha256"
+        )
+        self.eherkenning_config.technical_contact_person_telephone = "06123123123"
+        self.eherkenning_config.technical_contact_person_email = "test@test.nl"
+        self.eherkenning_config.organization_name = "Test organisation"
+        self.eherkenning_config.organization_url = "http://test-organisation.nl"
+        self.eherkenning_config.save()
 
-        stdout.seek(0)
-        output = stdout.read()
-        entity_descriptor_node = etree.XML(output)
+        eherkenning_metadata = generate_eherkenning_metadata(self.eherkenning_config)
+        entity_descriptor_node = etree.XML(eherkenning_metadata)
 
         self.assertEqual(
             "http://test-entity.id", entity_descriptor_node.attrib["entityID"]
@@ -229,7 +213,7 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
         eidas_attribute_consuming_service_node = attribute_consuming_service_nodes[1]
 
         self.assertEqual(
-            "urn:etoegang:DV:00000001112223330000:services:9050",
+            "urn:etoegang:DV:00000000000000000011:services:9050",
             eh_attribute_consuming_service_node.find(
                 ".//md:RequestedAttribute", namespaces=NAME_SPACES
             ).attrib["Name"],
@@ -247,7 +231,7 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
             ).text,
         )
         self.assertEqual(
-            "urn:etoegang:DV:00000001112223330000:services:9051",
+            "urn:etoegang:DV:00000000000000000011:services:9051",
             eidas_attribute_consuming_service_node.find(
                 ".//md:RequestedAttribute", namespaces=NAME_SPACES
             ).attrib["Name"],
@@ -301,36 +285,12 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
         )
         self.assertEqual("06123123123", contact_telephone_node.text)
 
-    def test_missing_required_properties(self):
-        with self.assertRaises(CommandError):
-            call_command(
-                "generate_eherkenning_metadata",
-            )
-
     def test_contact_telephone_no_email(self):
-        stdout = StringIO()
+        self.eherkenning_config.technical_contact_person_telephone = "06123123123"
+        self.eherkenning_config.save()
 
-        call_command(
-            "generate_eherkenning_metadata",
-            stdout=stdout,
-            **{
-                "want_assertions_encrypted": True,
-                "want_assertions_signed": True,
-                "key_file": settings.DIGID["key_file"],
-                "cert_file": settings.DIGID["cert_file"],
-                "oin": "00000001112223330000",
-                "entity_id": "http://test-entity.id",
-                "base_url": "http://test-entity.id",
-                "service_name": "Test Service Name",
-                "service_description": "Test Service Description",
-                "technical_contact_person_telephone": "06123123123",
-                "test": True,
-            }
-        )
-
-        stdout.seek(0)
-        output = stdout.read()
-        entity_descriptor_node = etree.XML(output)
+        eherkenning_metadata = generate_eherkenning_metadata(self.eherkenning_config)
+        entity_descriptor_node = etree.XML(eherkenning_metadata)
 
         contact_email_node = entity_descriptor_node.find(
             ".//md:EmailAddress",
@@ -345,29 +305,11 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
         self.assertIsNone(contact_telephone_node)
 
     def test_organisation_url_no_service(self):
-        stdout = StringIO()
+        self.eherkenning_config.organization_url = "http://test-organisation.nl"
+        self.eherkenning_config.save()
 
-        call_command(
-            "generate_eherkenning_metadata",
-            stdout=stdout,
-            **{
-                "want_assertions_encrypted": True,
-                "want_assertions_signed": True,
-                "oin": "00000001112223330000",
-                "key_file": settings.DIGID["key_file"],
-                "cert_file": settings.DIGID["cert_file"],
-                "entity_id": "http://test-entity.id",
-                "base_url": "http://test-entity.id",
-                "service_name": "Test Service Name",
-                "service_description": "Test Service Description",
-                "organization_url": "http://test-organisation.nl",
-                "test": True,
-            }
-        )
-
-        stdout.seek(0)
-        output = stdout.read()
-        entity_descriptor_node = etree.XML(output)
+        eherkenning_metadata = generate_eherkenning_metadata(self.eherkenning_config)
+        entity_descriptor_node = etree.XML(eherkenning_metadata)
 
         organisation_name_node = entity_descriptor_node.find(
             ".//md:OrganizationName",
@@ -387,36 +329,13 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
         self.assertIsNone(organisation_url_node)
 
     def test_no_eidas_service(self):
-        stdout = StringIO()
 
-        call_command(
-            "generate_eherkenning_metadata",
-            stdout=stdout,
-            **{
-                "want_assertions_encrypted": True,
-                "want_assertions_signed": True,
-                "key_file": settings.DIGID["key_file"],
-                "cert_file": settings.DIGID["cert_file"],
-                "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-                "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
-                "entity_id": "http://test-entity.id",
-                "base_url": "http://test-entity.id",
-                "eh_attribute_consuming_service_index": "9050",
-                "oin": "00000001112223330000",
-                "no_eidas": True,
-                "service_name": "Test Service Name",
-                "service_description": "Test Service Description",
-                "technical_contact_person_telephone": "06123123123",
-                "technical_contact_person_email": "test@test.nl",
-                "organization_name": "Test organisation",
-                "organization_url": "http://test-organisation.nl",
-                "test": True,
-            }
-        )
+        self.eherkenning_config.no_eidas = True
+        self.eherkenning_config.save()
 
-        stdout.seek(0)
-        output = stdout.read()
-        entity_descriptor_node = etree.XML(output)
+        eherkenning_metadata = generate_eherkenning_metadata(self.eherkenning_config)
+
+        entity_descriptor_node = etree.XML(eherkenning_metadata)
 
         attribute_consuming_service_nodes = entity_descriptor_node.findall(
             ".//md:AttributeConsumingService",
@@ -427,7 +346,7 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
         eh_attribute_consuming_service_node = attribute_consuming_service_nodes[0]
 
         self.assertEqual(
-            "urn:etoegang:DV:00000001112223330000:services:9050",
+            "urn:etoegang:DV:00000000000000000011:services:9050",
             eh_attribute_consuming_service_node.find(
                 ".//md:RequestedAttribute", namespaces=NAME_SPACES
             ).attrib["Name"],

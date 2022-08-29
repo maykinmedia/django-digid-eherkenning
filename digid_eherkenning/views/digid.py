@@ -5,8 +5,8 @@ from django.conf import settings
 from django.contrib import auth, messages
 from django.contrib.auth import get_user_model, logout as auth_logout
 from django.contrib.auth.views import LogoutView
-from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse, HttpResponseRedirect
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
@@ -17,9 +17,11 @@ from django.views.generic.base import TemplateView, View
 from onelogin.saml2.soap_logout_request import Soap_Logout_Request
 from onelogin.saml2.utils import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 
+from digid_eherkenning.models.digid_metadata_config import DigidMetadataConfiguration
+
 from ..choices import SectorType
 from ..forms import SAML2Form
-from ..saml2.digid import DigiDClient
+from ..saml2.digid import DigiDClient, generate_digid_metadata
 from ..utils import logout_user
 from .base import get_redirect_url
 
@@ -243,3 +245,17 @@ class DigidSingleLogoutSoapView(View):
             )
 
         logger.info("User %s has been forcefully logged out of Digid", user)
+
+
+def get_xml_digid_metadata(request):
+    digid_config = DigidMetadataConfiguration.get_solo()
+
+    try:
+        digid_config.clean()
+    except ValidationError:
+        return HttpResponseBadRequest(
+            _("Something went wrong during metadata recovery. Please, contact ....")
+        )
+
+    digid_metadata = generate_digid_metadata(digid_config)
+    return HttpResponse(digid_metadata, content_type="text/xml")

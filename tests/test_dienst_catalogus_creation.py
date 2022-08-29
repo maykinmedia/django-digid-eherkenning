@@ -1,15 +1,16 @@
 import os
-from io import StringIO
 
 from django.conf import settings
-from django.core.management import call_command
-from django.core.management.base import CommandError
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from lxml import etree
 
-from digid_eherkenning.saml2.eherkenning import create_service_catalogus
+from digid_eherkenning.saml2.eherkenning import (
+    create_service_catalogus,
+    generate_dienst_catalogus_metadata,
+)
+from tests.mixins import EherkenningMetadataMixin
 
 
 class CreateDienstCatalogusTests(SimpleTestCase):
@@ -393,35 +394,25 @@ NAME_SPACES = {
 }
 
 
-class ManagementCommandDienstCatalogus(SimpleTestCase):
+class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
     def test_generate_metadata_all_options_specified(self):
-        stdout = StringIO()
 
-        call_command(
-            "generate_eherkenning_dienstcatalogus",
-            stdout=stdout,
-            **{
-                "key_file": settings.DIGID["key_file"],
-                "cert_file": settings.DIGID["cert_file"],
-                "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-                "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
-                "entity_id": "http://test-entity.id",
-                "base_url": "http://test-entity.id",
-                "organization_name": "Test Organisation",
-                "eh_attribute_consuming_service_index": "9050",
-                "eidas_attribute_consuming_service_index": "9051",
-                "oin": "00000001112223330000",
-                "service_name": "Test Service Name",
-                "service_description": "Test Service Description",
-                "makelaar_id": "00000003332221110000",
-                "privacy_policy": "http://test-privacy.nl",
-                "test": True,
-            }
+        self.eherkenning_config.signature_algorithm = (
+            "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
         )
+        self.eherkenning_config.digest_algorithm = (
+            "http://www.w3.org/2001/04/xmlenc#sha256"
+        )
+        self.eherkenning_config.technical_contact_person_telephone = "06123123123"
+        self.eherkenning_config.technical_contact_person_email = "test@test.nl"
+        self.eherkenning_config.organization_name = "Test Organisation"
+        self.eherkenning_config.organization_url = "http://test-organisation.nl"
+        self.eherkenning_config.save()
 
-        stdout.seek(0)
-        output = stdout.read()
-        service_catalogue_node = etree.XML(output.encode("utf-8"))
+        eherkenning_diesntcatalogus_metadata = generate_dienst_catalogus_metadata(
+            self.eherkenning_config
+        )
+        service_catalogue_node = etree.XML(eherkenning_diesntcatalogus_metadata)
 
         signature_algorithm_node = service_catalogue_node.find(
             ".//ds:SignatureMethod",
@@ -447,7 +438,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             namespaces=NAME_SPACES,
         )
         self.assertEqual(
-            "00000001112223330000",
+            "00000000000000000011",
             service_provider_id_node.text,
         )
 
@@ -498,7 +489,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             ".//esc:HerkenningsmakelaarId",
             namespaces=NAME_SPACES,
         )
-        self.assertEqual("00000003332221110000", makelaar_id_node.text)
+        self.assertEqual("00000000000000000022", makelaar_id_node.text)
 
         entity_concerned_nodes = eherkenning_definition_node.findall(
             ".//esc:EntityConcernedTypesAllowed",
@@ -547,7 +538,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             ".//esc:HerkenningsmakelaarId",
             namespaces=NAME_SPACES,
         )
-        self.assertEqual("00000003332221110000", makelaar_id_node.text)
+        self.assertEqual("00000000000000000022", makelaar_id_node.text)
 
         entity_concerned_nodes = eidas_definition_node.findall(
             ".//esc:EntityConcernedTypesAllowed",
@@ -573,7 +564,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             namespaces=NAME_SPACES,
         )
         self.assertEqual(
-            "urn:etoegang:DV:00000001112223330000:services:9050", service_id_node.text
+            "urn:etoegang:DV:00000000000000000011:services:9050", service_id_node.text
         )
 
         service_url_node = eherkenning_instance_node.find(
@@ -592,7 +583,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             ".//esc:HerkenningsmakelaarId",
             namespaces=NAME_SPACES,
         )
-        self.assertEqual("00000003332221110000", makelaar_id_node.text)
+        self.assertEqual("00000000000000000022", makelaar_id_node.text)
 
         key_name_node = eherkenning_instance_node.find(
             ".//ds:KeyName",
@@ -617,7 +608,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             namespaces=NAME_SPACES,
         )
         self.assertEqual(
-            "urn:etoegang:DV:00000001112223330000:services:9051", service_id_node.text
+            "urn:etoegang:DV:00000000000000000011:services:9051", service_id_node.text
         )
 
         service_url_node = eidas_instance_node.find(
@@ -636,7 +627,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             ".//esc:HerkenningsmakelaarId",
             namespaces=NAME_SPACES,
         )
-        self.assertEqual("00000003332221110000", makelaar_id_node.text)
+        self.assertEqual("00000000000000000022", makelaar_id_node.text)
 
         key_name_node = eidas_instance_node.find(
             ".//ds:KeyName",
@@ -656,40 +647,14 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
         self.assertEqual(1, len(classifier_node))
         self.assertEqual("eIDAS-inbound", classifier_node[0].text)
 
-    def test_missing_required_properties(self):
-        with self.assertRaises(CommandError):
-            call_command(
-                "generate_eherkenning_dienstcatalogus",
-            )
-
     def test_no_eidas_service(self):
-        stdout = StringIO()
+        self.eherkenning_config.no_eidas = True
+        self.eherkenning_config.save()
 
-        call_command(
-            "generate_eherkenning_dienstcatalogus",
-            stdout=stdout,
-            **{
-                "key_file": settings.DIGID["key_file"],
-                "cert_file": settings.DIGID["cert_file"],
-                "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-                "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
-                "entity_id": "http://test-entity.id",
-                "base_url": "http://test-entity.id",
-                "organization_name": "Test Organisation",
-                "eh_attribute_consuming_service_index": "9050",
-                "no_eidas": True,
-                "oin": "00000001112223330000",
-                "service_name": "Test Service Name",
-                "service_description": "Test Service Description",
-                "makelaar_id": "00000003332221110000",
-                "privacy_policy": "http://test-privacy.nl",
-                "test": True,
-            }
+        eherkenning_diesntcatalogus_metadata = generate_dienst_catalogus_metadata(
+            self.eherkenning_config
         )
-
-        stdout.seek(0)
-        output = stdout.read()
-        service_catalogue_node = etree.XML(output.encode("utf-8"))
+        service_catalogue_node = etree.XML(eherkenning_diesntcatalogus_metadata)
 
         service_instance_nodes = service_catalogue_node.findall(
             ".//esc:ServiceInstance",
@@ -705,7 +670,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             namespaces=NAME_SPACES,
         )
         self.assertEqual(
-            "urn:etoegang:DV:00000001112223330000:services:9050", service_id_node.text
+            "urn:etoegang:DV:00000000000000000011:services:9050", service_id_node.text
         )
 
         service_url_node = eherkenning_instance_node.find(
@@ -724,7 +689,7 @@ class ManagementCommandDienstCatalogus(SimpleTestCase):
             ".//esc:HerkenningsmakelaarId",
             namespaces=NAME_SPACES,
         )
-        self.assertEqual("00000003332221110000", makelaar_id_node.text)
+        self.assertEqual("00000000000000000022", makelaar_id_node.text)
 
         key_name_node = eherkenning_instance_node.find(
             ".//ds:KeyName",
