@@ -8,9 +8,7 @@ from solo.models import SingletonModel
 
 class MetadataConfiguration(SingletonModel):
 
-    certificate = models.ForeignKey(
-        Certificate, blank=True, null=True, on_delete=models.PROTECT
-    )
+    certificate = models.ForeignKey(Certificate, null=True, on_delete=models.PROTECT)
     want_assertions_signed = models.BooleanField(
         _("Want assertions signed"),
         default=True,

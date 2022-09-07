@@ -3,10 +3,12 @@
 
 {% block object-tools-items %}
     <li>
-      <a href= {% url 'eherkenning_metadata' %}>{% trans "generate SAML metadata as XML" %}</a>
+      <a href="{% url 'eherkenning_metadata' %}">{% trans "View SAML metadata (XML)" %}</a>
     </li>
     <li>
-      <a href= {% url 'eherkenning_diesntcatalogus_metadata' %}>{% trans "generate services catalogue metadata as XML" %}</a>
+      <a href="{% url 'eherkenning_diesntcatalogus_metadata' %}">
+        {% trans "View service catalogue metadata (XML)" %}
+      </a>
     </li>
 {{ block.super }}
 {% endblock %}

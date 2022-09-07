@@ -3,8 +3,7 @@ from django.urls import reverse
 
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
-from digid_eherkenning.models.digid_metadata_config import DigidMetadataConfiguration
-
+from ..models import DigidMetadataConfiguration
 from .base import BaseSaml2Client
 
 

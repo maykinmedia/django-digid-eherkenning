@@ -15,10 +15,7 @@ from lxml.etree import Element
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from OpenSSL import crypto
 
-from digid_eherkenning.models.eherkenning_metadata_config import (
-    EherkenningMetadataConfiguration,
-)
-
+from ..models import EherkenningMetadataConfiguration
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
 from .base import BaseSaml2Client, get_service_description, get_service_name

@@ -17,10 +17,9 @@ from django.views.generic.base import TemplateView, View
 from onelogin.saml2.soap_logout_request import Soap_Logout_Request
 from onelogin.saml2.utils import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 
-from digid_eherkenning.models.digid_metadata_config import DigidMetadataConfiguration
-
 from ..choices import SectorType
 from ..forms import SAML2Form
+from ..models import DigidMetadataConfiguration
 from ..saml2.digid import DigiDClient, generate_digid_metadata
 from ..utils import logout_user
 from .base import get_redirect_url
@@ -252,9 +251,14 @@ def get_xml_digid_metadata(request):
 
     try:
         digid_config.clean()
-    except ValidationError:
+    except ValidationError as error:
+        logger.warning("Invalid DigiD configuration", exc_info=error)
         return HttpResponseBadRequest(
-            _("Something went wrong during metadata recovery. Please, contact ....")
+            _(
+                "Something went wrong while generating the metadata. Please get in touch "
+                "with your technical contact person and inform them the configuration is "
+                "invalid."
+            )
         )
 
     digid_metadata = generate_digid_metadata(digid_config)

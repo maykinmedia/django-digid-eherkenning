@@ -3,8 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 from solo.admin import SingletonModelAdmin
 
-from .models.digid_metadata_config import DigidMetadataConfiguration
-from .models.eherkenning_metadata_config import EherkenningMetadataConfiguration
+from .models import DigidMetadataConfiguration, EherkenningMetadataConfiguration
 
 
 @admin.register(DigidMetadataConfiguration)
