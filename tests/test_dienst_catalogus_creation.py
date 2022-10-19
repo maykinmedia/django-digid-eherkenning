@@ -5,6 +5,7 @@ from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from lxml import etree
+from privates.test import temp_private_root
 
 from digid_eherkenning.saml2.eherkenning import (
     create_service_catalogus,
@@ -394,6 +395,7 @@ NAME_SPACES = {
 }
 
 
+@temp_private_root()
 class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
     def test_generate_metadata_all_options_specified(self):
 

@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from lxml import etree
+from privates.test import temp_private_root
 
 from digid_eherkenning.saml2.digid import generate_digid_metadata
 from tests.mixins import DigidMetadataMixin
@@ -11,6 +12,7 @@ NAME_SPACES = {
 }
 
 
+@temp_private_root()
 class DigidMetadataTests(DigidMetadataMixin, TestCase):
     def test_generate_metadata_all_options_specified(self):
 

@@ -1,6 +1,8 @@
 from django.test import TestCase
 from django.urls import reverse
 
+from privates.test import temp_private_root
+
 from digid_eherkenning.models import (
     DigidMetadataConfiguration,
     EherkenningMetadataConfiguration,
@@ -9,6 +11,7 @@ from digid_eherkenning.models import (
 from .mixins import DigidMetadataMixin, EherkenningMetadataMixin
 
 
+@temp_private_root()
 class DigidMetadataViewTests(DigidMetadataMixin, TestCase):
     def test_digid_metadata_properly_displayed(self):
 
@@ -24,6 +27,7 @@ class DigidMetadataViewTests(DigidMetadataMixin, TestCase):
         self.assertEqual(400, response.status_code)
 
 
+@temp_private_root()
 class EherkenningMetadataViewTests(EherkenningMetadataMixin, TestCase):
     def test_digid_metadata_properly_displayed(self):
 
@@ -39,6 +43,7 @@ class EherkenningMetadataViewTests(EherkenningMetadataMixin, TestCase):
         self.assertEqual(400, response.status_code)
 
 
+@temp_private_root()
 class DiesntCatalogusMetadataViewTests(EherkenningMetadataMixin, TestCase):
     def test_digid_metadata_properly_displayed(self):
 

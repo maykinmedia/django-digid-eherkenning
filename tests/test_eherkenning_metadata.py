@@ -3,6 +3,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from lxml import etree
+from privates.test import temp_private_root
 
 from digid_eherkenning.saml2.eherkenning import eHerkenningClient
 
@@ -138,6 +139,7 @@ class EHerkenningClientTests(TestCase):
         )
 
 
+@temp_private_root()
 class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
     def test_generate_metadata_all_options_specified(self):
         self.eherkenning_config.signature_algorithm = (
