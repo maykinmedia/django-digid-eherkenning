@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import path
 
 from digid_eherkenning.mock.views.digid import (
     DigiDAssertionConsumerServiceMockView,
@@ -13,7 +13,7 @@ this is a mock replacement for the regular digid_urls.py
 app_name = "digid"
 
 urlpatterns = (
-    url(r"^login/", DigiDLoginMockView.as_view(), name="login"),
-    url(r"^acs/", DigiDAssertionConsumerServiceMockView.as_view(), name="acs"),
-    url(r"^logout/", DigiDLogoutMockView.as_view(), name="logout"),
+    path("login/", DigiDLoginMockView.as_view(), name="login"),
+    path("acs/", DigiDAssertionConsumerServiceMockView.as_view(), name="acs"),
+    path("logout/", DigiDLogoutMockView.as_view(), name="logout"),
 )
