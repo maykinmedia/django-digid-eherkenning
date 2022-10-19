@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import path
 
 from digid_eherkenning.mock.idp.views.digid import (
     DigiDMockIDPLoginView,
@@ -8,6 +8,6 @@ from digid_eherkenning.mock.idp.views.digid import (
 app_name = "digid-mock"
 
 urlpatterns = [
-    url(r"^inloggen/", DigiDMockIDPLoginView.as_view(), name="login"),
-    url(r"^inloggen_ww/", DigiDMockIDPPasswordLoginView.as_view(), name="password"),
+    path("inloggen/", DigiDMockIDPLoginView.as_view(), name="login"),
+    path("inloggen_ww/", DigiDMockIDPPasswordLoginView.as_view(), name="password"),
 ]
