@@ -1,5 +1,6 @@
 import logging
 import urllib
+import warnings
 from typing import Callable, List
 
 from django.conf import settings
@@ -88,6 +89,11 @@ class BaseSaml2Client:
             self.cache_key_prefix, self.cache_timeout
         )
         if conf is not None:
+            warnings.warn(
+                "Passing the configuration at client init is deprecated, please "
+                "update your subclass to implement the conf property instead.",
+                DeprecationWarning,
+            )
             self.conf = conf
 
     @property

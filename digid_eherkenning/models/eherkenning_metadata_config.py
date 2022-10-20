@@ -61,6 +61,16 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         default="application/soap+xml",
         max_length=100,
     )
+    eh_service_language = models.CharField(
+        _("eHerkenning service language"),
+        max_length=2,
+        default="nl",
+    )
+    eidas_service_language = models.CharField(
+        _("eidas service language"),
+        max_length=2,
+        default="nl",
+    )
 
     class Meta:
         verbose_name = _("Eherkenning metadata configuration")
@@ -122,6 +132,7 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
                         "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
                     },
                 ],
+                "language": self.eh_service_language,
             }
         ]
 
@@ -147,6 +158,7 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
                         "name": "urn:etoegang:1.9:EntityConcernedID:Pseudo",
                     },
                 ],
+                "language": self.eidas_service_language,
             }
             services.append(eidas_service)
 
