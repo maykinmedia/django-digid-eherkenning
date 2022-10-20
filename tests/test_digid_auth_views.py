@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+import pytest
 import responses
 from freezegun import freeze_time
 from lxml import etree
@@ -19,6 +20,7 @@ from .project.models import User
 from .utils import create_example_artifact, get_saml_element
 
 
+@pytest.mark.usefixtures("digid_config", "temp_private_root")
 class DigidLoginViewTests(TestCase):
     maxDiff = None
 

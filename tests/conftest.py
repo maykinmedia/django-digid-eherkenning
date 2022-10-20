@@ -27,23 +27,32 @@ DIGID_TEST_CONFIG = {
 
 
 @pytest.fixture
-def digid_certificate() -> Certificate:
+def temp_private_root(tmp_path, settings):
+    tmpdir = tmp_path / "private-media"
+    tmpdir.mkdir()
+    location = str(tmpdir)
+    settings.PRIVATE_MEDIA_ROOT = location
+    settings.SENDFILE_ROOT = location
+    return settings
+
+
+@pytest.fixture
+def digid_certificate(temp_private_root) -> Certificate:
     with DIGID_TEST_KEY_FILE.open("rb") as privkey, DIGID_TEST_CERTIFICATE_FILE.open(
         "rb"
     ) as cert:
-        certificate, _ = Certificate.objects.get_or_create(
+        certificate, created = Certificate.objects.get_or_create(
             label="DigiD Tests",
-            defaults={
-                "type": CertificateTypes.key_pair,
-                "public_certificate": File(cert),
-                "private_key": File(privkey),
-            },
+            defaults={"type": CertificateTypes.key_pair},
         )
+        if created:
+            certificate.public_certificate.save("cert.pem", File(cert), save=False)
+            certificate.private_key.save("key.pem", File(privkey))
     return certificate
 
 
 @pytest.fixture
-def digid_config(digid_certificate):
+def digid_config(digid_certificate, temp_private_root):
     updated_fields = []
 
     config = DigidMetadataConfiguration.get_solo()
@@ -54,7 +63,7 @@ def digid_config(digid_certificate):
 
     if not config.idp_metadata_file:
         with DIGID_TEST_METADATA_FILE.open("rb") as metadata_file:
-            config.idp_metadata_file = File(metadata_file)
+            config.idp_metadata_file.save("metadata", File(metadata_file), save=False)
             updated_fields.append("idp_metadata_file")
 
     # set remaining values
