@@ -75,24 +75,25 @@ def digid_certificate(temp_private_root) -> Certificate:
 
 
 @pytest.fixture
-def digid_config(digid_certificate, temp_private_root):
+def digid_config_defaults(digid_certificate, temp_private_root):
     config = DigidMetadataConfiguration.get_solo()
-
     if config.certificate != digid_certificate:
         config.certificate = digid_certificate
-
     with DIGID_TEST_METADATA_FILE.open("rb") as metadata_file:
         config.idp_metadata_file.save("metadata", File(metadata_file), save=False)
+    config.save()
+    return config
 
+
+@pytest.fixture
+def digid_config(digid_config_defaults):
     # set remaining values
     for field, value in DIGID_TEST_CONFIG.items():
-        current_value = getattr(config, field)
+        current_value = getattr(digid_config_defaults, field)
         if current_value != value:
-            setattr(config, field, value)
-
-    config.save()
-
-    return config
+            setattr(digid_config_defaults, field, value)
+    digid_config_defaults.save()
+    return digid_config_defaults
 
 
 @pytest.fixture
@@ -110,21 +111,22 @@ def eherkenning_certificate(temp_private_root) -> Certificate:
 
 
 @pytest.fixture
-def eherkenning_config(eherkenning_certificate, temp_private_root):
+def eherkenning_config_defaults(eherkenning_certificate):
     config = EherkenningMetadataConfiguration.get_solo()
-
     if config.certificate != eherkenning_certificate:
         config.certificate = eherkenning_certificate
-
     with EHERKENNING_TEST_METADATA_FILE.open("rb") as metadata_file:
         config.idp_metadata_file.save("metadata", File(metadata_file), save=False)
+    config.save()
+    return config
 
+
+@pytest.fixture
+def eherkenning_config(eherkenning_config_defaults):
     # set remaining values
     for field, value in EHERKENNING_TEST_CONFIG.items():
-        current_value = getattr(config, field)
+        current_value = getattr(eherkenning_config_defaults, field)
         if current_value != value:
-            setattr(config, field, value)
-
-    config.save()
-
-    return config
+            setattr(eherkenning_config_defaults, field, value)
+    eherkenning_config_defaults.save()
+    return eherkenning_config_defaults

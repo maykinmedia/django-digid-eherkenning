@@ -1,14 +1,36 @@
-from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 
+import pytest
+
+from digid_eherkenning.models import (
+    DigidMetadataConfiguration,
+    EherkenningMetadataConfiguration,
+)
 from digid_eherkenning.saml2.digid import DigiDClient
 from digid_eherkenning.saml2.eherkenning import eHerkenningClient
 
 
+@pytest.mark.usefixtures("digid_config_defaults", "temp_private_root")
 class DigidClientTests(TestCase):
     def test_wants_assertions_signed_setting_default(self):
-        conf = settings.DIGID.copy()
+        config = DigidMetadataConfiguration.get_solo()
+
+        conf = config.as_dict()
+        conf.setdefault("acs_path", reverse("digid:acs"))
+
+        digid_client = DigiDClient()
+        config_dict = digid_client.create_config_dict(conf)
+
+        self.assertIn("wantAssertionsSigned", config_dict["security"])
+        self.assertTrue(config_dict["security"]["wantAssertionsSigned"])
+
+    def test_wants_assertions_signed_setting_changed(self):
+        config = DigidMetadataConfiguration.get_solo()
+        config.want_assertions_signed = False
+        config.save()
+
+        conf = config.as_dict()
         conf.setdefault("acs_path", reverse("digid:acs"))
 
         digid_client = DigiDClient()
@@ -17,21 +39,27 @@ class DigidClientTests(TestCase):
         self.assertIn("wantAssertionsSigned", config_dict["security"])
         self.assertFalse(config_dict["security"]["wantAssertionsSigned"])
 
-    def test_wants_assertions_signed_setting_changed(self):
-        conf = settings.DIGID.copy()
-        conf.setdefault("acs_path", reverse("digid:acs"))
-        conf.update({"want_assertions_signed": True})
 
-        digid_client = DigiDClient()
-        config_dict = digid_client.create_config_dict(conf)
-
-        self.assertIn("wantAssertionsSigned", config_dict["security"])
-        self.assertTrue(config_dict["security"]["wantAssertionsSigned"])
-
-
+@pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")
 class EHerkenningClientTests(TestCase):
     def test_wants_assertions_signed_setting_default(self):
-        conf = settings.EHERKENNING.copy()
+        config = EherkenningMetadataConfiguration.get_solo()
+
+        conf = config.as_dict()
+        conf.setdefault("acs_path", reverse("eherkenning:acs"))
+
+        eherkenning_client = eHerkenningClient()
+        config_dict = eherkenning_client.create_config_dict(conf)
+
+        self.assertIn("wantAssertionsSigned", config_dict["security"])
+        self.assertTrue(config_dict["security"]["wantAssertionsSigned"])
+
+    def test_wants_assertions_signed_setting_changed(self):
+        config = EherkenningMetadataConfiguration.get_solo()
+        config.want_assertions_signed = False
+        config.save()
+
+        conf = config.as_dict()
         conf.setdefault("acs_path", reverse("eherkenning:acs"))
 
         eherkenning_client = eHerkenningClient()
@@ -40,26 +68,14 @@ class EHerkenningClientTests(TestCase):
         self.assertIn("wantAssertionsSigned", config_dict["security"])
         self.assertFalse(config_dict["security"]["wantAssertionsSigned"])
 
-    def test_wants_assertions_signed_setting_changed(self):
-        conf = settings.EHERKENNING.copy()
-        conf.setdefault("acs_path", reverse("eherkenning:acs"))
-        conf.update({"want_assertions_signed": True})
-
-        eherkenning_client = eHerkenningClient()
-        config_dict = eherkenning_client.create_config_dict(conf)
-
-        self.assertIn("wantAssertionsSigned", config_dict["security"])
-        self.assertTrue(config_dict["security"]["wantAssertionsSigned"])
-
     def test_signature_digest_algorithm_settings_changed(self):
-        conf = settings.EHERKENNING.copy()
+        config = EherkenningMetadataConfiguration.get_solo()
+        config.signature_algorithm = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
+        config.digest_algorithm = "http://www.w3.org/2001/04/xmlenc#sha256"
+        config.save()
+
+        conf = config.as_dict()
         conf.setdefault("acs_path", reverse("eherkenning:acs"))
-        conf.update(
-            {
-                "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-                "digest_algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
-            }
-        )
 
         eherkenning_client = eHerkenningClient()
         config_dict = eherkenning_client.create_config_dict(conf)
@@ -76,7 +92,9 @@ class EHerkenningClientTests(TestCase):
         )
 
     def test_artifact_resolve_content_type_settings_default(self):
-        conf = settings.EHERKENNING.copy()
+        config = EherkenningMetadataConfiguration.get_solo()
+
+        conf = config.as_dict()
         conf.setdefault("acs_path", reverse("eherkenning:acs"))
 
         eherkenning_client = eHerkenningClient()
@@ -89,13 +107,12 @@ class EHerkenningClientTests(TestCase):
         )
 
     def test_artifact_resolve_content_type_settings(self):
-        conf = settings.EHERKENNING.copy()
+        config = EherkenningMetadataConfiguration.get_solo()
+        config.artifact_resolve_content_type = "text/xml"
+        config.save()
+
+        conf = config.as_dict()
         conf.setdefault("acs_path", reverse("eherkenning:acs"))
-        conf.update(
-            {
-                "artifact_resolve_content_type": "text/xml",
-            }
-        )
 
         eherkenning_client = eHerkenningClient()
         config_dict = eherkenning_client.create_config_dict(conf)

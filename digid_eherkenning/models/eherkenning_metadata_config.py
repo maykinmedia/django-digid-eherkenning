@@ -56,6 +56,11 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         help_text=_("OIN of the broker used to set up eHerkenning/eIDAS."),
         max_length=100,
     )
+    artifact_resolve_content_type = models.CharField(
+        _("resolve artifact binding content type"),
+        default="application/soap+xml",
+        max_length=100,
+    )
 
     class Meta:
         verbose_name = _("Eherkenning metadata configuration")
@@ -168,5 +173,6 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
             "technical_contact_person_email": self.technical_contact_person_email
             or None,
             "organization": organization,
+            "artifact_resolve_content_type": self.artifact_resolve_content_type,
             # "session_age": get_setting("EHERKENNING_SESSION_AGE"),
         }
