@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from privates.fields import PrivateMediaFileField
 from simple_certmanager.models import Certificate
 from solo.models import SingletonModel
 
@@ -9,6 +10,17 @@ from solo.models import SingletonModel
 class MetadataConfiguration(SingletonModel):
 
     certificate = models.ForeignKey(Certificate, null=True, on_delete=models.PROTECT)
+    idp_metadata_file = PrivateMediaFileField(
+        _("Identity Provider metadata file"),
+        blank=False,
+        help_text=_("The metadata file of the identity provider"),
+    )
+    idp_service_entity_id = models.CharField(
+        _("Identity Provider service entity ID"),
+        max_length=255,
+        blank=False,
+        help_text="Example value: 'https://was-preprod1.digid.nl/saml/idp/metadata'",
+    )
     want_assertions_signed = models.BooleanField(
         _("Want assertions signed"),
         default=True,
@@ -53,6 +65,13 @@ class MetadataConfiguration(SingletonModel):
         _("Service name"),
         help_text=_("The name of the service for which DigiD login is required"),
         max_length=100,
+    )
+    requested_attributes = models.JSONField(
+        _("requested attributes"),
+        default=list,
+        help_text=_(
+            "A list of strings with the requested attributes, e.g. '[\"bsn\"]'"
+        ),
     )
     service_description = models.CharField(
         _("Service description"),
