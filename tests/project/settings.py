@@ -139,7 +139,7 @@ PRIVATE_MEDIA_ROOT = os.path.join(BASE_DIR, "private_media")
 #
 # eHerkenning settings
 #
-EHERKENNING = {
+_EHERKENNING = {
     "services": [
         {
             "service_uuid": "005f18b8-0114-4a1d-963a-ee8e80a08f3f",
