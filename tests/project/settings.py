@@ -138,7 +138,7 @@ PRIVATE_MEDIA_ROOT = os.path.join(BASE_DIR, "private_media")
 #
 # DigiD settings
 #
-DIGID = {
+_DIGID = {
     "base_url": "https://sp.example.nl",
     "entity_id": "sp.example.nl/digid",
     "metadata_file": os.path.join(BASE_DIR, "files", "digid", "metadata"),
