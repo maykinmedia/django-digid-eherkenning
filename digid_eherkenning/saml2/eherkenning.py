@@ -138,109 +138,15 @@ def generate_dienst_catalogus_metadata(eherkenning_config):
     return create_service_catalogus(settings)
 
 
-def generate_eherkenning_metadata(eherkenning_config: EherkenningMetadataConfiguration):
+def generate_eherkenning_metadata(*args):
+    client = eHerkenningClient()
+    client.saml2_setting_kwargs = {"sp_validation_only": True}
+    # client.conf.update({
 
-    key_file = eherkenning_config.certificate.private_key.path
-    cert_file = eherkenning_config.certificate.public_certificate.path
-
-    setting_dict = {
-        "strict": True,
-        "security": {
-            "signMetadata": True,
-            "authnRequestsSigned": True,
-            "wantAssertionsEncrypted": eherkenning_config.want_assertions_encrypted,
-            "wantAssertionsSigned": eherkenning_config.want_assertions_signed,
-            "soapClientKey": key_file,
-            "soapClientCert": cert_file,
-            "soapClientPassphrase": eherkenning_config.key_passphrase,
-            "signatureAlgorithm": eherkenning_config.signature_algorithm,
-            "digestAlgorithm": eherkenning_config.digest_algorithm,
-            # See comment in the python3-saml for in  OneLogin_Saml2_Response.validate_num_assertions (onelogin/saml2/response.py)
-            # for why we need this option.
-            "disableSignatureWrappingProtection": True,
-            # For eHerkenning, if the Metadata file expires, we sent them an update. So
-            # there is no need for an expiry date.
-            "metadataValidUntil": "",
-            "metadataCacheDuration": "",
-            "requestedAuthnContextComparison": "minimum",
-            "requestedAuthnContext": [eherkenning_config.loa],
-        },
-        # Service Provider Data that we are deploying.
-        "sp": {
-            # Identifier of the SP entity  (must be a URI)
-            "entityId": eherkenning_config.entity_id,
-            # Specifies info about where and how the <AuthnResponse> message MUST be
-            # returned to the requester, in this case our SP.
-            "assertionConsumerService": {
-                "url": furl(
-                    eherkenning_config.base_url + reverse("eherkenning:acs")
-                ).url,
-                "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
-            },
-            "attributeConsumingServices": [
-                {
-                    "index": eherkenning_config.eh_attribute_consuming_service_index,
-                    "serviceName": eherkenning_config.service_name,
-                    "serviceDescription": eherkenning_config.service_description,
-                    "requestedAttributes": [
-                        {
-                            "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
-                            % {
-                                "oin": eherkenning_config.oin,
-                                "index": eherkenning_config.eh_attribute_consuming_service_index,
-                            },
-                            "isRequired": False,
-                        }
-                    ],
-                    "language": "nl",
-                },
-                {
-                    "index": eherkenning_config.eidas_attribute_consuming_service_index,
-                    "serviceName": eherkenning_config.service_name + " (eIDAS)",
-                    "serviceDescription": eherkenning_config.service_description,
-                    "requestedAttributes": [
-                        {
-                            "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
-                            % {
-                                "oin": eherkenning_config.oin,
-                                "index": eherkenning_config.eidas_attribute_consuming_service_index,
-                            },
-                            "isRequired": False,
-                        }
-                    ],
-                    "language": "nl",
-                },
-            ],
-            "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
-            "x509cert": open(cert_file, "r").read(),
-            "privateKey": open(key_file, "r").read(),
-            "privateKeyPassphrase": eherkenning_config.key_passphrase,
-        },
-    }
-
-    telephone = eherkenning_config.technical_contact_person_telephone
-    email = eherkenning_config.technical_contact_person_email
-    if telephone and email:
-        setting_dict["contactPerson"] = {
-            "technical": {"telephoneNumber": telephone, "emailAddress": email}
-        }
-
-    if eherkenning_config.organization_url and eherkenning_config.organization_name:
-        setting_dict["organization"] = {
-            "nl": {
-                "name": eherkenning_config.organization_name,
-                "displayname": eherkenning_config.organization_name,
-                "url": eherkenning_config.organization_url,
-            }
-        }
-
-    if eherkenning_config.no_eidas:
-        setting_dict["sp"]["attributeConsumingServices"] = setting_dict["sp"][
-            "attributeConsumingServices"
-        ][:-1]
-
-    saml2_settings = OneLogin_Saml2_Settings(setting_dict, sp_validation_only=True)
-    return saml2_settings.get_sp_metadata()
+    # })
+    # TODO: possibly we need to drop the "idp" key from the setting_dict -> check
+    # with Silvia
+    return client.create_metadata()
 
 
 def xml_datetime(d):

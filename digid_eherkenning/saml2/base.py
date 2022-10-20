@@ -83,6 +83,9 @@ class BaseSaml2Client:
     cache_key_prefix = "saml2_"
     cache_timeout = 60 * 60  # 1 hour
     _conf = None
+    saml2_setting_kwargs: dict = {
+        "custom_base_path": None,
+    }
 
     def __init__(self, conf=None):
         self.authn_storage = AuthnRequestStorage(
@@ -212,7 +215,7 @@ class BaseSaml2Client:
         """
         Convert to the format expected by the OneLogin SAML2 library.
         """
-        return OneLogin_Saml2_Settings(config_dict, custom_base_path=None)
+        return OneLogin_Saml2_Settings(config_dict, **self.saml2_setting_kwargs)
 
     def create_config_dict(self, conf):
         """
@@ -301,7 +304,7 @@ class BaseSaml2Client:
 
         telephone = conf.get("technical_contact_person_telephone")
         email = conf.get("technical_contact_person_email")
-        if telephone or email:
+        if telephone and email:
             setting_dict["contactPerson"] = {
                 "technical": {"telephoneNumber": telephone, "emailAddress": email}
             }
