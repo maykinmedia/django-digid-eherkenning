@@ -2,6 +2,24 @@
 Changelog
 =========
 
+0.5.0 (2022-??-??)
+==================
+
+:boom: Breaking changes :warning: !
+
+* Moved configuration of DigiD/eHerkenning/eIDAS to the admin. The ``DIGID`` and
+  ``EHERKENNING`` settings no longer work.
+
+* Some default values have changed:
+
+  - ``want_assertions_signed``: ``False`` -> ``True``
+  - ``digestAlgorithm``: empty -> ``"http://www.w3.org/2000/09/xmldsig#sha1"``
+
+* The DigiD ``session_age`` parameter used to be opt-in. This now defaults to 15 minutes
+  (the maximum duration according to "DigiDCheck 2.2 T14 -- Sessieduur") through the
+  ``DIGID_SESSION_AGE`` setting.
+
+
 0.4.1 (2022-07-12)
 ==================
 * Supported single logout:

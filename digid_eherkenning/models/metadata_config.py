@@ -2,9 +2,16 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from privates.fields import PrivateMediaFileField
 from simple_certmanager.models import Certificate
 from solo.models import SingletonModel
+
+
+class MetadataConfigurationManager(models.Manager):
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.select_related("certificate")
 
 
 class MetadataConfiguration(SingletonModel):
@@ -44,7 +51,7 @@ class MetadataConfiguration(SingletonModel):
     signature_algorithm = models.CharField(
         _("Signature algorithm"),
         blank=True,
-        default="http://www.w3.org/2000/09/xmldsig#rsa-sha1",
+        default=OneLogin_Saml2_Constants.RSA_SHA1,
         help_text=_("Signature algorithm"),
         max_length=100,
     )
@@ -117,6 +124,8 @@ class MetadataConfiguration(SingletonModel):
         help_text=_("Attribute consuming service index"),
         max_length=100,
     )
+
+    objects = MetadataConfigurationManager()
 
     class Meta:
         abstract = True

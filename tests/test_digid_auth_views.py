@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib import auth
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -167,6 +167,8 @@ class DigidLoginViewTests(TestCase):
 
 
 @freeze_time("2020-04-09T08:31:46Z")
+@override_settings(LOGIN_URL=reverse("admin:login"))
+@pytest.mark.usefixtures("digid_config", "temp_private_root")
 class DigidAssertionConsumerServiceViewTests(TestCase):
     maxDiff = None
 
@@ -550,6 +552,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         # by the IDP.
         self.cache_mock.get.assert_called_once_with("digid__7afa5ce49")
 
+    @override_settings(LOGIN_URL="/dummy/login")
     @responses.activate
     def test_no_authn_request(self):
         """
@@ -580,7 +583,7 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, settings.DIGID["login_url"])
+        self.assertEqual(response.url, "/dummy/login")
 
         # Make sure no user is created.
         self.assertEqual(User.objects.count(), 0)

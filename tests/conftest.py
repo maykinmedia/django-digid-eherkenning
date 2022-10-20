@@ -23,6 +23,7 @@ DIGID_TEST_CONFIG = {
     "attribute_consuming_service_index": "1",
     "service_name": "Example",
     "requested_attributes": [],
+    "want_assertions_signed": False,
 }
 
 
@@ -45,35 +46,27 @@ def digid_certificate(temp_private_root) -> Certificate:
             label="DigiD Tests",
             defaults={"type": CertificateTypes.key_pair},
         )
-        if created:
-            certificate.public_certificate.save("cert.pem", File(cert), save=False)
-            certificate.private_key.save("key.pem", File(privkey))
+        certificate.public_certificate.save("cert.pem", File(cert), save=False)
+        certificate.private_key.save("key.pem", File(privkey))
     return certificate
 
 
 @pytest.fixture
 def digid_config(digid_certificate, temp_private_root):
-    updated_fields = []
-
     config = DigidMetadataConfiguration.get_solo()
 
     if config.certificate != digid_certificate:
         config.certificate = digid_certificate
-        updated_fields.append("certificate")
 
-    if not config.idp_metadata_file:
-        with DIGID_TEST_METADATA_FILE.open("rb") as metadata_file:
-            config.idp_metadata_file.save("metadata", File(metadata_file), save=False)
-            updated_fields.append("idp_metadata_file")
+    with DIGID_TEST_METADATA_FILE.open("rb") as metadata_file:
+        config.idp_metadata_file.save("metadata", File(metadata_file), save=False)
 
     # set remaining values
     for field, value in DIGID_TEST_CONFIG.items():
         current_value = getattr(config, field)
         if current_value != value:
             setattr(config, field, value)
-            updated_fields.append(field)
 
-    if updated_fields:
-        config.save()
+    config.save()
 
     return config

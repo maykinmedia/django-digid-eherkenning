@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.urls import reverse
 
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
@@ -104,11 +103,13 @@ class DigiDClient(BaseSaml2Client):
     cache_key_prefix = "digid"
     cache_timeout = 60 * 60  # 1 hour
 
-    def __init__(self):
-        conf = settings.DIGID.copy()
-        conf.setdefault("acs_path", reverse("digid:acs"))
-
-        super().__init__(conf)
+    @property
+    def conf(self) -> dict:
+        if self._conf is None:
+            db_config = DigidMetadataConfiguration.get_solo()
+            self._conf = db_config.as_dict()
+            self._conf.setdefault("acs_path", reverse("digid:acs"))
+        return self._conf
 
     def create_config(self, config_dict):
         config_dict["security"].update(

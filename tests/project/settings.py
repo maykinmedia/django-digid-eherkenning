@@ -135,22 +135,6 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 PRIVATE_MEDIA_ROOT = os.path.join(BASE_DIR, "private_media")
-#
-# DigiD settings
-#
-_DIGID = {
-    "base_url": "https://sp.example.nl",
-    "entity_id": "sp.example.nl/digid",
-    "metadata_file": os.path.join(BASE_DIR, "files", "digid", "metadata"),
-    "key_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key"),
-    "cert_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem"),
-    "service_entity_id": "https://was-preprod1.digid.nl/saml/idp/metadata",
-    "attribute_consuming_service_index": "1",
-    "service_name": "Example",
-    "requested_attributes": [],
-    "login_url": reverse_lazy("admin:login"),
-    "session_age": 15 * 60,
-}
 
 #
 # eHerkenning settings
