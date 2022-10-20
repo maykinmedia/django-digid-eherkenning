@@ -139,9 +139,7 @@ PRIVATE_MEDIA_ROOT = os.path.join(BASE_DIR, "private_media")
 #
 # eHerkenning settings
 #
-EHERKENNING = conf = {
-    "oin": "00000000000000000000",
-    "organisation_name": "Example",
+EHERKENNING = {
     "services": [
         {
             "service_uuid": "005f18b8-0114-4a1d-963a-ee8e80a08f3f",
@@ -180,14 +178,8 @@ EHERKENNING = conf = {
         },
     ],
     "service_index": "1",
-    "key_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key"),
-    "cert_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem"),
     # Also used as entity ID
-    "base_url": "https://example.com",
-    "metadata_file": os.path.join(BASE_DIR, "files", "eherkenning", "metadata"),
-    "service_entity_id": "urn:etoegang:HM:00000003520354760000:entities:9632",
-    "entity_id": "urn:etoegang:DV:0000000000000000001:entities:0002",
-    "login_url": reverse_lazy("admin:login"),
+    # "login_url": reverse_lazy("admin:login"),
     #
     # ** Optional settings **
     #

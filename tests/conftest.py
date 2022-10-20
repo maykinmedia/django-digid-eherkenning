@@ -6,7 +6,10 @@ import pytest
 from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.models import Certificate
 
-from digid_eherkenning.models import DigidMetadataConfiguration
+from digid_eherkenning.models import (
+    DigidMetadataConfiguration,
+    EherkenningMetadataConfiguration,
+)
 
 BASE_DIR = Path(__file__).parent.resolve()
 
@@ -24,6 +27,26 @@ DIGID_TEST_CONFIG = {
     "service_name": "Example",
     "requested_attributes": [],
     "want_assertions_signed": False,
+}
+
+EHERKENNING_TEST_METADATA_FILE = BASE_DIR / "files" / "eherkenning" / "metadata"
+EHERKENNING_TEST_KEY_FILE = DIGID_TEST_KEY_FILE
+EHERKENNING_TEST_CERTIFICATE_FILE = (
+    BASE_DIR / "files" / "snakeoil-cert" / "ssl-cert-snakeoil.pem"
+)
+
+EHERKENNING_TEST_CONFIG = {
+    "base_url": "https://example.com",
+    "entity_id": "urn:etoegang:DV:0000000000000000001:entities:0002",
+    "idp_service_entity_id": "urn:etoegang:HM:00000003520354760000:entities:9632",
+    "service_name": "Example eHerkenning",  # TODO: eidas variant?
+    "want_assertions_signed": False,
+    "organization_name": "Example",
+    "loa": "urn:etoegang:core:assurance-class:loa3",
+    "eh_attribute_consuming_service_index": "1",
+    "eidas_attribute_consuming_service_index": "2",
+    "oin": "00000000000000000000",
+    "no_eidas": False,
 }
 
 
@@ -63,6 +86,41 @@ def digid_config(digid_certificate, temp_private_root):
 
     # set remaining values
     for field, value in DIGID_TEST_CONFIG.items():
+        current_value = getattr(config, field)
+        if current_value != value:
+            setattr(config, field, value)
+
+    config.save()
+
+    return config
+
+
+@pytest.fixture
+def eherkenning_certificate(temp_private_root) -> Certificate:
+    with EHERKENNING_TEST_KEY_FILE.open(
+        "rb"
+    ) as privkey, EHERKENNING_TEST_CERTIFICATE_FILE.open("rb") as cert:
+        certificate, created = Certificate.objects.get_or_create(
+            label="eHerkenning Tests",
+            defaults={"type": CertificateTypes.key_pair},
+        )
+        certificate.public_certificate.save("cert.pem", File(cert), save=False)
+        certificate.private_key.save("key.pem", File(privkey))
+    return certificate
+
+
+@pytest.fixture
+def eherkenning_config(eherkenning_certificate, temp_private_root):
+    config = EherkenningMetadataConfiguration.get_solo()
+
+    if config.certificate != eherkenning_certificate:
+        config.certificate = eherkenning_certificate
+
+    with EHERKENNING_TEST_METADATA_FILE.open("rb") as metadata_file:
+        config.idp_metadata_file.save("metadata", File(metadata_file), save=False)
+
+    # set remaining values
+    for field, value in EHERKENNING_TEST_CONFIG.items():
         current_value = getattr(config, field)
         if current_value != value:
             setattr(config, field, value)

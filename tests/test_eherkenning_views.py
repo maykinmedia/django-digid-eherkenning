@@ -3,20 +3,24 @@ from base64 import b64decode
 from unittest.mock import patch
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+import pytest
 import responses
 from freezegun import freeze_time
 from furl import furl
 from lxml import etree
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
+from digid_eherkenning.models import EherkenningMetadataConfiguration
+
 from .project.models import User
 from .utils import create_example_artifact, get_saml_element
 
 
+@pytest.mark.usefixtures("eherkenning_config", "temp_private_root")
 class eHerkenningLoginViewTests(TestCase):
     maxDiff = None
 
@@ -145,15 +149,16 @@ class eHerkenningLoginViewTests(TestCase):
         )
 
 
+@pytest.mark.usefixtures("eherkenning_config", "temp_private_root")
 @freeze_time("2020-04-09T08:31:46Z")
 class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     def setUp(self):
         super().setUp()
 
-        cert_file = settings.EHERKENNING["cert_file"]
-        key_file = settings.EHERKENNING["key_file"]
-        key = open(key_file, "r").read()
-        cert = open(cert_file, "r").read()
+        config = EherkenningMetadataConfiguration.get_solo()
+
+        with config.certificate.public_certificate.open("r") as cert_file:
+            cert = cert_file.read()
 
         encrypted_attribute = OneLogin_Saml2_Utils.generate_name_id(
             "123456782",
@@ -362,6 +367,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
         # by the IDP.
         self.cache_mock.get.assert_called_once_with("eherkenning_id-jiaDzLL9mR3C3hioH")
 
+    @override_settings(LOGIN_URL="/dummy/login")
     @responses.activate
     def test_no_authn_request(self):
         """
@@ -392,7 +398,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, settings.EHERKENNING["login_url"])
+        self.assertEqual(response.url, "/dummy/login")
         # Make sure no user is created.
         self.assertEqual(User.objects.count(), 0)
 
@@ -418,6 +424,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
 
     # TODO: Add authnfailed tests here as well.
 
+    @override_settings(LOGIN_URL=reverse("admin:login"))
     @responses.activate
     def test_no_rsin(self):
         artifact_response_soap = etree.fromstring(self.artifact_response_soap)

@@ -483,7 +483,7 @@ def create_service_catalogus(conf, validate=True):
 
     sc_id = str(uuid4())
     service_provider_id = conf["oin"]
-    organization_display_name = conf["organisation_name"]
+    organization_display_name = conf["organization_name"]
 
     service_definitions = []
     service_instances = []
@@ -608,11 +608,13 @@ class eHerkenningClient(BaseSaml2Client):
     cache_key_prefix = "eherkenning"
     cache_timeout = 60 * 60  # 1 hour
 
-    def __init__(self):
-        conf = settings.EHERKENNING.copy()
-        conf.setdefault("acs_path", reverse("eherkenning:acs"))
-
-        super().__init__(conf)
+    @property
+    def conf(self) -> dict:
+        if self._conf is None:
+            db_config = EherkenningMetadataConfiguration.get_solo()
+            self._conf = db_config.as_dict()
+            self._conf.setdefault("acs_path", reverse("eherkenning:acs"))
+        return self._conf
 
     def write_metadata(self):
         """
@@ -623,7 +625,8 @@ class eHerkenningClient(BaseSaml2Client):
         """
         super().write_metadata()
 
-        service_catalogus = create_service_catalogus(settings.EHERKENNING)
+        db_config = EherkenningMetadataConfiguration.get_solo()
+        service_catalogus = create_service_catalogus(db_config.as_dict())
 
         date_string = timezone.now().date().isoformat()
         dc_filename = f"eherkenning-dienstencatalogus-{date_string}.xml"
@@ -635,6 +638,11 @@ class eHerkenningClient(BaseSaml2Client):
         config_dict = super().create_config_dict(conf)
 
         attribute_consuming_services = create_attribute_consuming_services(conf)
+        with conf["cert_file"].open("r") as cert_file, conf["key_file"].open(
+            "r"
+        ) as key_file:
+            certificate = cert_file.read()
+            privkey = key_file.read()
         config_dict.update(
             {
                 "sp": {
@@ -648,8 +656,8 @@ class eHerkenningClient(BaseSaml2Client):
                     },
                     "attributeConsumingServices": attribute_consuming_services,
                     "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
-                    "x509cert": open(conf["cert_file"], "r").read(),
-                    "privateKey": open(conf["key_file"], "r").read(),
+                    "x509cert": certificate,
+                    "privateKey": privkey,
                     "privateKeyPassphrase": conf.get("key_passphrase", None),
                 },
             }
