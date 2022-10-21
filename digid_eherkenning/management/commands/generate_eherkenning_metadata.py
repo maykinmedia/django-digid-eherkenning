@@ -2,7 +2,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from ...models import EherkenningMetadataConfiguration
-from ...saml2.eherkenning import eHerkenningClient
+from ...saml2.eherkenning import generate_eherkenning_metadata
 from ._base import SamlMetadataBaseCommand
 
 
@@ -68,8 +68,7 @@ class Command(SamlMetadataBaseCommand):
         # config.foo = "bar"
         config.save()
 
-        client = eHerkenningClient()
-        metadata = client.create_metadata()
+        metadata = generate_eherkenning_metadata()
 
         # TODO: do not rollback if we want to update the config from the CLI ->
         # add option - instead use transaction.commit() in that case.

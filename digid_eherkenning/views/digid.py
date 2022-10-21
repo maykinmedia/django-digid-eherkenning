@@ -256,5 +256,5 @@ def get_xml_digid_metadata(request):
             )
         )
 
-    digid_metadata = generate_digid_metadata(digid_config)
+    digid_metadata = generate_digid_metadata()
     return HttpResponse(digid_metadata, content_type="text/xml")

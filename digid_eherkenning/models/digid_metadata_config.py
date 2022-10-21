@@ -6,12 +6,21 @@ from ..settings import get_setting
 from .metadata_config import MetadataConfiguration
 
 
+def default_digid_requested_attributes():
+    return [
+        {
+            "name": "bsn",
+            "required": True,
+        }
+    ]
+
+
 class DigidMetadataConfiguration(MetadataConfiguration):
     requested_attributes = models.JSONField(
         _("requested attributes"),
-        default=list,
+        default=default_digid_requested_attributes,
         help_text=_(
-            "A list of strings with the requested attributes, e.g. '[\"bsn\"]'"
+            "A list of strings (or objects) with the requested attributes, e.g. '[\"bsn\"]'"
         ),
     )
     slo = models.BooleanField(
@@ -57,6 +66,7 @@ class DigidMetadataConfiguration(MetadataConfiguration):
             "service_entity_id": self.idp_service_entity_id,
             "attribute_consuming_service_index": self.attribute_consuming_service_index,
             "service_name": self.service_name,
+            "service_description": self.service_description,
             "requested_attributes": self.requested_attributes or [],
             # optional in runtime code
             "want_assertions_encrypted": self.want_assertions_encrypted,
@@ -70,4 +80,5 @@ class DigidMetadataConfiguration(MetadataConfiguration):
             or None,
             "organization": organization,
             "session_age": get_setting("DIGID_SESSION_AGE"),
+            "slo": self.slo,
         }

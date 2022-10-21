@@ -27,7 +27,7 @@ class DigidMetadataTests(DigidMetadataMixin, TestCase):
         self.digid_config.organization_url = "http://test-organisation.nl"
         self.digid_config.save()
 
-        digid_metadata = generate_digid_metadata(self.digid_config)
+        digid_metadata = generate_digid_metadata()
 
         entity_descriptor_node = etree.XML(digid_metadata)
 
@@ -157,7 +157,7 @@ class DigidMetadataTests(DigidMetadataMixin, TestCase):
         self.digid_config.technical_contact_person_telephone = "06123123123"
         self.digid_config.save()
 
-        digid_metadata = generate_digid_metadata(self.digid_config)
+        digid_metadata = generate_digid_metadata()
         entity_descriptor_node = etree.XML(digid_metadata)
 
         contact_email_node = entity_descriptor_node.find(
@@ -176,7 +176,7 @@ class DigidMetadataTests(DigidMetadataMixin, TestCase):
         self.digid_config.organization_url = "http://test-organisation.nl"
         self.digid_config.save()
 
-        digid_metadata = generate_digid_metadata(self.digid_config)
+        digid_metadata = generate_digid_metadata()
         entity_descriptor_node = etree.XML(digid_metadata)
 
         organisation_name_node = entity_descriptor_node.find(
@@ -200,7 +200,7 @@ class DigidMetadataTests(DigidMetadataMixin, TestCase):
         self.digid_config.slo = False
         self.digid_config.save()
 
-        digid_metadata = generate_digid_metadata(self.digid_config)
+        digid_metadata = generate_digid_metadata()
 
         entity_descriptor_node = etree.XML(digid_metadata)
 
