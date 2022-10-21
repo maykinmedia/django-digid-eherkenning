@@ -285,6 +285,17 @@ class DigidMetadataManagementCommandTests(TestCase):
         self.assertIsNone(single_logout_service_node)
 
 
+@pytest.mark.django_db
+def test_properties_in_db_config_not_required(digid_config):
+    """
+    Assert that required properties already configured don't cause problems.
+    """
+    try:
+        call_command("generate_digid_metadata")
+    except CommandError:
+        pytest.fail("Database configuration is valid for management commands.")
+
+
 @pytest.mark.usefixtures("digid_config", "temp_private_root")
 class DigidMetadataGenerationTests(DigidMetadataMixin, TestCase):
     def test_generate_metadata_all_options_specified(self):
