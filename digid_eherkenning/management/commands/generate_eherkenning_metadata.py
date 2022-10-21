@@ -1,13 +1,9 @@
 from django.db import transaction
-from django.urls import reverse
 from django.utils import timezone
-
-from furl import furl
-from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
 from ...models import EherkenningMetadataConfiguration
 from ...saml2.eherkenning import eHerkenningClient
-from .generate_digid_metadata import SamlMetadataBaseCommand
+from ._base import SamlMetadataBaseCommand
 
 
 class Command(SamlMetadataBaseCommand):
