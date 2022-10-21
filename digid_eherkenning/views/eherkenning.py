@@ -124,7 +124,7 @@ def get_xml_eherkenning_metadata(request):
             _("Something went wrong during metadata recovery. Please, contact ....")
         )
 
-    eherkenning_metadata = generate_eherkenning_metadata(eherkenning_config)
+    eherkenning_metadata = generate_eherkenning_metadata()
     return HttpResponse(eherkenning_metadata, content_type="text/xml")
 
 

@@ -32,121 +32,28 @@ MD = ElementMaker(namespace=namespaces["md"], nsmap=namespaces)
 xml_nl_lang = {"{http://www.w3.org/XML/1998/namespace}lang": "nl"}
 
 
-def generate_dienst_catalogus_metadata(*args):
-    eherkenning_config = EherkenningMetadataConfiguration.get_solo()
-
+def generate_dienst_catalogus_metadata(eherkenning_config=None):
+    eherkenning_config = (
+        eherkenning_config or EherkenningMetadataConfiguration.get_solo()
+    )
     settings = eherkenning_config.as_dict()
+    # ensure that the single language strings are output in both nl and en
+    for service in settings["services"]:
+        name = service["service_name"]
+        service["service_name"] = {"nl": name, "en": name}
 
-    key_file = eherkenning_config.certificate.private_key
-    cert_file = eherkenning_config.certificate.public_certificate
+        description = service["service_description"]
+        service["service_description"] = {"nl": description, "en": description}
 
-    # TODO: -> ensure both nl/en keys are here, otherwise this seems similar to usual
-    # metadata generation
-
-    settings = {
-        "key_file": key_file,
-        "cert_file": cert_file,
-        "base_url": eherkenning_config.base_url,
-        "entity_id": eherkenning_config.entity_id,
-        "oin": eherkenning_config.oin,
-        "organization_name": eherkenning_config.organization_name,
-        "services": [
-            {
-                "attribute_consuming_service_index": eherkenning_config.eh_attribute_consuming_service_index,
-                "service_loa": eherkenning_config.loa,
-                "service_uuid": str(uuid4()),
-                "service_name": {
-                    "nl": eherkenning_config.service_name,
-                    "en": eherkenning_config.service_name,
-                },
-                "service_description": {
-                    "nl": eherkenning_config.service_description,
-                    "en": eherkenning_config.service_description,
-                },
-                "service_instance_uuid": str(uuid4()),
-                "service_url": eherkenning_config.base_url,
-                # Either require and return RSIN and KVKNr (set 1) or require only KvKnr (set 2). The
-                # latter is needed for 'eenmanszaak'
-                "entity_concerned_types_allowed": [
-                    {
-                        "set_number": "1",
-                        "name": "urn:etoegang:1.9:EntityConcernedID:RSIN",
-                    },
-                    {
-                        "set_number": "1",
-                        "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
-                    },
-                    {
-                        "set_number": "2",
-                        "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
-                    },
-                ],
-                "requested_attributes": [
-                    {
-                        "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
-                        % {
-                            "oin": eherkenning_config.oin,
-                            "index": eherkenning_config.eh_attribute_consuming_service_index,
-                        },
-                        "isRequired": False,
-                    }
-                ],
-                "privacy_policy_url": {
-                    "nl": eherkenning_config.privacy_policy,
-                },
-                "herkenningsmakelaars_id": eherkenning_config.makelaar_id,
-            },
-            {
-                "attribute_consuming_service_index": eherkenning_config.eidas_attribute_consuming_service_index,
-                "service_loa": eherkenning_config.loa,
-                "service_uuid": str(uuid4()),
-                "service_name": {
-                    "nl": eherkenning_config.service_name + " (eIDAS)",
-                    "en": eherkenning_config.service_name + " (eIDAS)",
-                },
-                "service_description": {
-                    "nl": eherkenning_config.service_description,
-                    "en": eherkenning_config.service_description,
-                },
-                "service_instance_uuid": str(uuid4()),
-                "service_url": eherkenning_config.base_url,
-                "entity_concerned_types_allowed": [
-                    {
-                        "set_number": "1",
-                        "name": "urn:etoegang:1.9:EntityConcernedID:Pseudo",
-                    },
-                ],
-                "requestedAttributes": [
-                    {
-                        "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
-                        % {
-                            "oin": eherkenning_config.oin,
-                            "index": eherkenning_config.eidas_attribute_consuming_service_index,
-                        },
-                        "isRequired": False,
-                    }
-                ],
-                "privacy_policy_url": {
-                    "nl": eherkenning_config.privacy_policy,
-                },
-                "herkenningsmakelaars_id": eherkenning_config.makelaar_id,
-                "classifiers": ["eIDAS-inbound"],
-            },
-        ],
-    }
-
-    if eherkenning_config.no_eidas:
-        settings["services"] = settings["services"][:-1]
+        privacy_policy_url = service["privacy_policy_url"]
+        service["privacy_policy_url"] = {"nl": privacy_policy_url}
 
     return create_service_catalogus(settings)
 
 
-def generate_eherkenning_metadata(*args):
+def generate_eherkenning_metadata():
     client = eHerkenningClient()
     client.saml2_setting_kwargs = {"sp_validation_only": True}
-    # client.conf.update({
-
-    # })
     return client.create_metadata()
 
 

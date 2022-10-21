@@ -283,7 +283,7 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.technical_contact_person_telephone = "06123123123"
         self.eherkenning_config.save()
 
-        eherkenning_metadata = generate_eherkenning_metadata(self.eherkenning_config)
+        eherkenning_metadata = generate_eherkenning_metadata()
         entity_descriptor_node = etree.XML(eherkenning_metadata)
 
         contact_email_node = entity_descriptor_node.find(
@@ -302,7 +302,7 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.organization_url = "http://test-organisation.nl"
         self.eherkenning_config.save()
 
-        eherkenning_metadata = generate_eherkenning_metadata(self.eherkenning_config)
+        eherkenning_metadata = generate_eherkenning_metadata()
         entity_descriptor_node = etree.XML(eherkenning_metadata)
 
         organisation_name_node = entity_descriptor_node.find(
@@ -327,7 +327,7 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.no_eidas = True
         self.eherkenning_config.save()
 
-        eherkenning_metadata = generate_eherkenning_metadata(self.eherkenning_config)
+        eherkenning_metadata = generate_eherkenning_metadata()
 
         entity_descriptor_node = etree.XML(eherkenning_metadata)
 

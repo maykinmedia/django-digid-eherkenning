@@ -116,12 +116,12 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         # at least the EH service
         services = [
             {
-                # FIXME - the UUID should not change every time!!
+                # FIXME - the UUID should probably not change every time!!
                 "service_uuid": str(uuid.uuid4()),
                 "service_name": self.service_name,
                 "service_loa": self.loa,
                 "attribute_consuming_service_index": self.eh_attribute_consuming_service_index,
-                # FIXME - the UUID should not change every time!!
+                # FIXME - the UUID should probably not change every time!!
                 "service_instance_uuid": str(uuid.uuid4()),
                 "service_description": self.service_description,
                 "service_url": self.base_url,
@@ -149,12 +149,12 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         # add eIDAS
         if not self.no_eidas:
             eidas_service = {
-                # FIXME - the UUID should not change every time!!
+                # FIXME - the UUID should probably not change every time!!
                 "service_uuid": str(uuid.uuid4()),
                 "service_name": f"{self.service_name} (eIDAS)",
                 "service_loa": self.loa,
                 "attribute_consuming_service_index": self.eidas_attribute_consuming_service_index,
-                # FIXME - the UUID should not change every time!!
+                # FIXME - the UUID should probably not change every time!!
                 "service_instance_uuid": str(uuid.uuid4()),
                 "service_description": self.service_description,
                 "service_url": self.base_url,
@@ -164,6 +164,7 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
                 "entity_concerned_types_allowed": [
                     {
                         "name": "urn:etoegang:1.9:EntityConcernedID:Pseudo",
+                        "set_number": "1",
                     },
                 ],
                 "language": self.service_language,
