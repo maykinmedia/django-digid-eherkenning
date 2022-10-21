@@ -131,7 +131,7 @@ class EHerkenningClientTests(TestCase):
         )
 
 
-@pytest.mark.usefixtures("eherkenning_config", "temp_private_root")
+@pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")
 class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
     def test_generate_metadata_all_options_specified(self):
         self.eherkenning_config.signature_algorithm = (
@@ -146,7 +146,7 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.organization_url = "http://test-organisation.nl"
         self.eherkenning_config.save()
 
-        eherkenning_metadata = generate_eherkenning_metadata(self.eherkenning_config)
+        eherkenning_metadata = generate_eherkenning_metadata()
         entity_descriptor_node = etree.XML(eherkenning_metadata)
 
         self.assertEqual(

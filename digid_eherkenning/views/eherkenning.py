@@ -72,10 +72,6 @@ class eHerkenningAssertionConsumerServiceView(View):
         if url:
             return url
 
-        eherkenning_login_url = settings.EHERKENNING.get("login_url")
-        if eherkenning_login_url:
-            return resolve_url(eherkenning_login_url)
-
         return resolve_url(settings.LOGIN_URL)
 
     def get_success_url(self):

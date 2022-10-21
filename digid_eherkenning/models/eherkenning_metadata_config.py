@@ -147,12 +147,12 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
             }
         ]
 
-        # add eidas
+        # add eIDAS
         if not self.no_eidas:
             eidas_service = {
                 # FIXME - the UUID should not change every time!!
                 "service_uuid": str(uuid.uuid4()),
-                "service_name": self.service_name,
+                "service_name": f"{self.service_name} (eIDAS)",
                 "service_loa": self.loa,
                 "attribute_consuming_service_index": self.eidas_attribute_consuming_service_index,
                 # FIXME - the UUID should not change every time!!

@@ -10,6 +10,10 @@ Changelog
 * Moved configuration of DigiD/eHerkenning/eIDAS to the admin. The ``DIGID`` and
   ``EHERKENNING`` settings no longer work.
 
+  - in particular, the ``login_url`` key within these settings is not supported anymore,
+    specify Django's ``LOGIN_URL`` setting instead or use the ``RelayState`` GET
+    parameter
+
 * Some default values have changed:
 
   - ``want_assertions_signed``: ``False`` -> ``True``
