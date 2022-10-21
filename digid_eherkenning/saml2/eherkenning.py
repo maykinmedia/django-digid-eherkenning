@@ -35,10 +35,16 @@ MD = ElementMaker(namespace=namespaces["md"], nsmap=namespaces)
 xml_nl_lang = {"{http://www.w3.org/XML/1998/namespace}lang": "nl"}
 
 
-def generate_dienst_catalogus_metadata(eherkenning_config):
+def generate_dienst_catalogus_metadata(*args):
+    eherkenning_config = EherkenningMetadataConfiguration.get_solo()
 
-    key_file = eherkenning_config.certificate.private_key.path
-    cert_file = eherkenning_config.certificate.public_certificate.path
+    settings = eherkenning_config.as_dict()
+
+    key_file = eherkenning_config.certificate.private_key
+    cert_file = eherkenning_config.certificate.public_certificate
+
+    # TODO: -> ensure both nl/en keys are here, otherwise this seems similar to usual
+    # metadata generation
 
     settings = {
         "key_file": key_file,
@@ -144,8 +150,6 @@ def generate_eherkenning_metadata(*args):
     # client.conf.update({
 
     # })
-    # TODO: possibly we need to drop the "idp" key from the setting_dict -> check
-    # with Silvia
     return client.create_metadata()
 
 
@@ -385,7 +389,8 @@ def create_service_catalogus(conf, validate=True):
     """
     https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
     """
-    x509_certificate_content = open(conf["cert_file"], "rb").read()
+    with conf["cert_file"].open("rb") as cert_file:
+        x509_certificate_content = cert_file.read()
 
     sc_id = str(uuid4())
     service_provider_id = conf["oin"]

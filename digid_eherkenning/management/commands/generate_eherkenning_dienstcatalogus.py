@@ -1,115 +1,9 @@
-from uuid import uuid4
-
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from django.utils import timezone
 
-from digid_eherkenning.saml2.eherkenning import create_service_catalogus
-
-
-def generate_dienst_catalogus(options):
-    # TODO: -> ensure both nl/en keys are here, otherwise this seems similar to usual
-    # metadata generation
-
-    settings = {
-        "key_file": options["key_file"],
-        "cert_file": options["cert_file"],
-        "base_url": options["base_url"],
-        "entity_id": options["entity_id"],
-        "oin": options["oin"],
-        "organization_name": options["organization_name"],
-        "services": [
-            {
-                "attribute_consuming_service_index": options[
-                    "eh_attribute_consuming_service_index"
-                ],
-                "service_loa": options["loa"],
-                "service_uuid": str(uuid4()),
-                "service_name": {
-                    "nl": options["service_name"],
-                    "en": options["service_name"],
-                },
-                "service_description": {
-                    "nl": options["service_description"],
-                    "en": options["service_description"],
-                },
-                "service_instance_uuid": str(uuid4()),
-                "service_url": options["base_url"],
-                # Either require and return RSIN and KVKNr (set 1) or require only KvKnr (set 2). The
-                # latter is needed for 'eenmanszaak'
-                "entity_concerned_types_allowed": [
-                    {
-                        "set_number": "1",
-                        "name": "urn:etoegang:1.9:EntityConcernedID:RSIN",
-                    },
-                    {
-                        "set_number": "1",
-                        "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
-                    },
-                    {
-                        "set_number": "2",
-                        "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
-                    },
-                ],
-                "requested_attributes": [
-                    {
-                        "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
-                        % {
-                            "oin": options["oin"],
-                            "index": options["eh_attribute_consuming_service_index"],
-                        },
-                        "isRequired": False,
-                    }
-                ],
-                "privacy_policy_url": {
-                    "nl": options["privacy_policy"],
-                },
-                "herkenningsmakelaars_id": options["makelaar_id"],
-            },
-            {
-                "attribute_consuming_service_index": options[
-                    "eidas_attribute_consuming_service_index"
-                ],
-                "service_loa": options["loa"],
-                "service_uuid": str(uuid4()),
-                "service_name": {
-                    "nl": options["service_name"] + " (eIDAS)",
-                    "en": options["service_name"] + " (eIDAS)",
-                },
-                "service_description": {
-                    "nl": options["service_description"],
-                    "en": options["service_description"],
-                },
-                "service_instance_uuid": str(uuid4()),
-                "service_url": options["base_url"],
-                "entity_concerned_types_allowed": [
-                    {
-                        "set_number": "1",
-                        "name": "urn:etoegang:1.9:EntityConcernedID:Pseudo",
-                    },
-                ],
-                "requestedAttributes": [
-                    {
-                        "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
-                        % {
-                            "oin": options["oin"],
-                            "index": options["eidas_attribute_consuming_service_index"],
-                        },
-                        "isRequired": False,
-                    }
-                ],
-                "privacy_policy_url": {
-                    "nl": options["privacy_policy"],
-                },
-                "herkenningsmakelaars_id": options["makelaar_id"],
-                "classifiers": ["eIDAS-inbound"],
-            },
-        ],
-    }
-
-    if options["no_eidas"]:
-        settings["services"] = settings["services"][:-1]
-
-    return create_service_catalogus(settings)
+from ...models import EherkenningMetadataConfiguration
+from ...saml2.eherkenning import generate_dienst_catalogus_metadata
 
 
 class Command(BaseCommand):
@@ -267,10 +161,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.check_options(options)
 
-        catalogus = generate_dienst_catalogus(options)
+        transaction.set_autocommit(False)
+
+        # TODO: update config from options in rolled back transaction
+        config = EherkenningMetadataConfiguration.get_solo()
+        config.save()
+
+        metadata = generate_dienst_catalogus_metadata()
+
+        transaction.rollback()
 
         if options["test"]:
-            self.stdout.write(catalogus.decode("utf-8"))
+            self.stdout.write(metadata.decode("utf-8"))
             return
 
         if options["output_file"]:
@@ -279,9 +181,8 @@ class Command(BaseCommand):
             date_string = timezone.now().date().isoformat()
             filename = f"eherkenning-dienstcatalogus-{date_string}.xml"
 
-        catalogus_file = open(filename, "xb")
-        catalogus_file.write(catalogus)
-        catalogus_file.close()
+        with open(filename, "xb") as outfile:
+            outfile.write(metadata)
 
         self.stdout.write(
             self.style.SUCCESS(

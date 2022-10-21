@@ -1,4 +1,5 @@
 import os
+from unittest.mock import patch
 
 from django.conf import settings
 from django.test import TestCase
@@ -7,72 +8,36 @@ from django.urls import reverse
 import pytest
 from lxml import etree
 
+from digid_eherkenning.models import EherkenningMetadataConfiguration
 from digid_eherkenning.saml2.eherkenning import (
     create_service_catalogus,
     generate_dienst_catalogus_metadata,
 )
-from tests.mixins import EherkenningMetadataMixin
+
+from .mixins import EherkenningMetadataMixin
 
 
 @pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")
 class CreateDienstCatalogusTests(TestCase):
-    def test_wants_assertions_signed_setting_default(self):
-        conf = {
-            "oin": "00000000000000000000",
-            "organisation_name": "Example",
-            "services": [
-                {
-                    "service_uuid": "005f18b8-0114-4a1d-963a-ee8e80a08f3f",
-                    "service_name": "Example eHerkenning",
-                    "service_loa": "urn:etoegang:core:assurance-class:loa3",
-                    "attribute_consuming_service_index": "1",
-                    "service_instance_uuid": "54efe0fe-c1a7-42da-9612-d84bf3c8fb07",
-                    "service_description": "Description eHerkenning",
-                    "service_url": "",
-                    "privacy_policy_url": "",
-                    "herkenningsmakelaars_id": "00000000000000000000",
-                    "requested_attributes": [],
-                    "entity_concerned_types_allowed": [
-                        {
-                            "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
-                        },
-                    ],
-                },
-                {
-                    "service_uuid": "2e167de1-8bef-4d5a-ab48-8fa020e9e631",
-                    "service_name": "Example eIDAS",
-                    "service_loa": "urn:etoegang:core:assurance-class:loa3",
-                    "attribute_consuming_service_index": "2",
-                    "service_instance_uuid": "9ba1b0ee-c0d3-437e-87ac-f577098c7e15",
-                    "service_description": "Description eIDAS",
-                    "service_url": "",
-                    "privacy_policy_url": "",
-                    "herkenningsmakelaars_id": "00000000000000000000",
-                    "requested_attributes": [],
-                    "entity_concerned_types_allowed": [
-                        {
-                            "name": "urn:etoegang:1.9:EntityConcernedID:Pseudo",
-                        },
-                    ],
-                    "classifiers": ["eIDAS-inbound"],
-                },
-            ],
-            "service_index": "1",
-            "key_file": os.path.join(
-                settings.BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key"
-            ),
-            "cert_file": os.path.join(
-                settings.BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem"
-            ),
-            # Also used as entity ID
-            "base_url": "https://example.com",
-            "metadata_file": os.path.join(
-                settings.BASE_DIR, "files", "eherkenning", "metadata"
-            ),
-            "service_entity_id": "urn:etoegang:HM:00000003520354760000:entities:9632",
-            "entity_id": "urn:etoegang:DV:0000000000000000001:entities:0002",
-            "login_url": reverse("admin:login"),
-        }
+    @patch("digid_eherkenning.models.eherkenning_metadata_config.uuid.uuid4")
+    def test_wants_assertions_signed_setting_default(self, mock_uuid):
+        mock_uuid.side_effect = [
+            "005f18b8-0114-4a1d-963a-ee8e80a08f3f",
+            "54efe0fe-c1a7-42da-9612-d84bf3c8fb07",
+            "2e167de1-8bef-4d5a-ab48-8fa020e9e631",
+            "9ba1b0ee-c0d3-437e-87ac-f577098c7e15",
+        ]
+
+        config = EherkenningMetadataConfiguration.get_solo()
+        config.oin = "00000000000000000000"
+        config.makelaar_id = "00000000000000000000"
+        config.service_name = "Example"
+        config.service_description = "Description"
+        config.eh_attribute_consuming_service_index = "1"
+        config.eidas_attribute_consuming_service_index = "2"
+        config.save()
+
+        conf = config.as_dict()
 
         catalogus = create_service_catalogus(conf, validate=False)
 
@@ -115,19 +80,19 @@ class CreateDienstCatalogusTests(TestCase):
             .text,
         )
         self.assertEqual(
-            "Example eHerkenning",
+            "Example",
             service_definition_nodes[0]
             .find(".//esc:ServiceName", namespaces=namespace)
             .text,
         )
         self.assertEqual(
-            "Description eHerkenning",
+            "Description",
             service_definition_nodes[0]
             .find(".//esc:ServiceDescription", namespaces=namespace)
             .text,
         )
         self.assertEqual(
-            "urn:etoegang:1.9:EntityConcernedID:KvKnr",
+            "urn:etoegang:1.9:EntityConcernedID:RSIN",
             service_definition_nodes[0]
             .find(".//esc:EntityConcernedTypesAllowed", namespaces=namespace)
             .text,
@@ -139,13 +104,13 @@ class CreateDienstCatalogusTests(TestCase):
             .text,
         )
         self.assertEqual(
-            "Example eIDAS",
+            "Example (eIDAS)",
             service_definition_nodes[1]
             .find(".//esc:ServiceName", namespaces=namespace)
             .text,
         )
         self.assertEqual(
-            "Description eIDAS",
+            "Description",
             service_definition_nodes[1]
             .find(".//esc:ServiceDescription", namespaces=namespace)
             .text,
@@ -218,9 +183,10 @@ class CreateDienstCatalogusTests(TestCase):
         )
 
     def test_catalogus_with_requested_attributes_with_purpose_statement(self):
-        conf = settings.EHERKENNING.copy()
-        conf.setdefault("acs_path", reverse("eherkenning:acs"))
-        conf["services"][0]["requested_attributes"] = [
+        config = EherkenningMetadataConfiguration.get_solo()
+        config.oin = "00000000000000000000"
+        config.makelaar_id = "1" * 20
+        config.eh_requested_attributes = [
             {
                 "name": "Test Attribute",
                 "required": False,
@@ -230,8 +196,9 @@ class CreateDienstCatalogusTests(TestCase):
                 },
             }
         ]
-        conf["services"] = conf["services"][:-1]
+        config.save()
 
+        conf = config.as_dict()
         catalogus = create_service_catalogus(conf)
 
         tree = etree.XML(catalogus)
@@ -266,19 +233,25 @@ class CreateDienstCatalogusTests(TestCase):
         )
 
     def test_catalogus_with_requested_attributes_without_purpose_statement(self):
-        conf = settings.EHERKENNING.copy()
-        conf.setdefault("acs_path", reverse("eherkenning:acs"))
-        conf["services"][0]["requested_attributes"] = [
+        config = EherkenningMetadataConfiguration.get_solo()
+        config.oin = "00000000000000000000"
+        config.makelaar_id = "1" * 20
+        config.eh_requested_attributes = [
             {
                 "name": "Test Attribute",
                 "required": False,
             }
         ]
+        config.save()
+
+        conf = config.as_dict()
+        catalogus = create_service_catalogus(conf)
+
+        # FIXME: incorporate this in DB config?
         conf["services"][0]["service_name"] = {
             "nl": "Voorbeeld dienst",
             "en": "Example service",
         }
-        conf["services"] = conf["services"][:-1]
 
         catalogus = create_service_catalogus(conf)
 
@@ -313,63 +286,20 @@ class CreateDienstCatalogusTests(TestCase):
             ],
         )
 
-    def test_makelaar_oin_is_configuratble(self):
-        conf = {
-            "oin": "00000000000000000000",
-            "organisation_name": "Example",
-            "services": [
-                {
-                    "service_uuid": "005f18b8-0114-4a1d-963a-ee8e80a08f3f",
-                    "service_name": "Example eHerkenning",
-                    "service_loa": "urn:etoegang:core:assurance-class:loa3",
-                    "attribute_consuming_service_index": "1",
-                    "service_instance_uuid": "54efe0fe-c1a7-42da-9612-d84bf3c8fb07",
-                    "service_description": "Description eHerkenning",
-                    "service_url": "",
-                    "privacy_policy_url": "",
-                    "herkenningsmakelaars_id": "00000000000000000123",
-                    "requested_attributes": [],
-                    "entity_concerned_types_allowed": [
-                        {
-                            "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
-                        },
-                    ],
-                },
-                {
-                    "service_uuid": "2e167de1-8bef-4d5a-ab48-8fa020e9e631",
-                    "service_name": "Example eIDAS",
-                    "service_loa": "urn:etoegang:core:assurance-class:loa3",
-                    "attribute_consuming_service_index": "2",
-                    "service_instance_uuid": "9ba1b0ee-c0d3-437e-87ac-f577098c7e15",
-                    "service_description": "Description eIDAS",
-                    "service_url": "",
-                    "privacy_policy_url": "",
-                    "herkenningsmakelaars_id": "00000000000000000123",
-                    "requested_attributes": [],
-                    "entity_concerned_types_allowed": [
-                        {
-                            "name": "urn:etoegang:1.9:EntityConcernedID:Pseudo",
-                        },
-                    ],
-                    "classifiers": ["eIDAS-inbound"],
-                },
-            ],
-            "service_index": "1",
-            "key_file": os.path.join(
-                settings.BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key"
-            ),
-            "cert_file": os.path.join(
-                settings.BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem"
-            ),
-            # Also used as entity ID
-            "base_url": "https://example.com",
-            "metadata_file": os.path.join(
-                settings.BASE_DIR, "files", "eherkenning", "metadata"
-            ),
-            "service_entity_id": "urn:etoegang:HM:00000000000000000123:entities:0001",
-            "entity_id": "urn:etoegang:DV:0000000000000000001:entities:0002",
-            "login_url": reverse("admin:login"),
-        }
+    def test_makelaar_oin_is_configurable(self):
+        config = EherkenningMetadataConfiguration.get_solo()
+        config.organisation_name = "Example"
+        config.service_name = "Example"
+        config.oin = "00000000000000000000"
+        config.makelaar_id = "00000000000000000123"
+        config.eh_requested_attributes = [
+            {
+                "name": "Test Attribute",
+                "required": False,
+            }
+        ]
+        config.save()
+        conf = config.as_dict()
 
         catalogus = create_service_catalogus(conf, validate=False)
 
@@ -379,12 +309,10 @@ class CreateDienstCatalogusTests(TestCase):
             "esc": "urn:etoegang:1.13:service-catalog",
             "md": "urn:oasis:names:tc:SAML:2.0:metadata",
         }
-
         makelaar_id_nodes = tree.findall(
             ".//esc:HerkenningsmakelaarId",
             namespaces=namespace,
         )
-
         for node in makelaar_id_nodes:
             self.assertEqual("00000000000000000123", node.text)
 

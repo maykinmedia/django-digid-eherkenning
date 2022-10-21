@@ -168,6 +168,7 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
                     },
                 ],
                 "language": self.service_language,
+                "classifiers": ["eIDAS-inbound"],
             }
             services.append(eidas_service)
 
@@ -194,6 +195,7 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
             "technical_contact_person_email": self.technical_contact_person_email
             or None,
             "organization": organization,
+            "organization_name": self.organization_name,
             "artifact_resolve_content_type": self.artifact_resolve_content_type,
             # "session_age": get_setting("EHERKENNING_SESSION_AGE"),
         }
