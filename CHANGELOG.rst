@@ -26,7 +26,9 @@ Changelog
 
 0.4.1 (2022-07-12)
 ==================
+
 * Supported single logout:
+
   * Added Digid logout view for Sp-initiated logout
   * Added Didid callback view for Sp-initiated logout with HTTP-redirect binding
   * Added Digid callback view for Idp-initiated logout with SOAP binding
@@ -34,22 +36,25 @@ Changelog
 
 0.4.0 (2022-06-23)
 ==================
+
 * Added ``slo`` required parameter for Digid metadata generation as a first step to support single logout.
 
 
 0.3.3 (2022-06-15)
 ==================
+
 * Update to include locale files for translations
 
 0.3.2 (2022-06-14)
 ==================
+
 * Updated DigiD error messages to comply with Logius specifications
 
 0.3.1 (2022-04-21)
 ==================
+
 * Removed Jenkins related files
 * The content-type header used during the resolve artifact request was made configurable.
-
 
 0.3.0 (2022-02-25)
 ==================
