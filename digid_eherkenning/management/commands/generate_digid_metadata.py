@@ -34,9 +34,8 @@ class Command(SamlMetadataBaseCommand):
         date_string = timezone.now().date().isoformat()
         return f"digid-metadata-{date_string}.xml"
 
+    @transaction.atomic
     def generate_metadata(self, options):
-        transaction.set_autocommit(False)
-
         # TODO: apply options to DB config
         config = DigidMetadataConfiguration.get_solo()
         config.save()
@@ -44,6 +43,6 @@ class Command(SamlMetadataBaseCommand):
         metadata = generate_digid_metadata()
 
         # TODO: option to rollback/store config
-        transaction.rollback()
+        transaction.set_rollback(True)
 
         return metadata
