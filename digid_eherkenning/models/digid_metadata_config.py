@@ -16,6 +16,13 @@ def default_digid_requested_attributes():
 
 
 class DigidMetadataConfiguration(MetadataConfiguration):
+    attribute_consuming_service_index = models.CharField(
+        _("Attribute consuming service index"),
+        blank=True,
+        default="1",
+        help_text=_("Attribute consuming service index"),
+        max_length=100,
+    )
     requested_attributes = models.JSONField(
         _("requested attributes"),
         default=default_digid_requested_attributes,

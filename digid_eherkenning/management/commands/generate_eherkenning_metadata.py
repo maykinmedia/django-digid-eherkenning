@@ -9,15 +9,15 @@ from ._base import SamlMetadataBaseCommand
 class Command(SamlMetadataBaseCommand):
     help = "Create the eHerkenning metadata file"
 
-    required_options = [
-        "key_file",
-        "cert_file",
-        "entity_id",
-        "base_url",
-        "service_name",
-        "service_description",
-        "oin",
-    ]
+    # required_options = [
+    #     "key_file",
+    #     "cert_file",
+    #     "entity_id",
+    #     "base_url",
+    #     "service_name",
+    #     "service_description",
+    #     "oin",
+    # ]
 
     def add_arguments(self, parser):
         super().add_arguments(parser)
@@ -44,6 +44,7 @@ class Command(SamlMetadataBaseCommand):
         )
         parser.add_argument(
             "--oin",
+            required=True,
             type=str,
             action="store",
             help="The OIN of the company providing the service.",

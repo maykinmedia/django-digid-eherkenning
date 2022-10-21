@@ -5,6 +5,7 @@ from django.test import TestCase
 
 import pytest
 from lxml import etree
+from privates.test import temp_private_root
 
 from digid_eherkenning.saml2.digid import generate_digid_metadata
 from tests.mixins import DigidMetadataMixin
@@ -17,12 +18,15 @@ NAME_SPACES = {
 }
 
 
+@temp_private_root()
 class DigidMetadataManagementCommandTests(TestCase):
     def test_generate_metadata_all_options_specified(self):
         stdout = StringIO()
 
         call_command(
             "generate_digid_metadata",
+            "--no-save-config",
+            "--slo",
             stdout=stdout,
             want_assertions_encrypted=True,
             want_assertions_signed=True,
@@ -40,7 +44,6 @@ class DigidMetadataManagementCommandTests(TestCase):
             organization_name="Test organisation",
             organization_url="http://test-organisation.nl",
             test=True,
-            slo=True,
         )
 
         output = stdout.getvalue()
@@ -169,22 +172,22 @@ class DigidMetadataManagementCommandTests(TestCase):
         )
 
     def test_missing_required_properties(self):
-        with self.assertRaises(CommandError) as cm:
-            call_command(
-                "generate_digid_metadata",
-            )
-        self.assertEqual(
-            cm.exception.args[0],
-            "Missing the following required arguments: --key_file --cert_file "
-            "--entity_id --base_url --service_name --service_description --slo",
+        expected_error = (
+            "Error: the following arguments are required: --key-file, --cert-file, "
+            "--entity-id, --base-url, --service-name, --service-description, "
+            "--save-config/--no-save-config, --slo/--no-slo"
         )
+
+        with self.assertRaisesMessage(CommandError, expected_error):
+            call_command("generate_digid_metadata")
 
     def test_contact_telephone_no_email(self):
         stdout = StringIO()
 
         call_command(
             "generate_digid_metadata",
-            stdout=stdout,
+            "--no-save-config",
+            "--slo",
             want_assertions_encrypted=True,
             want_assertions_signed=True,
             key_file=str(DIGID_TEST_KEY_FILE),
@@ -195,7 +198,7 @@ class DigidMetadataManagementCommandTests(TestCase):
             service_description="Test Service Description",
             technical_contact_person_telephone="06123123123",
             test=True,
-            slo=True,
+            stdout=stdout,
         )
 
         output = stdout.getvalue()
@@ -218,6 +221,8 @@ class DigidMetadataManagementCommandTests(TestCase):
 
         call_command(
             "generate_digid_metadata",
+            "--no-save-config",
+            "--slo",
             stdout=stdout,
             want_assertions_encrypted=True,
             want_assertions_signed=True,
@@ -229,7 +234,6 @@ class DigidMetadataManagementCommandTests(TestCase):
             service_description="Test Service Description",
             organization_url="http://test-organisation.nl",
             test=True,
-            slo=True,
         )
 
         output = stdout.getvalue()
@@ -257,6 +261,8 @@ class DigidMetadataManagementCommandTests(TestCase):
 
         call_command(
             "generate_digid_metadata",
+            "--no-save-config",
+            "--no-slo",
             stdout=stdout,
             want_assertions_encrypted=True,
             want_assertions_signed=True,
@@ -267,7 +273,6 @@ class DigidMetadataManagementCommandTests(TestCase):
             service_name="Test Service Name",
             service_description="Test Service Description",
             test=True,
-            slo=False,
         )
 
         output = stdout.getvalue()

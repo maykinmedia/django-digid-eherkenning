@@ -232,13 +232,6 @@ class BaseSaml2Client:
         service_name: Name of SP service we set up. This is used in metadata generation.
         requested_attributes: List of attributes which should be returned by the IDP.
         """
-        with conf["metadata_file"].open("r") as metadata_file:
-            metadata = metadata_file.read()
-
-        idp_settings = OneLogin_Saml2_IdPMetadataParser.parse(
-            metadata, entity_id=conf["service_entity_id"]
-        )["idp"]
-
         service_name = get_service_name(conf)
         service_description = get_service_description(conf)
         requested_attributes = get_requested_attributes(conf)
@@ -299,8 +292,17 @@ class BaseSaml2Client:
                 "privateKey": privkey,
                 "privateKeyPassphrase": conf.get("key_passphrase", None),
             },
-            "idp": idp_settings,
         }
+
+        # check if we need to add the idp
+        metadata_file = conf["metadata_file"]
+        if metadata_file:
+            with metadata_file.open("r") as metadata_file:
+                metadata = metadata_file.read()
+            idp_settings = OneLogin_Saml2_IdPMetadataParser.parse(
+                metadata, entity_id=conf["service_entity_id"]
+            )["idp"]
+            setting_dict["idp"] = idp_settings
 
         telephone = conf.get("technical_contact_person_telephone")
         email = conf.get("technical_contact_person_email")
