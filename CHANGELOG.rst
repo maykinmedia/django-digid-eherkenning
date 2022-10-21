@@ -23,6 +23,7 @@ Changelog
   (the maximum duration according to "DigiDCheck 2.2 T14 -- Sessieduur") through the
   ``DIGID_SESSION_AGE`` setting.
 
+* Dropped support for Django 2.2 which is EOL
 
 0.4.1 (2022-07-12)
 ==================
