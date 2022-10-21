@@ -21,7 +21,7 @@ NAME_SPACES = {
 class EHerkenningClientTests(TestCase):
     def test_attribute_consuming_services_with_non_required_requested_attribute(self):
         config = EherkenningMetadataConfiguration.get_solo()
-        config.requested_attributes = [{"name": "Test Attribute", "required": False}]
+        config.eh_requested_attributes = [{"name": "Test Attribute", "required": False}]
         config.save()
 
         eherkenning_client = eHerkenningClient()
@@ -54,7 +54,7 @@ class EHerkenningClientTests(TestCase):
 
     def test_attribute_consuming_services_with_required_requested_attribute(self):
         config = EherkenningMetadataConfiguration.get_solo()
-        config.requested_attributes = [{"name": "Test Attribute", "required": True}]
+        config.eh_requested_attributes = [{"name": "Test Attribute", "required": True}]
         config.save()
 
         eherkenning_client = eHerkenningClient()
@@ -89,8 +89,7 @@ class EHerkenningClientTests(TestCase):
     def test_attribute_consuming_services_dutch(self):
         config = EherkenningMetadataConfiguration.get_solo()
         config.no_eidas = True
-        # FIXME: should the same service be offered in multiple languages?
-        config.eh_service_language = "en"
+        config.service_language = "en"
         config.save()
 
         eherkenning_client = eHerkenningClient()

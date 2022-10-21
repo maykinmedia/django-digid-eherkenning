@@ -46,7 +46,7 @@ def generate_dienst_catalogus_metadata(eherkenning_config):
         "base_url": eherkenning_config.base_url,
         "entity_id": eherkenning_config.entity_id,
         "oin": eherkenning_config.oin,
-        "organisation_name": eherkenning_config.organization_name,
+        "organization_name": eherkenning_config.organization_name,
         "services": [
             {
                 "attribute_consuming_service_index": eherkenning_config.eh_attribute_consuming_service_index,
@@ -586,6 +586,7 @@ class eHerkenningClient(BaseSaml2Client):
                 "metadataCacheDuration": "",
                 "requestedAuthnContextComparison": "minimum",
                 "requestedAuthnContext": [
+                    # TODO: replace with direct config source reference (django-solo model?)
                     self.conf["services"][0]["service_loa"],
                 ],
             }

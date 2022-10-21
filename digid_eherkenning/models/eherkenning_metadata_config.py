@@ -31,6 +31,24 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         help_text=_("Attribute consuming service index for the eHerkenning service"),
         max_length=100,
     )
+    eh_requested_attributes = models.JSONField(
+        _("requested attributes"),
+        default=list,
+        help_text=_(
+            "A list of additional requested attributes. A single requested attribute "
+            "can be a string (the name of the attribute) or an object with keys 'name' "
+            "and 'required', where 'name' is a string and 'required' a boolean'."
+        ),
+    )
+    eidas_requested_attributes = models.JSONField(
+        _("requested attributes"),
+        default=list,
+        help_text=_(
+            "A list of additional requested attributes. A single requested attribute "
+            "can be a string (the name of the attribute) or an object with keys 'name' "
+            "and 'required', where 'name' is a string and 'required' a boolean'."
+        ),
+    )
     oin = models.CharField(
         _("Oin"),
         help_text=_("The OIN of the company providing the service."),
@@ -61,15 +79,11 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         default="application/soap+xml",
         max_length=100,
     )
-    eh_service_language = models.CharField(
-        _("eHerkenning service language"),
+    service_language = models.CharField(
+        _("service language"),
         max_length=2,
         default="nl",
-    )
-    eidas_service_language = models.CharField(
-        _("eidas service language"),
-        max_length=2,
-        default="nl",
+        help_text=_("Metadata for eHerkenning/eidas will contain this language key"),
     )
 
     class Meta:
@@ -93,7 +107,7 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
 
         if self.organization_url and self.organization_name:
             organization = {
-                "nl": {
+                self.service_language: {
                     "name": self.organization_name,
                     "displayname": self.organization_name,
                     "url": self.organization_url,
@@ -114,10 +128,7 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
                 "service_url": self.base_url,
                 "privacy_policy_url": self.privacy_policy,
                 "herkenningsmakelaars_id": self.makelaar_id,
-                # FIXME: there needs to be a EH/eidas variant here - can be a list of
-                # either strings (name of attribute, required) or dicts (with keys name and required)
-                "requested_attributes": self.requested_attributes,
-                # FIXME: does this need to be configurable?
+                "requested_attributes": self.eh_requested_attributes,
                 "entity_concerned_types_allowed": [
                     {
                         "set_number": "1",
@@ -132,7 +143,7 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
                         "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
                     },
                 ],
-                "language": self.eh_service_language,
+                "language": self.service_language,
             }
         ]
 
@@ -150,15 +161,13 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
                 "service_url": self.base_url,
                 "privacy_policy_url": self.privacy_policy,
                 "herkenningsmakelaars_id": self.makelaar_id,
-                # FIXME: there needs to be a eidas variant here - can be a list of
-                # either strings (name of attribute, required) or dicts (with keys name and required)
-                "requested_attributes": self.requested_attributes,
+                "requested_attributes": self.eidas_requested_attributes,
                 "entity_concerned_types_allowed": [
                     {
                         "name": "urn:etoegang:1.9:EntityConcernedID:Pseudo",
                     },
                 ],
-                "language": self.eidas_service_language,
+                "language": self.service_language,
             }
             services.append(eidas_service)
 

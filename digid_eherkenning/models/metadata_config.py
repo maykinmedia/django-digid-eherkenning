@@ -73,13 +73,6 @@ class MetadataConfiguration(SingletonModel):
         help_text=_("The name of the service for which DigiD login is required"),
         max_length=100,
     )
-    requested_attributes = models.JSONField(
-        _("requested attributes"),
-        default=list,
-        help_text=_(
-            "A list of strings with the requested attributes, e.g. '[\"bsn\"]'"
-        ),
-    )
     service_description = models.CharField(
         _("Service description"),
         help_text=_("A description of the service for which DigiD login is required"),

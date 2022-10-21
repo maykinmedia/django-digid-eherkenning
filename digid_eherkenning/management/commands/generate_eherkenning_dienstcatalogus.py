@@ -7,13 +7,16 @@ from digid_eherkenning.saml2.eherkenning import create_service_catalogus
 
 
 def generate_dienst_catalogus(options):
+    # TODO: -> ensure both nl/en keys are here, otherwise this seems similar to usual
+    # metadata generation
+
     settings = {
         "key_file": options["key_file"],
         "cert_file": options["cert_file"],
         "base_url": options["base_url"],
         "entity_id": options["entity_id"],
         "oin": options["oin"],
-        "organisation_name": options["organization_name"],
+        "organization_name": options["organization_name"],
         "services": [
             {
                 "attribute_consuming_service_index": options[

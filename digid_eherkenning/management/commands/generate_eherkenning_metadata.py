@@ -1,9 +1,12 @@
+from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 
 from furl import furl
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
+from ...models import EherkenningMetadataConfiguration
+from ...saml2.eherkenning import eHerkenningClient
 from .generate_digid_metadata import SamlMetadataBaseCommand
 
 
@@ -62,103 +65,18 @@ class Command(SamlMetadataBaseCommand):
         return f"eherkenning-metadata-{date_string}.xml"
 
     def generate_metadata(self, options):
-        setting_dict = {
-            "strict": True,
-            "security": {
-                "signMetadata": True,
-                "authnRequestsSigned": True,
-                "wantAssertionsEncrypted": options["want_assertions_encrypted"],
-                "wantAssertionsSigned": options["want_assertions_signed"],
-                "soapClientKey": options["key_file"],
-                "soapClientCert": options["cert_file"],
-                "soapClientPassphrase": options["key_passphrase"],
-                "signatureAlgorithm": options["signature_algorithm"],
-                "digestAlgorithm": options["digest_algorithm"],
-                # See comment in the python3-saml for in  OneLogin_Saml2_Response.validate_num_assertions (onelogin/saml2/response.py)
-                # for why we need this option.
-                "disableSignatureWrappingProtection": True,
-                # For eHerkenning, if the Metadata file expires, we sent them an update. So
-                # there is no need for an expiry date.
-                "metadataValidUntil": "",
-                "metadataCacheDuration": "",
-                "requestedAuthnContextComparison": "minimum",
-                "requestedAuthnContext": [options["loa"]],
-            },
-            # Service Provider Data that we are deploying.
-            "sp": {
-                # Identifier of the SP entity  (must be a URI)
-                "entityId": options["entity_id"],
-                # Specifies info about where and how the <AuthnResponse> message MUST be
-                # returned to the requester, in this case our SP.
-                "assertionConsumerService": {
-                    "url": furl(options["base_url"] + reverse("eherkenning:acs")).url,
-                    "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
-                },
-                "attributeConsumingServices": [
-                    {
-                        "index": options["eh_attribute_consuming_service_index"],
-                        "serviceName": options["service_name"],
-                        "serviceDescription": options["service_description"],
-                        "requestedAttributes": [
-                            {
-                                "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
-                                % {
-                                    "oin": options["oin"],
-                                    "index": options[
-                                        "eh_attribute_consuming_service_index"
-                                    ],
-                                },
-                                "isRequired": False,
-                            }
-                        ],
-                        "language": "nl",
-                    },
-                    {
-                        "index": options["eidas_attribute_consuming_service_index"],
-                        "serviceName": options["service_name"] + " (eIDAS)",
-                        "serviceDescription": options["service_description"],
-                        "requestedAttributes": [
-                            {
-                                "name": "urn:etoegang:DV:%(oin)s:services:%(index)s"
-                                % {
-                                    "oin": options["oin"],
-                                    "index": options[
-                                        "eidas_attribute_consuming_service_index"
-                                    ],
-                                },
-                                "isRequired": False,
-                            }
-                        ],
-                        "language": "nl",
-                    },
-                ],
-                "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
-                "x509cert": open(options["cert_file"], "r").read(),
-                "privateKey": open(options["key_file"], "r").read(),
-                "privateKeyPassphrase": options["key_passphrase"],
-            },
-        }
+        transaction.set_autocommit(False)
+        # TODO: incorporate the CLI arguments into the config and offer to save the updated
+        # config.
+        config = EherkenningMetadataConfiguration.get_solo()
+        # config.foo = "bar"
+        config.save()
 
-        telephone = options["technical_contact_person_telephone"]
-        email = options["technical_contact_person_email"]
-        if telephone and email:
-            setting_dict["contactPerson"] = {
-                "technical": {"telephoneNumber": telephone, "emailAddress": email}
-            }
+        client = eHerkenningClient()
+        metadata = client.create_metadata()
 
-        if options["organization_url"] and options["organization_name"]:
-            setting_dict["organization"] = {
-                "nl": {
-                    "name": options["organization_name"],
-                    "displayname": options["organization_name"],
-                    "url": options["organization_url"],
-                }
-            }
+        # TODO: do not rollback if we want to update the config from the CLI ->
+        # add option - instead use transaction.commit() in that case.
+        transaction.rollback()
 
-        if options["no_eidas"]:
-            setting_dict["sp"]["attributeConsumingServices"] = setting_dict["sp"][
-                "attributeConsumingServices"
-            ][:-1]
-
-        saml2_settings = OneLogin_Saml2_Settings(setting_dict, sp_validation_only=True)
-        return saml2_settings.get_sp_metadata()
+        return metadata

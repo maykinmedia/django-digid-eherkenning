@@ -7,7 +7,13 @@ from .metadata_config import MetadataConfiguration
 
 
 class DigidMetadataConfiguration(MetadataConfiguration):
-
+    requested_attributes = models.JSONField(
+        _("requested attributes"),
+        default=list,
+        help_text=_(
+            "A list of strings with the requested attributes, e.g. '[\"bsn\"]'"
+        ),
+    )
     slo = models.BooleanField(
         _("Single logout"),
         default=True,
