@@ -4,7 +4,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from ..settings import get_setting
 from .metadata_config import MetadataConfiguration
 
 

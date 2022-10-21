@@ -136,68 +136,6 @@ STATICFILES_FINDERS = [
 ]
 PRIVATE_MEDIA_ROOT = os.path.join(BASE_DIR, "private_media")
 
-#
-# eHerkenning settings
-#
-_EHERKENNING = {
-    "services": [
-        {
-            "service_uuid": "005f18b8-0114-4a1d-963a-ee8e80a08f3f",
-            "service_name": "Example eHerkenning",
-            "service_loa": "urn:etoegang:core:assurance-class:loa3",
-            "attribute_consuming_service_index": "1",
-            "service_instance_uuid": "54efe0fe-c1a7-42da-9612-d84bf3c8fb07",
-            "service_description": "Description eHerkenning",
-            "service_url": "",
-            "privacy_policy_url": "",
-            "herkenningsmakelaars_id": "00000000000000000000",
-            "requested_attributes": [],
-            "entity_concerned_types_allowed": [
-                {
-                    "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
-                },
-            ],
-        },
-        {
-            "service_uuid": "2e167de1-8bef-4d5a-ab48-8fa020e9e631",
-            "service_name": "Example eIDAS",
-            "service_loa": "urn:etoegang:core:assurance-class:loa3",
-            "attribute_consuming_service_index": "2",
-            "service_instance_uuid": "9ba1b0ee-c0d3-437e-87ac-f577098c7e15",
-            "service_description": "Description eIDAS",
-            "service_url": "",
-            "privacy_policy_url": "",
-            "herkenningsmakelaars_id": "00000000000000000000",
-            "requested_attributes": [],
-            "entity_concerned_types_allowed": [
-                {
-                    "name": "urn:etoegang:1.9:EntityConcernedID:Pseudo",
-                },
-            ],
-            "classifiers": ["eIDAS-inbound"],
-        },
-    ],
-    "service_index": "1",
-    # Also used as entity ID
-    # "login_url": reverse_lazy("admin:login"),
-    #
-    # ** Optional settings **
-    #
-    # "want_assertions_signed": True,
-    # "want_assertions_encrypted": True,
-    # "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-    # "technical_contact_person_telephone": "11111111111",
-    # "technical_contact_person_email": "test@example.com",
-    # "organization": {
-    #     "nl": {
-    #         "name": "maykin",
-    #         "displayname": "Maykin Media",
-    #         "url": "https://www.maykinmedia.nl"
-    #     }
-    # },
-}
-
-
 AUTHENTICATION_BACKENDS = [
     "digid_eherkenning.backends.DigiDBackend",
     # "digid_eherkenning.mock.backends.DigiDBackend",

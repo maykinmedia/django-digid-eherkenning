@@ -4,15 +4,12 @@ from io import BytesIO
 from typing import List
 from uuid import uuid4
 
-from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
 from defusedxml.lxml import tostring
-from furl import furl
 from lxml.builder import ElementMaker
 from lxml.etree import Element
-from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from OpenSSL import crypto
 
 from ..models import EherkenningMetadataConfiguration
