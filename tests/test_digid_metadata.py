@@ -175,7 +175,7 @@ class DigidMetadataManagementCommandTests(TestCase):
         expected_error = (
             "Error: the following arguments are required: --key-file, --cert-file, "
             "--entity-id, --base-url, --service-name, --service-description, "
-            "--save-config/--no-save-config, --slo/--no-slo"
+            "--save-config/--no-save-config"
         )
 
         with self.assertRaisesMessage(CommandError, expected_error):
@@ -290,8 +290,15 @@ def test_properties_in_db_config_not_required(digid_config):
     """
     Assert that required properties already configured don't cause problems.
     """
+    digid_config.service_description = "CLI test"
+    digid_config.save()
     try:
-        call_command("generate_digid_metadata")
+        call_command(
+            "generate_digid_metadata",
+            "--no-save-config",
+            "--test",
+            stdout=StringIO(),
+        )
     except CommandError:
         pytest.fail("Database configuration is valid for management commands.")
 

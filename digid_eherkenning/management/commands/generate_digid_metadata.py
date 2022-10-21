@@ -17,16 +17,18 @@ class Command(SamlMetadataBaseCommand):
 
     def add_arguments(self, parser):
         super().add_arguments(parser)
+
+        config: DigidMetadataConfiguration = self._get_config()
+
         parser.add_argument(
             "--slo",
-            required=True,
+            default=config.slo,
             action=BooleanOptionalAction,
             help="If '--slo' is present, Single Logout is supported. To turn it off use '--no-slo'",
         )
         parser.add_argument(
             "--attribute-consuming-service-index",
             type=str,
-            action="store",
             help="Attribute consuming service index, defaults to 1",
             default="1",
         )
