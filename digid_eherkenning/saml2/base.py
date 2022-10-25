@@ -120,24 +120,6 @@ class BaseSaml2Client:
     def create_metadata(self):
         return self.saml2_settings.get_sp_metadata()
 
-    def get_saml_metadata_path(self):
-        """
-        File is written to the current working directory by default.
-        """
-        date_string = timezone.now().date().isoformat()
-        return f"{self.cache_key_prefix}-metadata-{date_string}.xml"
-
-    def write_metadata(self):
-        """
-        Write SAML metadata to the path specified by get_saml_metadata_path.
-
-        :raises FileExistsError
-        """
-        metadata_content = self.create_metadata()
-        metadata_file = open(self.get_saml_metadata_path(), "xb")
-        metadata_file.write(metadata_content)
-        metadata_file.close()
-
     def create_authn_request(
         self, request, return_to=None, attr_consuming_service_index=None, **kwargs
     ):

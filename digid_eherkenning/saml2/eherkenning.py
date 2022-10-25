@@ -431,24 +431,6 @@ class eHerkenningClient(BaseSaml2Client):
             self._conf.setdefault("acs_path", reverse("eherkenning:acs"))
         return self._conf
 
-    def write_metadata(self):
-        """
-        Write the dienstencatalogus, in addition to the saml2 metadata to the
-        current working directory.
-
-        :raises FileExistsError
-        """
-        super().write_metadata()
-
-        db_config = EherkenningMetadataConfiguration.get_solo()
-        service_catalogus = create_service_catalogus(db_config.as_dict())
-
-        date_string = timezone.now().date().isoformat()
-        dc_filename = f"eherkenning-dienstencatalogus-{date_string}.xml"
-        dc_file = open(dc_filename, "xb")
-        dc_file.write(service_catalogus)
-        dc_file.close()
-
     def create_config_dict(self, conf):
         config_dict = super().create_config_dict(conf)
 
