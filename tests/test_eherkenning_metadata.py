@@ -320,6 +320,46 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
             ).text,
         )
 
+    def test_management_command_and_update_config(self):
+        stdout = StringIO()
+        assert not EherkenningMetadataConfiguration.objects.exists()
+
+        call_command(
+            "generate_eherkenning_metadata",
+            "--save-config",
+            "--want-assertions-encrypted",
+            "--no-only-assertions-signed",
+            ["--eh-attribute-consuming-service-index", "1"],
+            key_file=str(EHERKENNING_TEST_KEY_FILE),
+            cert_file=str(EHERKENNING_TEST_CERTIFICATE_FILE),
+            entity_id="http://test-entity.id",
+            base_url="http://test-entity.id",
+            service_name="Test Service Name",
+            service_description="Test Service Description",
+            oin="01234567890123456789",
+            stdout=stdout,
+            test=True,
+        )
+
+        self.assertTrue(EherkenningMetadataConfiguration.objects.exists())
+        config = EherkenningMetadataConfiguration.get_solo()
+        self.assertTrue(config.want_assertions_encrypted)
+        self.assertFalse(config.want_assertions_signed)
+        self.assertEqual(config.oin, "01234567890123456789")
+        self.assertEqual(config.service_name, "Test Service Name")
+        self.assertEqual(config.service_description, "Test Service Description")
+        self.assertEqual(config.eh_attribute_consuming_service_index, "1")
+
+        self.assertIsNotNone(config.certificate)
+
+        with config.certificate.private_key.open("rb") as privkey:
+            with EHERKENNING_TEST_KEY_FILE.open("rb") as source_privkey:
+                self.assertEqual(privkey.read(), source_privkey.read())
+
+        with config.certificate.public_certificate.open("rb") as cert:
+            with EHERKENNING_TEST_CERTIFICATE_FILE.open("rb") as source_cert:
+                self.assertEqual(cert.read(), source_cert.read())
+
 
 @pytest.mark.usefixtures("eherkenning_config", "temp_private_root")
 class EHerkenningClientTests(TestCase):

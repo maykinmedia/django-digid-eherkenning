@@ -7,10 +7,11 @@ import pytest
 from lxml import etree
 from privates.test import temp_private_root
 
+from digid_eherkenning.models import DigidMetadataConfiguration
 from digid_eherkenning.saml2.digid import generate_digid_metadata
-from tests.mixins import DigidMetadataMixin
 
 from .conftest import DIGID_TEST_CERTIFICATE_FILE, DIGID_TEST_KEY_FILE
+from .mixins import DigidMetadataMixin
 
 NAME_SPACES = {
     "md": "urn:oasis:names:tc:SAML:2.0:metadata",
@@ -283,6 +284,44 @@ class DigidMetadataManagementCommandTests(TestCase):
             namespaces=NAME_SPACES,
         )
         self.assertIsNone(single_logout_service_node)
+
+    def test_management_command_and_update_config(self):
+        stdout = StringIO()
+        assert not DigidMetadataConfiguration.objects.exists()
+
+        call_command(
+            "generate_digid_metadata",
+            "--save-config",
+            "--want-assertions-encrypted",
+            "--no-only-assertions-signed",
+            ["--attribute-consuming-service-index", "1"],
+            key_file=str(DIGID_TEST_KEY_FILE),
+            cert_file=str(DIGID_TEST_CERTIFICATE_FILE),
+            entity_id="http://test-entity.id",
+            base_url="http://test-entity.id",
+            service_name="Test Service Name",
+            service_description="Test Service Description",
+            stdout=stdout,
+            test=True,
+        )
+
+        self.assertTrue(DigidMetadataConfiguration.objects.exists())
+        config = DigidMetadataConfiguration.get_solo()
+        self.assertTrue(config.want_assertions_encrypted)
+        self.assertFalse(config.want_assertions_signed)
+        self.assertEqual(config.service_name, "Test Service Name")
+        self.assertEqual(config.service_description, "Test Service Description")
+        self.assertEqual(config.attribute_consuming_service_index, "1")
+
+        self.assertIsNotNone(config.certificate)
+
+        with config.certificate.private_key.open("rb") as privkey:
+            with DIGID_TEST_KEY_FILE.open("rb") as source_privkey:
+                self.assertEqual(privkey.read(), source_privkey.read())
+
+        with config.certificate.public_certificate.open("rb") as cert:
+            with DIGID_TEST_CERTIFICATE_FILE.open("rb") as source_cert:
+                self.assertEqual(cert.read(), source_cert.read())
 
 
 @pytest.mark.django_db
