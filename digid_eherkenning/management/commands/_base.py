@@ -17,7 +17,6 @@ except ImportError:
 
 
 class SamlMetadataBaseCommand(BaseCommand):
-    required_options: Sequence[str]
     config_model: Type[MetadataConfiguration]
     default_certificate_label: str
 
@@ -198,7 +197,7 @@ class SamlMetadataBaseCommand(BaseCommand):
         for key, value in options.items():
             if key not in valid_field_names:
                 continue
-            # optional, unspecified -> go with the model default
+            # optional, unspecified -> go with the model default or current value
             if value is None:
                 continue
             setattr(config, key, value)

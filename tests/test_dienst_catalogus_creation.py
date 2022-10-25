@@ -1,9 +1,12 @@
+from io import StringIO
 from unittest.mock import patch
 
+from django.core.management import CommandError, call_command
 from django.test import TestCase
 
 import pytest
 from lxml import etree
+from privates.test import temp_private_root
 
 from digid_eherkenning.models import EherkenningMetadataConfiguration
 from digid_eherkenning.saml2.eherkenning import (
@@ -11,6 +14,7 @@ from digid_eherkenning.saml2.eherkenning import (
     generate_dienst_catalogus_metadata,
 )
 
+from .conftest import EHERKENNING_TEST_CERTIFICATE_FILE, EHERKENNING_TEST_KEY_FILE
 from .mixins import EherkenningMetadataMixin
 
 
@@ -618,6 +622,352 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
             namespaces=NAMESPACES,
         )
         self.assertEqual("00000000000000000022", makelaar_id_node.text)
+
+        key_name_node = eherkenning_instance_node.find(
+            ".//ds:KeyName",
+            namespaces=NAMESPACES,
+        )
+        self.assertIsNotNone(key_name_node)
+        certificate_node = eherkenning_instance_node.find(
+            ".//ds:X509Certificate",
+            namespaces=NAMESPACES,
+        )
+        self.assertIsNotNone(certificate_node)
+
+        classifier_node = eherkenning_instance_node.findall(
+            ".//esc:Classifier",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(0, len(classifier_node))
+
+
+@temp_private_root()
+class ManagementCommandDienstCatalogus(TestCase):
+    def test_generate_metadata_all_options_specified(self):
+        stdout = StringIO()
+
+        call_command(
+            "generate_eherkenning_dienstcatalogus",
+            "--no-save-config",
+            stdout=stdout,
+            key_file=str(EHERKENNING_TEST_KEY_FILE),
+            cert_file=str(EHERKENNING_TEST_CERTIFICATE_FILE),
+            signature_algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+            digest_algorithm="http://www.w3.org/2001/04/xmlenc#sha256",
+            entity_id="http://test-entity.id",
+            base_url="http://test-entity.id",
+            organization_name="Test Organisation",
+            eh_attribute_consuming_service_index="9050",
+            eidas_attribute_consuming_service_index="9051",
+            oin="00000001112223330000",
+            service_name="Test Service Name",
+            service_description="Test Service Description",
+            makelaar_id="00000003332221110000",
+            privacy_policy="http://test-privacy.nl",
+            test=True,
+        )
+
+        output = stdout.getvalue()
+        service_catalogue_node = etree.XML(output.encode("utf-8"))
+
+        signature_algorithm_node = service_catalogue_node.find(
+            ".//ds:SignatureMethod",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(
+            "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+            signature_algorithm_node.attrib["Algorithm"],
+        )
+
+        digest_algorithm_node = service_catalogue_node.find(
+            ".//ds:DigestMethod",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(
+            "http://www.w3.org/2001/04/xmlenc#sha256",
+            digest_algorithm_node.attrib["Algorithm"],
+        )
+
+        # Service Provider
+        service_provider_id_node = service_catalogue_node.find(
+            ".//esc:ServiceProviderID",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(
+            "00000001112223330000",
+            service_provider_id_node.text,
+        )
+
+        oganisation_display_node = service_catalogue_node.find(
+            ".//esc:OrganizationDisplayName",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(
+            "Test Organisation",
+            oganisation_display_node.text,
+        )
+
+        # Services
+        service_definition_nodes = service_catalogue_node.findall(
+            ".//esc:ServiceDefinition",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(2, len(service_definition_nodes))
+
+        eherkenning_definition_node, eidas_definition_node = service_definition_nodes
+
+        # eHerkenning service definition
+        uuid_node = eherkenning_definition_node.find(
+            ".//esc:ServiceUUID",
+            namespaces=NAMESPACES,
+        )
+        self.assertIsNotNone(uuid_node)
+
+        service_name_node = eherkenning_definition_node.find(
+            ".//esc:ServiceName",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("Test Service Name", service_name_node.text)
+
+        service_description_node = eherkenning_definition_node.find(
+            ".//esc:ServiceDescription",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("Test Service Description", service_description_node.text)
+
+        loa_node = eherkenning_definition_node.find(
+            ".//saml:AuthnContextClassRef",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("urn:etoegang:core:assurance-class:loa3", loa_node.text)
+
+        makelaar_id_node = eherkenning_definition_node.find(
+            ".//esc:HerkenningsmakelaarId",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("00000003332221110000", makelaar_id_node.text)
+
+        entity_concerned_nodes = eherkenning_definition_node.findall(
+            ".//esc:EntityConcernedTypesAllowed",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(3, len(entity_concerned_nodes))
+        self.assertEqual("1", entity_concerned_nodes[0].attrib["setNumber"])
+        self.assertEqual(
+            "urn:etoegang:1.9:EntityConcernedID:RSIN", entity_concerned_nodes[0].text
+        )
+        self.assertEqual("1", entity_concerned_nodes[1].attrib["setNumber"])
+        self.assertEqual(
+            "urn:etoegang:1.9:EntityConcernedID:KvKnr", entity_concerned_nodes[1].text
+        )
+        self.assertEqual("2", entity_concerned_nodes[2].attrib["setNumber"])
+        self.assertEqual(
+            "urn:etoegang:1.9:EntityConcernedID:KvKnr", entity_concerned_nodes[2].text
+        )
+
+        # eIDAS service definition
+        uuid_node = eidas_definition_node.find(
+            ".//esc:ServiceUUID",
+            namespaces=NAMESPACES,
+        )
+        self.assertIsNotNone(uuid_node)
+
+        service_name_node = eidas_definition_node.find(
+            ".//esc:ServiceName",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("Test Service Name (eIDAS)", service_name_node.text)
+
+        service_description_node = eidas_definition_node.find(
+            ".//esc:ServiceDescription",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("Test Service Description", service_description_node.text)
+
+        loa_node = eidas_definition_node.find(
+            ".//saml:AuthnContextClassRef",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("urn:etoegang:core:assurance-class:loa3", loa_node.text)
+
+        makelaar_id_node = eidas_definition_node.find(
+            ".//esc:HerkenningsmakelaarId",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("00000003332221110000", makelaar_id_node.text)
+
+        entity_concerned_nodes = eidas_definition_node.findall(
+            ".//esc:EntityConcernedTypesAllowed",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(1, len(entity_concerned_nodes))
+        self.assertEqual(
+            "urn:etoegang:1.9:EntityConcernedID:Pseudo", entity_concerned_nodes[0].text
+        )
+
+        # Service instances
+        service_instance_nodes = service_catalogue_node.findall(
+            ".//esc:ServiceInstance",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(2, len(service_instance_nodes))
+
+        eherkenning_instance_node, eidas_instance_node = service_instance_nodes
+
+        # Service instance eHerkenning
+        service_id_node = eherkenning_instance_node.find(
+            ".//esc:ServiceID",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(
+            "urn:etoegang:DV:00000001112223330000:services:9050", service_id_node.text
+        )
+
+        service_url_node = eherkenning_instance_node.find(
+            ".//esc:ServiceURL",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("http://test-entity.id", service_url_node.text)
+
+        privacy_url_node = eherkenning_instance_node.find(
+            ".//esc:PrivacyPolicyURL",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("http://test-privacy.nl", privacy_url_node.text)
+
+        makelaar_id_node = eherkenning_instance_node.find(
+            ".//esc:HerkenningsmakelaarId",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("00000003332221110000", makelaar_id_node.text)
+
+        key_name_node = eherkenning_instance_node.find(
+            ".//ds:KeyName",
+            namespaces=NAMESPACES,
+        )
+        self.assertIsNotNone(key_name_node)
+        certificate_node = eherkenning_instance_node.find(
+            ".//ds:X509Certificate",
+            namespaces=NAMESPACES,
+        )
+        self.assertIsNotNone(certificate_node)
+
+        classifier_node = eherkenning_instance_node.findall(
+            ".//esc:Classifier",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(0, len(classifier_node))
+
+        # Service instance eIDAS
+        service_id_node = eidas_instance_node.find(
+            ".//esc:ServiceID",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(
+            "urn:etoegang:DV:00000001112223330000:services:9051", service_id_node.text
+        )
+
+        service_url_node = eidas_instance_node.find(
+            ".//esc:ServiceURL",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("http://test-entity.id", service_url_node.text)
+
+        privacy_url_node = eidas_instance_node.find(
+            ".//esc:PrivacyPolicyURL",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("http://test-privacy.nl", privacy_url_node.text)
+
+        makelaar_id_node = eidas_instance_node.find(
+            ".//esc:HerkenningsmakelaarId",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("00000003332221110000", makelaar_id_node.text)
+
+        key_name_node = eidas_instance_node.find(
+            ".//ds:KeyName",
+            namespaces=NAMESPACES,
+        )
+        self.assertIsNotNone(key_name_node)
+        certificate_node = eidas_instance_node.find(
+            ".//ds:X509Certificate",
+            namespaces=NAMESPACES,
+        )
+        self.assertIsNotNone(certificate_node)
+
+        classifier_node = eidas_instance_node.findall(
+            ".//esc:Classifier",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(1, len(classifier_node))
+        self.assertEqual("eIDAS-inbound", classifier_node[0].text)
+
+    def test_missing_required_properties(self):
+        with self.assertRaises(CommandError):
+            call_command("generate_eherkenning_dienstcatalogus")
+
+    def test_no_eidas_service(self):
+        stdout = StringIO()
+
+        call_command(
+            "generate_eherkenning_dienstcatalogus",
+            "--no-save-config",
+            stdout=stdout,
+            key_file=str(EHERKENNING_TEST_KEY_FILE),
+            cert_file=str(EHERKENNING_TEST_CERTIFICATE_FILE),
+            signature_algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+            digest_algorithm="http://www.w3.org/2001/04/xmlenc#sha256",
+            entity_id="http://test-entity.id",
+            base_url="http://test-entity.id",
+            organization_name="Test Organisation",
+            eh_attribute_consuming_service_index="9050",
+            no_eidas=True,
+            oin="00000001112223330000",
+            service_name="Test Service Name",
+            service_description="Test Service Description",
+            makelaar_id="00000003332221110000",
+            privacy_policy="http://test-privacy.nl",
+            test=True,
+        )
+
+        output = stdout.getvalue()
+        service_catalogue_node = etree.XML(output.encode("utf-8"))
+
+        service_instance_nodes = service_catalogue_node.findall(
+            ".//esc:ServiceInstance",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(1, len(service_instance_nodes))
+
+        eherkenning_instance_node = service_instance_nodes[0]
+
+        # Service instance eHerkenning
+        service_id_node = eherkenning_instance_node.find(
+            ".//esc:ServiceID",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(
+            "urn:etoegang:DV:00000001112223330000:services:9050", service_id_node.text
+        )
+
+        service_url_node = eherkenning_instance_node.find(
+            ".//esc:ServiceURL",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("http://test-entity.id", service_url_node.text)
+
+        privacy_url_node = eherkenning_instance_node.find(
+            ".//esc:PrivacyPolicyURL",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("http://test-privacy.nl", privacy_url_node.text)
+
+        makelaar_id_node = eherkenning_instance_node.find(
+            ".//esc:HerkenningsmakelaarId",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual("00000003332221110000", makelaar_id_node.text)
 
         key_name_node = eherkenning_instance_node.find(
             ".//ds:KeyName",
