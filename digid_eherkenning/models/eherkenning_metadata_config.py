@@ -4,15 +4,17 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from ..choices import AssuranceLevels, XMLContentTypes
 from .metadata_config import MetadataConfiguration
 
 
 class EherkenningMetadataConfiguration(MetadataConfiguration):
 
     loa = models.CharField(
-        _("Loa"),
-        default="urn:etoegang:core:assurance-class:loa3",
+        _("LoA"),
         blank=True,
+        choices=AssuranceLevels,
+        default=AssuranceLevels.substantial,
         help_text=_("Level of Assurance (LoA) to use for all the services."),
         max_length=100,
     )
@@ -49,10 +51,10 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         ),
     )
     eidas_attribute_consuming_service_index = models.CharField(
-        _("eidas attribute consuming service index"),
+        _("eIDAS attribute consuming service index"),
         blank=True,
         default="9053",
-        help_text=_("Attribute consuming service index for the eHerkenning service"),
+        help_text=_("Attribute consuming service index for the eIDAS service"),
         max_length=100,
     )
     eidas_requested_attributes = models.JSONField(
@@ -68,7 +70,7 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         _("eIDAS service UUID"),
         default=uuid.uuid4,
         help_text=_(
-            "UUID of the eHerkenning service. Once entered into catalogues, changing "
+            "UUID of the eIDAS service. Once entered into catalogues, changing "
             "the value is a manual process."
         ),
     )
@@ -81,12 +83,12 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         ),
     )
     oin = models.CharField(
-        _("Oin"),
+        _("OIN"),
         help_text=_("The OIN of the company providing the service."),
         max_length=100,
     )
     no_eidas = models.BooleanField(
-        _("No eidas"),
+        _("no eIDAS"),
         blank=True,
         default=False,
         help_text=_(
@@ -94,21 +96,27 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         ),
     )
     privacy_policy = models.URLField(
-        _("Privacy policy"),
+        _("privacy policy"),
         help_text=_(
-            "The URL where the privacy policy from the organisation providing the service can be found."
+            "The URL where the privacy policy from the organization providing the "
+            "service can be found."
         ),
-        max_length=100,
+        max_length=255,
     )
     makelaar_id = models.CharField(
-        _("Makelaar ID"),
+        _("broker ID"),
         help_text=_("OIN of the broker used to set up eHerkenning/eIDAS."),
         max_length=100,
     )
     artifact_resolve_content_type = models.CharField(
         _("resolve artifact binding content type"),
-        default="application/soap+xml",
+        choices=XMLContentTypes,
+        default=XMLContentTypes.soap_xml,
         max_length=100,
+        help_text=_(
+            "'application/soap+xml' is considered legacy and modern brokers typically "
+            "expect 'text/xml'."
+        ),
     )
     service_language = models.CharField(
         _("service language"),
@@ -118,7 +126,7 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
     )
 
     class Meta:
-        verbose_name = _("Eherkenning metadata configuration")
+        verbose_name = _("Eherkenning/eIDAS metadata configuration")
 
     def as_dict(self) -> dict:
         """

@@ -8,6 +8,8 @@ from privates.fields import PrivateMediaFileField
 from simple_certmanager.models import Certificate
 from solo.models import SingletonModel
 
+from ..choices import DigestAlgorithms, SignatureAlgorithms
+
 
 class MetadataConfigurationManager(models.Manager):
     def get_queryset(self):
@@ -17,97 +19,131 @@ class MetadataConfigurationManager(models.Manager):
 
 class MetadataConfiguration(SingletonModel):
 
-    certificate = models.ForeignKey(Certificate, null=True, on_delete=models.PROTECT)
+    certificate = models.ForeignKey(
+        Certificate,
+        null=True,
+        on_delete=models.PROTECT,
+        verbose_name=_("key pair"),
+        help_text=_(
+            "The private key and public certificate pair to use during the "
+            "authentication flow."
+        ),
+    )
     idp_metadata_file = PrivateMediaFileField(
-        _("Identity Provider metadata file"),
+        _("identity provider metadata"),
         blank=False,
-        help_text=_("The metadata file of the identity provider"),
+        help_text=_("The metadata file of the identity provider."),
     )
     idp_service_entity_id = models.CharField(
-        _("Identity Provider service entity ID"),
+        _("identity provider service entity ID"),
         max_length=255,
         blank=False,
-        help_text="Example value: 'https://was-preprod1.digid.nl/saml/idp/metadata'",
+        help_text=_(
+            "Example value: 'https://was-preprod1.digid.nl/saml/idp/metadata'. Note "
+            "that this must match the 'entityID' attribute on the "
+            "'md:EntityDescriptor' node found in the Identity Provider's metadata."
+        ),
     )
     want_assertions_signed = models.BooleanField(
-        _("Want assertions signed"),
+        _("want assertions signed"),
         default=True,
         help_text=_(
-            "If True, the XML assertions need to be signed, otherwise the whole response needs to be signed."
+            "If True, the XML assertions need to be signed, otherwise the whole "
+            "response needs to be signed."
         ),
         max_length=100,
     )
     want_assertions_encrypted = models.BooleanField(
-        _("Want assertions encrypted"),
+        _("want assertions encrypted"),
         default=False,
         help_text=_("If True the XML assertions need to be encrypted."),
         max_length=100,
     )
     key_passphrase = models.CharField(
-        _("Key passphrase"),
+        _("key passphrase"),
         blank=True,
-        help_text=_("Passphrase for SOAP client"),
+        help_text=_("Passphrase for the private key used by the SOAP client."),
         max_length=100,
     )
     signature_algorithm = models.CharField(
-        _("Signature algorithm"),
+        _("signature algorithm"),
         blank=True,
-        default=OneLogin_Saml2_Constants.RSA_SHA1,
-        help_text=_("Signature algorithm"),
+        choices=SignatureAlgorithms,
+        default=SignatureAlgorithms.rsa_sha1,
+        help_text=_(
+            "Signature algorithm. Note that DSA_SHA1 and RSA_SHA1 are deprecated, but "
+            "RSA_SHA1 is still the default value in the SAMLv2 standard. Warning: "
+            "there are known issues with single-logout functionality if using anything "
+            "other than SHA1 due to some hardcoded algorithm."
+        ),
         max_length=100,
     )
     digest_algorithm = models.CharField(
-        _("Digest algorithm"),
+        _("digest algorithm"),
         blank=True,
-        default="http://www.w3.org/2000/09/xmldsig#sha1",
-        help_text=_("Digest algorithm"),
+        choices=DigestAlgorithms,
+        default=DigestAlgorithms.sha1,
+        help_text=_(
+            "Digest algorithm. Note that SHA1 is deprecated, but still the default "
+            "value in the SAMLv2 standard. Warning: "
+            "there are known issues with single-logout functionality if using anything "
+            "other than SHA1 due to some hardcoded algorithm."
+        ),
         max_length=100,
     )
     entity_id = models.CharField(
-        _("Entity ID"), help_text=_("Service provider entity ID"), max_length=100
+        _("entity ID"), help_text=_("Service provider entity ID."), max_length=100
     )
     base_url = models.URLField(
-        _("Base URL"), help_text=_("Base URL of the application"), max_length=100
+        _("base URL"), help_text=_("Base URL of the application."), max_length=100
     )
     service_name = models.CharField(
-        _("Service name"),
-        help_text=_("The name of the service for which DigiD login is required"),
+        _("service name"),
+        help_text=_("Name of the service you are providing."),
         max_length=100,
     )
     service_description = models.CharField(
-        _("Service description"),
-        help_text=_("A description of the service for which DigiD login is required"),
+        _("service description"),
+        help_text=_("A description of the service you are providing."),
         max_length=100,
     )
     technical_contact_person_telephone = models.CharField(
-        _("Technical contact person telephone"),
+        _("technical contact: phone number"),
         blank=True,
         help_text=_(
-            "Telephone number of the technical person responsible for this DigiD setup. For it to be used, technical_contact_person_email should also be set."
+            "Telephone number of the technical person responsible for this "
+            "DigiD/eHerkenning/eIDAS setup. For it to show up in the metata, you "
+            "should also specify the email address."
         ),
         max_length=100,
     )
     technical_contact_person_email = models.CharField(
-        _("Technical contact person email"),
+        _("technical contact: email"),
         blank=True,
         help_text=_(
-            "Email address of the technical person responsible for this DigiD setup. For it to be used, technical_contact_person_telephone should also be set."
+            "Email address of the technical person responsible for this "
+            "DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you "
+            "should also specify the phone number."
         ),
         max_length=100,
     )
     organization_url = models.URLField(
-        _("Organization URL"),
+        _("organization URL"),
         blank=True,
         help_text=_(
-            "URL of the organisation providing the service for which DigiD login is setup. For it to be used, also organization_name should be filled."
+            "URL of the organization providing the service for which "
+            "DigiD/eHerkenning/eIDAS login is configured. For it to show up in the "
+            "metadata, you should also specify the organization name."
         ),
-        max_length=100,
+        max_length=255,
     )
     organization_name = models.CharField(
-        _("Organization name"),
+        _("organization name"),
         blank=True,
         help_text=_(
-            "Name of the organisation providing the service for which DigiD login is setup. For it to be used, also organization_url should be filled"
+            "URL of the organization providing the service for which "
+            "DigiD/eHerkenning/eIDAS login is configured. For it to show up in the "
+            "metadata, you should also specify the organization URL."
         ),
         max_length=100,
     )
