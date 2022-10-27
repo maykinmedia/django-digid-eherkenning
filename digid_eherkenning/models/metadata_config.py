@@ -3,7 +3,6 @@ from django.db import models
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
-from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from privates.fields import PrivateMediaFileField
 from simple_certmanager.models import Certificate
 from solo.models import SingletonModel

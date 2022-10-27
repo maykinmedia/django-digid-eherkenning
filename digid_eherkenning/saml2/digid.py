@@ -29,7 +29,8 @@ class DigiDClient(BaseSaml2Client):
                 # URL where the <LogoutRequest> from the IdP will be sent (IdP-initiated logout)
                 "url": conf["base_url"] + reverse("digid:slo-soap"),
                 "binding": "urn:oasis:names:tc:SAML:2.0:bindings:SOAP",
-                # URL Location where the <LogoutResponse> from the IdP will sent (SP-initiated logout, reply)
+                # URL Location where the <LogoutResponse> from the IdP will be sent
+                # (SP-initiated logout, reply)
                 "responseUrl": conf["base_url"] + reverse("digid:slo-redirect"),
                 "responseBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
             }

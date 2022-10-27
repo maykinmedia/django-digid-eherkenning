@@ -215,9 +215,6 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
             "key_file": self.certificate.private_key,
             "cert_file": self.certificate.public_certificate,
             "service_entity_id": self.idp_service_entity_id,
-            # "attribute_consuming_service_index": self.attribute_consuming_service_index,
-            # "service_name": self.service_name,
-            # "requested_attributes": self.requested_attributes or [],
             "oin": self.oin,
             "services": services,
             # optional in runtime code
@@ -233,5 +230,4 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
             "organization": organization,
             "organization_name": self.organization_name,
             "artifact_resolve_content_type": self.artifact_resolve_content_type,
-            # "session_age": get_setting("EHERKENNING_SESSION_AGE"),
         }

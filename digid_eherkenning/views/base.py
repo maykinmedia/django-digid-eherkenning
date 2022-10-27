@@ -1,8 +1,4 @@
-# Django 1.11 compatibility
-try:
-    from django.utils.http import url_has_allowed_host_and_scheme
-except ImportError:
-    from django.utils.http import is_safe_url as url_has_allowed_host_and_scheme
+from django.utils.http import url_has_allowed_host_and_scheme
 
 
 def get_redirect_url(request, redirect_to, require_https=True):
