@@ -17,16 +17,9 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         max_length=100,
     )
     eh_attribute_consuming_service_index = models.CharField(
-        _("eh attribute consumng service index"),
+        _("eHerkenning attribute consuming service index"),
         blank=True,
         default="9052",
-        help_text=_("Attribute consuming service index for the eHerkenning service"),
-        max_length=100,
-    )
-    eidas_attribute_consuming_service_index = models.CharField(
-        _("eidas attribute consumng service index"),
-        blank=True,
-        default="9053",
         help_text=_("Attribute consuming service index for the eHerkenning service"),
         max_length=100,
     )
@@ -39,6 +32,29 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
             "and 'required', where 'name' is a string and 'required' a boolean'."
         ),
     )
+    eh_service_uuid = models.UUIDField(
+        _("eHerkenning service UUID"),
+        default=uuid.uuid4,
+        help_text=_(
+            "UUID of the eHerkenning service. Once entered into catalogues, changing "
+            "the value is a manual process."
+        ),
+    )
+    eh_service_instance_uuid = models.UUIDField(
+        _("eHerkenning service UUID"),
+        default=uuid.uuid4,
+        help_text=_(
+            "UUID of the eHerkenning service instance. Once entered into catalogues, "
+            "changing the value is a manual process."
+        ),
+    )
+    eidas_attribute_consuming_service_index = models.CharField(
+        _("eidas attribute consuming service index"),
+        blank=True,
+        default="9053",
+        help_text=_("Attribute consuming service index for the eHerkenning service"),
+        max_length=100,
+    )
     eidas_requested_attributes = models.JSONField(
         _("requested attributes"),
         default=list,
@@ -46,6 +62,22 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
             "A list of additional requested attributes. A single requested attribute "
             "can be a string (the name of the attribute) or an object with keys 'name' "
             "and 'required', where 'name' is a string and 'required' a boolean'."
+        ),
+    )
+    eidas_service_uuid = models.UUIDField(
+        _("eIDAS service UUID"),
+        default=uuid.uuid4,
+        help_text=_(
+            "UUID of the eHerkenning service. Once entered into catalogues, changing "
+            "the value is a manual process."
+        ),
+    )
+    eidas_service_instance_uuid = models.UUIDField(
+        _("eIDAS service UUID"),
+        default=uuid.uuid4,
+        help_text=_(
+            "UUID of the eHerkenning service instance. Once entered into catalogues, "
+            "changing the value is a manual process."
         ),
     )
     oin = models.CharField(
@@ -116,13 +148,11 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         # at least the EH service
         services = [
             {
-                # FIXME - the UUID should probably not change every time!!
-                "service_uuid": str(uuid.uuid4()),
+                "service_uuid": str(self.eh_service_uuid),
                 "service_name": self.service_name,
                 "service_loa": self.loa,
                 "attribute_consuming_service_index": self.eh_attribute_consuming_service_index,
-                # FIXME - the UUID should probably not change every time!!
-                "service_instance_uuid": str(uuid.uuid4()),
+                "service_instance_uuid": str(self.eh_service_instance_uuid),
                 "service_description": self.service_description,
                 "service_url": self.base_url,
                 "privacy_policy_url": self.privacy_policy,
@@ -149,13 +179,11 @@ class EherkenningMetadataConfiguration(MetadataConfiguration):
         # add eIDAS
         if not self.no_eidas:
             eidas_service = {
-                # FIXME - the UUID should probably not change every time!!
-                "service_uuid": str(uuid.uuid4()),
+                "service_uuid": str(self.eidas_service_uuid),
                 "service_name": f"{self.service_name} (eIDAS)",
                 "service_loa": self.loa,
                 "attribute_consuming_service_index": self.eidas_attribute_consuming_service_index,
-                # FIXME - the UUID should probably not change every time!!
-                "service_instance_uuid": str(uuid.uuid4()),
+                "service_instance_uuid": str(self.eidas_service_instance_uuid),
                 "service_description": self.service_description,
                 "service_url": self.base_url,
                 "privacy_policy_url": self.privacy_policy,
