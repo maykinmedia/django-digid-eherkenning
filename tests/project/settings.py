@@ -39,10 +39,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "digid_eherkenning",
     "sessionprofile",
-    "tests.project",
     "simple_certmanager",
+    "solo",
+    # own apps
+    "digid_eherkenning",
+    "tests.project",
 ]
 
 MIDDLEWARE = [
@@ -140,6 +142,7 @@ AUTHENTICATION_BACKENDS = [
     "digid_eherkenning.backends.DigiDBackend",
     # "digid_eherkenning.mock.backends.DigiDBackend",
     "digid_eherkenning.backends.eHerkenningBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 AUTH_USER_MODEL = "project.User"
