@@ -39,8 +39,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "digid_eherkenning",
     "sessionprofile",
+    "privates",
+    "simple_certmanager",
+    "solo",
+    # own apps
+    "digid_eherkenning",
     "tests.project",
 ]
 
@@ -133,98 +137,16 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
-
-#
-# DigiD settings
-#
-DIGID = {
-    "base_url": "https://sp.example.nl",
-    "entity_id": "sp.example.nl/digid",
-    "metadata_file": os.path.join(BASE_DIR, "files", "digid", "metadata"),
-    "key_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key"),
-    "cert_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem"),
-    "service_entity_id": "https://was-preprod1.digid.nl/saml/idp/metadata",
-    "attribute_consuming_service_index": "1",
-    "service_name": "Example",
-    "requested_attributes": [],
-    "login_url": reverse_lazy("admin:login"),
-    "session_age": 15 * 60,
-}
-
-#
-# eHerkenning settings
-#
-EHERKENNING = conf = {
-    "oin": "00000000000000000000",
-    "organisation_name": "Example",
-    "services": [
-        {
-            "service_uuid": "005f18b8-0114-4a1d-963a-ee8e80a08f3f",
-            "service_name": "Example eHerkenning",
-            "service_loa": "urn:etoegang:core:assurance-class:loa3",
-            "attribute_consuming_service_index": "1",
-            "service_instance_uuid": "54efe0fe-c1a7-42da-9612-d84bf3c8fb07",
-            "service_description": "Description eHerkenning",
-            "service_url": "",
-            "privacy_policy_url": "",
-            "herkenningsmakelaars_id": "00000000000000000000",
-            "requested_attributes": [],
-            "entity_concerned_types_allowed": [
-                {
-                    "name": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
-                },
-            ],
-        },
-        {
-            "service_uuid": "2e167de1-8bef-4d5a-ab48-8fa020e9e631",
-            "service_name": "Example eIDAS",
-            "service_loa": "urn:etoegang:core:assurance-class:loa3",
-            "attribute_consuming_service_index": "2",
-            "service_instance_uuid": "9ba1b0ee-c0d3-437e-87ac-f577098c7e15",
-            "service_description": "Description eIDAS",
-            "service_url": "",
-            "privacy_policy_url": "",
-            "herkenningsmakelaars_id": "00000000000000000000",
-            "requested_attributes": [],
-            "entity_concerned_types_allowed": [
-                {
-                    "name": "urn:etoegang:1.9:EntityConcernedID:Pseudo",
-                },
-            ],
-            "classifiers": ["eIDAS-inbound"],
-        },
-    ],
-    "service_index": "1",
-    "key_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.key"),
-    "cert_file": os.path.join(BASE_DIR, "files", "snakeoil-cert/ssl-cert-snakeoil.pem"),
-    # Also used as entity ID
-    "base_url": "https://example.com",
-    "metadata_file": os.path.join(BASE_DIR, "files", "eherkenning", "metadata"),
-    "service_entity_id": "urn:etoegang:HM:00000003520354760000:entities:9632",
-    "entity_id": "urn:etoegang:DV:0000000000000000001:entities:0002",
-    "login_url": reverse_lazy("admin:login"),
-    #
-    # ** Optional settings **
-    #
-    # "want_assertions_signed": True,
-    # "want_assertions_encrypted": True,
-    # "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-    # "technical_contact_person_telephone": "11111111111",
-    # "technical_contact_person_email": "test@example.com",
-    # "organization": {
-    #     "nl": {
-    #         "name": "maykin",
-    #         "displayname": "Maykin Media",
-    #         "url": "https://www.maykinmedia.nl"
-    #     }
-    # },
-}
-
+PRIVATE_MEDIA_ROOT = os.path.join(BASE_DIR, "private_media")
+PRIVATE_MEDIA_URL = "/protected/"
+SENDFILE_ROOT = PRIVATE_MEDIA_ROOT
+SENDFILE_BACKEND = "django_sendfile.backends.development"
 
 AUTHENTICATION_BACKENDS = [
     "digid_eherkenning.backends.DigiDBackend",
     # "digid_eherkenning.mock.backends.DigiDBackend",
     "digid_eherkenning.backends.eHerkenningBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 AUTH_USER_MODEL = "project.User"

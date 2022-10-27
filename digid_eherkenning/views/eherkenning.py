@@ -9,7 +9,11 @@ from django.views.generic.base import TemplateView, View
 
 from ..exceptions import SAML2Error, eHerkenningNoRSINError
 from ..forms import SAML2Form
-from ..saml2.eherkenning import eHerkenningClient
+from ..saml2.eherkenning import (
+    eHerkenningClient,
+    generate_dienst_catalogus_metadata,
+    generate_eherkenning_metadata,
+)
 from .base import get_redirect_url
 
 
@@ -65,10 +69,6 @@ class eHerkenningAssertionConsumerServiceView(View):
         url = self.get_redirect_url()
         if url:
             return url
-
-        eherkenning_login_url = settings.EHERKENNING.get("login_url")
-        if eherkenning_login_url:
-            return resolve_url(eherkenning_login_url)
 
         return resolve_url(settings.LOGIN_URL)
 

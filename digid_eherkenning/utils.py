@@ -7,6 +7,7 @@ from lxml import etree
 
 
 def get_client_ip(request):
+    # TODO: document that these headers must be trusted properly.
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
         # The general format of the field is:  X-Forwarded-For: client, proxy1, proxy2

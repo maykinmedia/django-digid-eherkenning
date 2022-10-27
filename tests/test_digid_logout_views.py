@@ -4,6 +4,7 @@ from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse, reverse_lazy
 
+import pytest
 from freezegun import freeze_time
 from furl import furl
 from lxml import etree
@@ -13,12 +14,14 @@ from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
 from sessionprofile.models import SessionProfile
 
 from digid_eherkenning.choices import SectorType
+from digid_eherkenning.models import DigidConfiguration
 
 from .project.choices import UserLoginType
 from .project.models import User
 from .utils import get_saml_element
 
 
+@pytest.mark.usefixtures("digid_config", "temp_private_root")
 class DigidLogoutViewTests(TestCase):
     maxDiff = None
 
@@ -32,6 +35,7 @@ class DigidLogoutViewTests(TestCase):
 
         works as intended.
         """
+        config = DigidConfiguration.get_solo()
         uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
         user = User.objects.create_user(
             username="testuser", password="test", bsn="12345670"
@@ -81,7 +85,7 @@ class DigidLogoutViewTests(TestCase):
             'xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" '
             'ID="ONELOGIN_5ba93c9db0cff93f52b521d7420e43f6eda2784f" Version="2.0" IssueInstant="2020-04-09T08:31:46Z" '
             'Destination="https://preprod1.digid.nl/saml/idp/request_logout">'
-            f'<saml:Issuer>{settings.DIGID["entity_id"]}</saml:Issuer>'
+            f"<saml:Issuer>{config.entity_id}</saml:Issuer>"
             f"<saml:NameID>{SectorType.bsn}:{user.bsn}</saml:NameID>"
             "</samlp:LogoutRequest>"
         )
@@ -110,6 +114,7 @@ class DigidLogoutViewTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
 
+@pytest.mark.usefixtures("digid_config", "temp_private_root")
 class DigidSloLogoutRedirectTests(TestCase):
     url = reverse_lazy("digid:slo-redirect")
 
@@ -222,6 +227,7 @@ class DigidSloLogoutRedirectTests(TestCase):
         )
 
 
+@pytest.mark.usefixtures("digid_config", "temp_private_root")
 class DigidSloLogoutSOAPRequestTests(TestCase):
     maxDiff = None
     url = reverse_lazy("digid:slo-soap")

@@ -21,6 +21,7 @@ local.py
 .env
 
 tests/db.sqlite3
+tests/private_media
 /digid_eherkenning/db.sqlite3
 .tox
 .pytest_cache

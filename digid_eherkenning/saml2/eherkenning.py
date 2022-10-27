@@ -4,7 +4,6 @@ from io import BytesIO
 from typing import List
 from uuid import uuid4
 
-from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -13,6 +12,7 @@ from lxml.builder import ElementMaker
 from lxml.etree import Element
 from OpenSSL import crypto
 
+from ..models import EherkenningConfiguration
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
 from .base import BaseSaml2Client, get_service_description, get_service_name
@@ -30,6 +30,29 @@ SAML = ElementMaker(namespace=namespaces["saml"], nsmap=namespaces)
 MD = ElementMaker(namespace=namespaces["md"], nsmap=namespaces)
 
 xml_nl_lang = {"{http://www.w3.org/XML/1998/namespace}lang": "nl"}
+
+
+def generate_dienst_catalogus_metadata(eherkenning_config=None):
+    eherkenning_config = eherkenning_config or EherkenningConfiguration.get_solo()
+    settings = eherkenning_config.as_dict()
+    # ensure that the single language strings are output in both nl and en
+    for service in settings["services"]:
+        name = service["service_name"]
+        service["service_name"] = {"nl": name, "en": name}
+
+        description = service["service_description"]
+        service["service_description"] = {"nl": description, "en": description}
+
+        privacy_policy_url = service["privacy_policy_url"]
+        service["privacy_policy_url"] = {"nl": privacy_policy_url}
+
+    return create_service_catalogus(settings)
+
+
+def generate_eherkenning_metadata():
+    client = eHerkenningClient()
+    client.saml2_setting_kwargs = {"sp_validation_only": True}
+    return client.create_metadata()
 
 
 def xml_datetime(d):
@@ -268,11 +291,12 @@ def create_service_catalogus(conf, validate=True):
     """
     https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
     """
-    x509_certificate_content = open(conf["cert_file"], "rb").read()
+    with conf["cert_file"].open("rb") as cert_file:
+        x509_certificate_content = cert_file.read()
 
     sc_id = str(uuid4())
     service_provider_id = conf["oin"]
-    organization_display_name = conf["organisation_name"]
+    organization_display_name = conf["organization_name"]
 
     service_definitions = []
     service_instances = []
@@ -397,33 +421,23 @@ class eHerkenningClient(BaseSaml2Client):
     cache_key_prefix = "eherkenning"
     cache_timeout = 60 * 60  # 1 hour
 
-    def __init__(self):
-        conf = settings.EHERKENNING.copy()
-        conf.setdefault("acs_path", reverse("eherkenning:acs"))
-
-        super().__init__(conf)
-
-    def write_metadata(self):
-        """
-        Write the dienstencatalogus, in addition to the saml2 metadata to the
-        current working directory.
-
-        :raises FileExistsError
-        """
-        super().write_metadata()
-
-        service_catalogus = create_service_catalogus(settings.EHERKENNING)
-
-        date_string = timezone.now().date().isoformat()
-        dc_filename = f"eherkenning-dienstencatalogus-{date_string}.xml"
-        dc_file = open(dc_filename, "xb")
-        dc_file.write(service_catalogus)
-        dc_file.close()
+    @property
+    def conf(self) -> dict:
+        if not hasattr(self, "_conf"):
+            db_config = EherkenningConfiguration.get_solo()
+            self._conf = db_config.as_dict()
+            self._conf.setdefault("acs_path", reverse("eherkenning:acs"))
+        return self._conf
 
     def create_config_dict(self, conf):
         config_dict = super().create_config_dict(conf)
 
         attribute_consuming_services = create_attribute_consuming_services(conf)
+        with conf["cert_file"].open("r") as cert_file, conf["key_file"].open(
+            "r"
+        ) as key_file:
+            certificate = cert_file.read()
+            privkey = key_file.read()
         config_dict.update(
             {
                 "sp": {
@@ -437,16 +451,17 @@ class eHerkenningClient(BaseSaml2Client):
                     },
                     "attributeConsumingServices": attribute_consuming_services,
                     "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
-                    "x509cert": open(conf["cert_file"], "r").read(),
-                    "privateKey": open(conf["key_file"], "r").read(),
+                    "x509cert": certificate,
+                    "privateKey": privkey,
                     "privateKeyPassphrase": conf.get("key_passphrase", None),
                 },
             }
         )
 
-        config_dict["idp"]["resolveArtifactBindingContentType"] = conf.get(
-            "artifact_resolve_content_type", "application/soap+xml"
-        )
+        if "idp" in config_dict:
+            config_dict["idp"]["resolveArtifactBindingContentType"] = conf.get(
+                "artifact_resolve_content_type", "application/soap+xml"
+            )
         return config_dict
 
     def create_config(self, config_dict):
@@ -461,6 +476,7 @@ class eHerkenningClient(BaseSaml2Client):
                 "metadataCacheDuration": "",
                 "requestedAuthnContextComparison": "minimum",
                 "requestedAuthnContext": [
+                    # TODO: replace with direct config source reference (django-solo model?)
                     self.conf["services"][0]["service_loa"],
                 ],
             }

@@ -1,10 +1,10 @@
 import logging
 import urllib
+import warnings
 from typing import Callable, List
 
 from django.conf import settings
 from django.core.cache import cache
-from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
@@ -82,37 +82,29 @@ def get_requested_attributes(conf: dict) -> List[dict]:
 class BaseSaml2Client:
     cache_key_prefix = "saml2_"
     cache_timeout = 60 * 60  # 1 hour
+    saml2_setting_kwargs: dict = {
+        "custom_base_path": None,
+    }
 
-    def __init__(self, conf):
-        self.conf = conf
-        self.saml2_settings = self.create_config(
-            self.create_config_dict(conf=self.conf),
-        )
-
+    def __init__(self, conf=None):
         self.authn_storage = AuthnRequestStorage(
             self.cache_key_prefix, self.cache_timeout
         )
 
-    def create_metadata(self):
+    @property
+    def conf(self):
+        raise NotImplementedError("Subclasses must implement the 'conf' property")
+
+    @property
+    def saml2_settings(self):
+        if not hasattr(self, "_saml2_settings"):
+            self._saml2_settings = self.create_config(
+                self.create_config_dict(conf=self.conf)
+            )
+        return self._saml2_settings
+
+    def create_metadata(self) -> bytes:
         return self.saml2_settings.get_sp_metadata()
-
-    def get_saml_metadata_path(self):
-        """
-        File is written to the current working directory by default.
-        """
-        date_string = timezone.now().date().isoformat()
-        return f"{self.cache_key_prefix}-metadata-{date_string}.xml"
-
-    def write_metadata(self):
-        """
-        Write SAML metadata to the path specified by get_saml_metadata_path.
-
-        :raises FileExistsError
-        """
-        metadata_content = self.create_metadata()
-        metadata_file = open(self.get_saml_metadata_path(), "xb")
-        metadata_file.write(metadata_content)
-        metadata_file.close()
 
     def create_authn_request(
         self, request, return_to=None, attr_consuming_service_index=None, **kwargs
@@ -191,7 +183,7 @@ class BaseSaml2Client:
         """
         Convert to the format expected by the OneLogin SAML2 library.
         """
-        return OneLogin_Saml2_Settings(config_dict, custom_base_path=None)
+        return OneLogin_Saml2_Settings(config_dict, **self.saml2_setting_kwargs)
 
     def create_config_dict(self, conf):
         """
@@ -199,30 +191,24 @@ class BaseSaml2Client:
 
         base_url: URL which is prefixed before any URL used by the SP we set up.
         entity_id: SAML2 Entity id of SP we set up.
-        key_file: path on disk of private key in PEM format
-        cert_file: path on disk of certificate in PEM format.
+        key_file: Django FieldFile with private key in PEM format
+        cert_file: Django FieldFile with with certificate in PEM format.
 
-        metadata_file: path on disk for metadata file which specifies the IDP.
+        metadata_file: Django FieldFile with metadata file which specifies the IDP.
         service_entity_id: entity id used to find settings of IDP in metadata file.
         attribute_consuming_service_index
         service_name: Name of SP service we set up. This is used in metadata generation.
         requested_attributes: List of attributes which should be returned by the IDP.
         """
-        try:
-            metadata_content = open(conf["metadata_file"], "r").read()
-        except FileNotFoundError:
-            raise ImproperlyConfigured(
-                f"The file: {conf['metadata_file']} could not be found. Please "
-                "specify an existing metadata in the conf['metadata_file'] setting."
-            )
-
-        idp_settings = OneLogin_Saml2_IdPMetadataParser.parse(
-            metadata_content, entity_id=conf["service_entity_id"]
-        )["idp"]
-
         service_name = get_service_name(conf)
         service_description = get_service_description(conf)
         requested_attributes = get_requested_attributes(conf)
+
+        with conf["cert_file"].open("r") as cert_file, conf["key_file"].open(
+            "r"
+        ) as key_file:
+            certificate = cert_file.read()
+            privkey = key_file.read()
 
         setting_dict = {
             "strict": True,
@@ -233,8 +219,8 @@ class BaseSaml2Client:
                 "logoutResponseSigned": True,
                 "wantAssertionsEncrypted": conf.get("want_assertions_encrypted", False),
                 "wantAssertionsSigned": conf.get("want_assertions_signed", False),
-                "soapClientKey": conf["key_file"],
-                "soapClientCert": conf["cert_file"],
+                "soapClientKey": conf["key_file"].path,
+                "soapClientCert": conf["cert_file"].path,
                 "soapClientPassphrase": conf.get("key_passphrase", None),
                 # algorithm for requests with HTTP-redirect binding.
                 # AuthnRequest with HTTP-POST uses RSA_SHA256, which is hardcoded in OneLogin_Saml2_Auth.login_post
@@ -270,23 +256,32 @@ class BaseSaml2Client:
                     ],
                 },
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
-                "x509cert": open(conf["cert_file"], "r").read(),
-                "privateKey": open(conf["key_file"], "r").read(),
+                "x509cert": certificate,
+                "privateKey": privkey,
                 "privateKeyPassphrase": conf.get("key_passphrase", None),
             },
-            "idp": idp_settings,
         }
+
+        # check if we need to add the idp
+        metadata_file = conf["metadata_file"]
+        if metadata_file:
+            with metadata_file.open("r") as metadata_file:
+                metadata = metadata_file.read()
+            idp_settings = OneLogin_Saml2_IdPMetadataParser.parse(
+                metadata, entity_id=conf["service_entity_id"]
+            )["idp"]
+            setting_dict["idp"] = idp_settings
 
         telephone = conf.get("technical_contact_person_telephone")
         email = conf.get("technical_contact_person_email")
-        if telephone or email:
+        if telephone and email:
             setting_dict["contactPerson"] = {
                 "technical": {"telephoneNumber": telephone, "emailAddress": email}
             }
 
-        organisation = conf.get("organization")
-        if organisation:
-            setting_dict["organization"] = organisation
+        organization = conf.get("organization")
+        if organization:
+            setting_dict["organization"] = organization
 
         return setting_dict
 
