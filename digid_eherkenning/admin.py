@@ -64,6 +64,9 @@ class DigidMetadataConfigurationAdmin(SingletonModelAdmin):
             },
         ),
     )
+    change_form_template = (
+        "admin/digid_eherkenning/digidmetadataconfiguration/change_form.html"
+    )
 
 
 @admin.register(EherkenningMetadataConfiguration)
@@ -149,4 +152,7 @@ class EherkenningMetadataConfigurationAdmin(SingletonModelAdmin):
                 ),
             },
         ),
+    )
+    change_form_template = (
+        "admin/digid_eherkenning/eherkenningmetadataconfiguration/change_form.html"
     )

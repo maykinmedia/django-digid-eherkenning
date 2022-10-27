@@ -2,16 +2,14 @@ from django.urls import path
 
 from . import views
 
+app_name = "metadata"
+
 urlpatterns = [
-    path("digid/metadata", views.get_xml_digid_metadata, name="digid_metadata"),
+    path("digid", views.get_xml_digid_metadata, name="digid"),
+    path("eherkenning", views.get_xml_eherkenning_metadata, name="eherkenning"),
     path(
-        "eherkenning/metadata",
-        views.get_xml_eherkenning_metadata,
-        name="eherkenning_metadata",
-    ),
-    path(
-        "eherkenning/diesnt-catalogus-metadata",
+        "eherkenning/dienstcatalogus",
         views.get_xml_eherkenning_dienstcatalogus_metadata,
-        name="eherkenning_diesntcatalogus_metadata",
+        name="eh-dienstcatalogus",
     ),
 ]

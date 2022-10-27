@@ -1,0 +1,10 @@
+{% extends 'admin/solo/change_form.html' %}
+{% load i18n %}
+
+
+{% block object-tools-items %}
+<li>
+  <a href="{% url 'metadata:digid' %}">{% trans "View SAML metadata (XML)" %}</a>
+</li>
+{{ block.super }}
+{% endblock %}
