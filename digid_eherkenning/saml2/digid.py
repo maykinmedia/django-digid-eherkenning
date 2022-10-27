@@ -16,7 +16,7 @@ class DigiDClient(BaseSaml2Client):
 
     @property
     def conf(self) -> dict:
-        if self._conf is None:
+        if not hasattr(self, "_conf"):
             db_config = DigidConfiguration.get_solo()
             self._conf = db_config.as_dict()
             self._conf.setdefault("acs_path", reverse("digid:acs"))

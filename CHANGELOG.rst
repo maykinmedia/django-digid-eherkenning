@@ -25,6 +25,9 @@ Changelog
 
 * Dropped support for Django 2.2 which is EOL
 
+* Custom subclasses of ``digid_eherkenning.saml2.base.BaseSaml2Client`` need to implement
+  the ``conf`` property - the ``__init__`` method no longer accepts a config dict.
+
 0.4.1 (2022-07-12)
 ==================
 

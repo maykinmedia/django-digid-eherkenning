@@ -82,7 +82,6 @@ def get_requested_attributes(conf: dict) -> List[dict]:
 class BaseSaml2Client:
     cache_key_prefix = "saml2_"
     cache_timeout = 60 * 60  # 1 hour
-    _conf = None
     saml2_setting_kwargs: dict = {
         "custom_base_path": None,
     }
@@ -91,23 +90,10 @@ class BaseSaml2Client:
         self.authn_storage = AuthnRequestStorage(
             self.cache_key_prefix, self.cache_timeout
         )
-        if conf is not None:
-            warnings.warn(
-                "Passing the configuration at client init is deprecated, please "
-                "update your subclass to implement the conf property instead.",
-                DeprecationWarning,
-            )
-            self.conf = conf
 
     @property
     def conf(self):
-        if self._conf is None:
-            raise NotImplementedError("Subclasses must implement the 'conf' property")
-        return self._conf
-
-    @conf.setter
-    def conf(self, value):
-        self._conf = value
+        raise NotImplementedError("Subclasses must implement the 'conf' property")
 
     @property
     def saml2_settings(self):
