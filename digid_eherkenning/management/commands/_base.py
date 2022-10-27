@@ -8,7 +8,7 @@ from django.db import transaction
 from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.models import Certificate
 
-from ...models.metadata_config import MetadataConfiguration
+from ...models.metadata_config import BaseConfiguration
 
 try:
     from argparse import BooleanOptionalAction
@@ -17,7 +17,7 @@ except ImportError:
 
 
 class SamlMetadataBaseCommand(BaseCommand):
-    config_model: Type[MetadataConfiguration]
+    config_model: Type[BaseConfiguration]
     default_certificate_label: str
 
     def add_arguments(self, parser):
@@ -160,7 +160,7 @@ class SamlMetadataBaseCommand(BaseCommand):
             self._config = self.config_model.get_solo()
         return self._config
 
-    def _set_certificate(self, config: MetadataConfiguration, options: dict):
+    def _set_certificate(self, config: BaseConfiguration, options: dict):
         certificate = config.certificate
 
         # no certificate exists yet -> create one

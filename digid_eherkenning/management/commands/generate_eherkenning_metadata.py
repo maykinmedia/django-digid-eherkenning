@@ -1,19 +1,19 @@
 from django.utils import timezone
 
-from ...models import EherkenningMetadataConfiguration
+from ...models import EherkenningConfiguration
 from ...saml2.eherkenning import generate_eherkenning_metadata
 from ._base import SamlMetadataBaseCommand
 
 
 class Command(SamlMetadataBaseCommand):
     help = "Create the eHerkenning metadata file"
-    config_model = EherkenningMetadataConfiguration
+    config_model = EherkenningConfiguration
     default_certificate_label = "eHerkenning/eIDAS"
 
     def add_arguments(self, parser):
         super().add_arguments(parser)
 
-        config: EherkenningMetadataConfiguration = self._get_config()
+        config: EherkenningConfiguration = self._get_config()
 
         parser.add_argument(
             "--loa",

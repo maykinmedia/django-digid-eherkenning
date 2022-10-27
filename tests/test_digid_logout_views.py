@@ -14,7 +14,7 @@ from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
 from sessionprofile.models import SessionProfile
 
 from digid_eherkenning.choices import SectorType
-from digid_eherkenning.models import DigidMetadataConfiguration
+from digid_eherkenning.models import DigidConfiguration
 
 from .project.choices import UserLoginType
 from .project.models import User
@@ -35,7 +35,7 @@ class DigidLogoutViewTests(TestCase):
 
         works as intended.
         """
-        config = DigidMetadataConfiguration.get_solo()
+        config = DigidConfiguration.get_solo()
         uuid_mock.hex = "80dd245883b84bd98dacbf3978af3d03"
         user = User.objects.create_user(
             username="testuser", password="test", bsn="12345670"

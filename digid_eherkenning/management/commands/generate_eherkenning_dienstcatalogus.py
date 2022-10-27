@@ -1,6 +1,6 @@
 from django.utils import timezone
 
-from ...models import EherkenningMetadataConfiguration
+from ...models import EherkenningConfiguration
 from ...saml2.eherkenning import generate_dienst_catalogus_metadata
 from .generate_eherkenning_metadata import Command as EherkenningCommand
 
@@ -40,7 +40,7 @@ class Command(EherkenningCommand):
         for dest in dests_to_delete:
             _remove_action_by_dest(parser, dest)
 
-        config: EherkenningMetadataConfiguration = self._get_config()
+        config: EherkenningConfiguration = self._get_config()
 
         parser.add_argument(
             "--privacy-policy",

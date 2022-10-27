@@ -6,10 +6,10 @@ from django.utils.translation import gettext_lazy as _
 
 from ..choices import AssuranceLevels, XMLContentTypes
 from ..validators import oin_validator
-from .metadata_config import MetadataConfiguration
+from .metadata_config import BaseConfiguration
 
 
-class EherkenningMetadataConfiguration(MetadataConfiguration):
+class EherkenningConfiguration(BaseConfiguration):
 
     loa = models.CharField(
         _("LoA"),

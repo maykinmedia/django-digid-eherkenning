@@ -7,13 +7,13 @@ from django.http.response import HttpResponseBase
 from django.utils.translation import gettext as _
 from django.views import View
 
-from ..models.metadata_config import MetadataConfiguration
+from ..models.metadata_config import BaseConfiguration
 
 logger = logging.getLogger(__name__)
 
 
 class MetadataView(View):
-    config_model: Type[MetadataConfiguration] = MetadataConfiguration
+    config_model: Type[BaseConfiguration] = BaseConfiguration
     metadata_generator: Callable[[], bytes] = lambda: b""
 
     def get(self, request: HttpRequest) -> HttpResponseBase:

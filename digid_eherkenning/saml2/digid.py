@@ -1,6 +1,6 @@
 from django.urls import reverse
 
-from ..models import DigidMetadataConfiguration
+from ..models import DigidConfiguration
 from .base import BaseSaml2Client
 
 
@@ -17,7 +17,7 @@ class DigiDClient(BaseSaml2Client):
     @property
     def conf(self) -> dict:
         if self._conf is None:
-            db_config = DigidMetadataConfiguration.get_solo()
+            db_config = DigidConfiguration.get_solo()
             self._conf = db_config.as_dict()
             self._conf.setdefault("acs_path", reverse("digid:acs"))
         return self._conf

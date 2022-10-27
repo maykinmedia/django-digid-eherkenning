@@ -14,7 +14,7 @@ from furl import furl
 from lxml import etree
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
-from digid_eherkenning.models import EherkenningMetadataConfiguration
+from digid_eherkenning.models import EherkenningConfiguration
 
 from .project.models import User
 from .utils import create_example_artifact, get_saml_element
@@ -155,7 +155,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
     def setUp(self):
         super().setUp()
 
-        config = EherkenningMetadataConfiguration.get_solo()
+        config = EherkenningConfiguration.get_solo()
 
         with config.certificate.public_certificate.open("r") as cert_file:
             cert = cert_file.read()

@@ -4,11 +4,11 @@ from django.utils.translation import gettext_lazy as _
 from privates.admin import PrivateMediaMixin
 from solo.admin import SingletonModelAdmin
 
-from .models import DigidMetadataConfiguration, EherkenningMetadataConfiguration
+from .models import DigidConfiguration, EherkenningConfiguration
 
 
-@admin.register(DigidMetadataConfiguration)
-class DigidMetadataConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
+@admin.register(DigidConfiguration)
+class DigidConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
     fieldsets = (
         (
             _("X.509 Certificate"),
@@ -65,14 +65,12 @@ class DigidMetadataConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
             },
         ),
     )
-    change_form_template = (
-        "admin/digid_eherkenning/digidmetadataconfiguration/change_form.html"
-    )
+    change_form_template = "admin/digid_eherkenning/digidconfiguration/change_form.html"
     private_media_fields = ("idp_metadata_file",)
 
 
-@admin.register(EherkenningMetadataConfiguration)
-class EherkenningMetadataConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
+@admin.register(EherkenningConfiguration)
+class EherkenningConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
     fieldsets = (
         (
             _("X.509 Certificate"),
@@ -156,6 +154,6 @@ class EherkenningMetadataConfigurationAdmin(PrivateMediaMixin, SingletonModelAdm
         ),
     )
     change_form_template = (
-        "admin/digid_eherkenning/eherkenningmetadataconfiguration/change_form.html"
+        "admin/digid_eherkenning/eherkenningconfiguration/change_form.html"
     )
     private_media_fields = ("idp_metadata_file",)

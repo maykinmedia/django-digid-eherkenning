@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from ..settings import get_setting
-from .metadata_config import MetadataConfiguration
+from .metadata_config import BaseConfiguration
 
 
 def default_digid_requested_attributes():
@@ -15,7 +15,7 @@ def default_digid_requested_attributes():
     ]
 
 
-class DigidMetadataConfiguration(MetadataConfiguration):
+class DigidConfiguration(BaseConfiguration):
     attribute_consuming_service_index = models.CharField(
         _("Attribute consuming service index"),
         blank=True,

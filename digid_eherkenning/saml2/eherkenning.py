@@ -12,7 +12,7 @@ from lxml.builder import ElementMaker
 from lxml.etree import Element
 from OpenSSL import crypto
 
-from ..models import EherkenningMetadataConfiguration
+from ..models import EherkenningConfiguration
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
 from .base import BaseSaml2Client, get_service_description, get_service_name
@@ -33,9 +33,7 @@ xml_nl_lang = {"{http://www.w3.org/XML/1998/namespace}lang": "nl"}
 
 
 def generate_dienst_catalogus_metadata(eherkenning_config=None):
-    eherkenning_config = (
-        eherkenning_config or EherkenningMetadataConfiguration.get_solo()
-    )
+    eherkenning_config = eherkenning_config or EherkenningConfiguration.get_solo()
     settings = eherkenning_config.as_dict()
     # ensure that the single language strings are output in both nl and en
     for service in settings["services"]:
@@ -426,7 +424,7 @@ class eHerkenningClient(BaseSaml2Client):
     @property
     def conf(self) -> dict:
         if self._conf is None:
-            db_config = EherkenningMetadataConfiguration.get_solo()
+            db_config = EherkenningConfiguration.get_solo()
             self._conf = db_config.as_dict()
             self._conf.setdefault("acs_path", reverse("eherkenning:acs"))
         return self._conf

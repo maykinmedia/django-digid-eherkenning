@@ -10,13 +10,13 @@ from solo.models import SingletonModel
 from ..choices import DigestAlgorithms, SignatureAlgorithms
 
 
-class MetadataConfigurationManager(models.Manager):
+class ConfigurationManager(models.Manager):
     def get_queryset(self):
         qs = super().get_queryset()
         return qs.select_related("certificate")
 
 
-class MetadataConfiguration(SingletonModel):
+class BaseConfiguration(SingletonModel):
 
     certificate = models.ForeignKey(
         Certificate,
@@ -147,7 +147,7 @@ class MetadataConfiguration(SingletonModel):
         max_length=100,
     )
 
-    objects = MetadataConfigurationManager()
+    objects = ConfigurationManager()
 
     class Meta:
         abstract = True

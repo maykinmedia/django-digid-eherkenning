@@ -7,7 +7,7 @@ import pytest
 from lxml import etree
 from privates.test import temp_private_root
 
-from digid_eherkenning.models import EherkenningMetadataConfiguration
+from digid_eherkenning.models import EherkenningConfiguration
 from digid_eherkenning.saml2.eherkenning import (
     eHerkenningClient,
     generate_eherkenning_metadata,
@@ -322,7 +322,7 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
 
     def test_management_command_and_update_config(self):
         stdout = StringIO()
-        assert not EherkenningMetadataConfiguration.objects.exists()
+        assert not EherkenningConfiguration.objects.exists()
 
         call_command(
             "generate_eherkenning_metadata",
@@ -341,8 +341,8 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
             test=True,
         )
 
-        self.assertTrue(EherkenningMetadataConfiguration.objects.exists())
-        config = EherkenningMetadataConfiguration.get_solo()
+        self.assertTrue(EherkenningConfiguration.objects.exists())
+        config = EherkenningConfiguration.get_solo()
         self.assertTrue(config.want_assertions_encrypted)
         self.assertFalse(config.want_assertions_signed)
         self.assertEqual(config.oin, "01234567890123456789")
@@ -364,7 +364,7 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
 @pytest.mark.usefixtures("eherkenning_config", "temp_private_root")
 class EHerkenningClientTests(TestCase):
     def test_attribute_consuming_services_with_non_required_requested_attribute(self):
-        config = EherkenningMetadataConfiguration.get_solo()
+        config = EherkenningConfiguration.get_solo()
         config.eh_requested_attributes = [{"name": "Test Attribute", "required": False}]
         config.save()
 
@@ -397,7 +397,7 @@ class EHerkenningClientTests(TestCase):
         self.assertNotIn("isRequired", requested_attribute_node.attrib)
 
     def test_attribute_consuming_services_with_required_requested_attribute(self):
-        config = EherkenningMetadataConfiguration.get_solo()
+        config = EherkenningConfiguration.get_solo()
         config.eh_requested_attributes = [{"name": "Test Attribute", "required": True}]
         config.save()
 
@@ -431,7 +431,7 @@ class EHerkenningClientTests(TestCase):
         self.assertEqual("true", requested_attribute_node.attrib["isRequired"])
 
     def test_attribute_consuming_services_dutch(self):
-        config = EherkenningMetadataConfiguration.get_solo()
+        config = EherkenningConfiguration.get_solo()
         config.no_eidas = True
         config.service_language = "en"
         config.save()

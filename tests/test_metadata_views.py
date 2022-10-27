@@ -3,10 +3,7 @@ from django.urls import reverse
 
 import pytest
 
-from digid_eherkenning.models import (
-    DigidMetadataConfiguration,
-    EherkenningMetadataConfiguration,
-)
+from digid_eherkenning.models import DigidConfiguration, EherkenningConfiguration
 
 from .mixins import DigidMetadataMixin, EherkenningMetadataMixin
 
@@ -20,7 +17,7 @@ class DigidMetadataViewTests(DigidMetadataMixin, TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_digid_metadata_not_properly_displayed(self):
-        DigidMetadataConfiguration.get_solo().delete()
+        DigidConfiguration.get_solo().delete()
 
         response = self.client.get(reverse("metadata:digid"))
 
@@ -36,7 +33,7 @@ class EherkenningMetadataViewTests(EherkenningMetadataMixin, TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_digid_metadata_not_properly_displayed(self):
-        EherkenningMetadataConfiguration.get_solo().delete()
+        EherkenningConfiguration.get_solo().delete()
 
         response = self.client.get(reverse("metadata:eherkenning"))
 
@@ -52,7 +49,7 @@ class DiesntCatalogusMetadataViewTests(EherkenningMetadataMixin, TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_digid_metadata_not_properly_displayed(self):
-        EherkenningMetadataConfiguration.get_solo().delete()
+        EherkenningConfiguration.get_solo().delete()
 
         response = self.client.get(reverse("metadata:eh-dienstcatalogus"))
 

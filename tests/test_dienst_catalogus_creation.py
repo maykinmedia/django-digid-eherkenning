@@ -7,7 +7,7 @@ import pytest
 from lxml import etree
 from privates.test import temp_private_root
 
-from digid_eherkenning.models import EherkenningMetadataConfiguration
+from digid_eherkenning.models import EherkenningConfiguration
 from digid_eherkenning.saml2.eherkenning import (
     create_service_catalogus,
     generate_dienst_catalogus_metadata,
@@ -20,7 +20,7 @@ from .mixins import EherkenningMetadataMixin
 @pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")
 class CreateDienstCatalogusTests(TestCase):
     def test_wants_assertions_signed_setting_default(self):
-        config = EherkenningMetadataConfiguration.get_solo()
+        config = EherkenningConfiguration.get_solo()
         config.eh_service_uuid = "005f18b8-0114-4a1d-963a-ee8e80a08f3f"
         config.eh_service_instance_uuid = "54efe0fe-c1a7-42da-9612-d84bf3c8fb07"
         config.eidas_service_uuid = "2e167de1-8bef-4d5a-ab48-8fa020e9e631"
@@ -179,7 +179,7 @@ class CreateDienstCatalogusTests(TestCase):
         )
 
     def test_catalogus_with_requested_attributes_with_purpose_statement(self):
-        config = EherkenningMetadataConfiguration.get_solo()
+        config = EherkenningConfiguration.get_solo()
         config.oin = "00000000000000000000"
         config.makelaar_id = "1" * 20
         config.eh_requested_attributes = [
@@ -229,7 +229,7 @@ class CreateDienstCatalogusTests(TestCase):
         )
 
     def test_catalogus_with_requested_attributes_without_purpose_statement(self):
-        config = EherkenningMetadataConfiguration.get_solo()
+        config = EherkenningConfiguration.get_solo()
         config.oin = "00000000000000000000"
         config.makelaar_id = "1" * 20
         config.eh_requested_attributes = [
@@ -283,7 +283,7 @@ class CreateDienstCatalogusTests(TestCase):
         )
 
     def test_makelaar_oin_is_configurable(self):
-        config = EherkenningMetadataConfiguration.get_solo()
+        config = EherkenningConfiguration.get_solo()
         config.organisation_name = "Example"
         config.service_name = "Example"
         config.oin = "00000000000000000000"

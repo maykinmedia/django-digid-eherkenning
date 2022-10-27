@@ -7,7 +7,7 @@ import pytest
 from lxml import etree
 from privates.test import temp_private_root
 
-from digid_eherkenning.models import DigidMetadataConfiguration
+from digid_eherkenning.models import DigidConfiguration
 from digid_eherkenning.saml2.digid import generate_digid_metadata
 
 from .conftest import DIGID_TEST_CERTIFICATE_FILE, DIGID_TEST_KEY_FILE
@@ -287,7 +287,7 @@ class DigidMetadataManagementCommandTests(TestCase):
 
     def test_management_command_and_update_config(self):
         stdout = StringIO()
-        assert not DigidMetadataConfiguration.objects.exists()
+        assert not DigidConfiguration.objects.exists()
 
         call_command(
             "generate_digid_metadata",
@@ -305,8 +305,8 @@ class DigidMetadataManagementCommandTests(TestCase):
             test=True,
         )
 
-        self.assertTrue(DigidMetadataConfiguration.objects.exists())
-        config = DigidMetadataConfiguration.get_solo()
+        self.assertTrue(DigidConfiguration.objects.exists())
+        config = DigidConfiguration.get_solo()
         self.assertTrue(config.want_assertions_encrypted)
         self.assertFalse(config.want_assertions_signed)
         self.assertEqual(config.service_name, "Test Service Name")

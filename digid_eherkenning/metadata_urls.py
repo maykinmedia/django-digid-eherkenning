@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .models import DigidMetadataConfiguration, EherkenningMetadataConfiguration
+from .models import DigidConfiguration, EherkenningConfiguration
 from .saml2.digid import generate_digid_metadata
 from .saml2.eherkenning import (
     generate_dienst_catalogus_metadata,
@@ -14,7 +14,7 @@ urlpatterns = [
     path(
         "digid",
         MetadataView.as_view(
-            config_model=DigidMetadataConfiguration,
+            config_model=DigidConfiguration,
             metadata_generator=generate_digid_metadata,
         ),
         name="digid",
@@ -22,7 +22,7 @@ urlpatterns = [
     path(
         "eherkenning",
         MetadataView.as_view(
-            config_model=EherkenningMetadataConfiguration,
+            config_model=EherkenningConfiguration,
             metadata_generator=generate_eherkenning_metadata,
         ),
         name="eherkenning",
@@ -30,7 +30,7 @@ urlpatterns = [
     path(
         "eherkenning/dienstcatalogus",
         MetadataView.as_view(
-            config_model=EherkenningMetadataConfiguration,
+            config_model=EherkenningConfiguration,
             metadata_generator=generate_dienst_catalogus_metadata,
         ),
         name="eh-dienstcatalogus",

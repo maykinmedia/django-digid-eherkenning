@@ -1,14 +1,11 @@
-from digid_eherkenning.models import (
-    DigidMetadataConfiguration,
-    EherkenningMetadataConfiguration,
-)
+from digid_eherkenning.models import DigidConfiguration, EherkenningConfiguration
 
 
 class EherkenningMetadataMixin:
     def setUp(self):
         super().setUp()
 
-        self.eherkenning_config = EherkenningMetadataConfiguration.get_solo()
+        self.eherkenning_config = EherkenningConfiguration.get_solo()
         self.eherkenning_config.entity_id = "http://test-entity.id"
         self.eherkenning_config.base_url = "http://test-entity.id"
         self.eherkenning_config.service_name = "Test Service Name"
@@ -24,7 +21,7 @@ class EherkenningMetadataMixin:
 class DigidMetadataMixin:
     def setUp(self):
         super().setUp()
-        self.digid_config = DigidMetadataConfiguration.get_solo()
+        self.digid_config = DigidConfiguration.get_solo()
         self.digid_config.entity_id = "http://test-entity.id"
         self.digid_config.base_url = "http://test-entity.id"
         self.digid_config.service_name = "Test Service Name"

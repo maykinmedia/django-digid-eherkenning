@@ -6,10 +6,7 @@ import pytest
 from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.models import Certificate
 
-from digid_eherkenning.models import (
-    DigidMetadataConfiguration,
-    EherkenningMetadataConfiguration,
-)
+from digid_eherkenning.models import DigidConfiguration, EherkenningConfiguration
 
 BASE_DIR = Path(__file__).parent.resolve()
 
@@ -76,7 +73,7 @@ def digid_certificate(temp_private_root) -> Certificate:
 
 @pytest.fixture
 def digid_config_defaults(digid_certificate, temp_private_root):
-    config = DigidMetadataConfiguration.get_solo()
+    config = DigidConfiguration.get_solo()
     if config.certificate != digid_certificate:
         config.certificate = digid_certificate
     with DIGID_TEST_METADATA_FILE.open("rb") as metadata_file:
@@ -112,7 +109,7 @@ def eherkenning_certificate(temp_private_root) -> Certificate:
 
 @pytest.fixture
 def eherkenning_config_defaults(eherkenning_certificate):
-    config = EherkenningMetadataConfiguration.get_solo()
+    config = EherkenningConfiguration.get_solo()
     if config.certificate != eherkenning_certificate:
         config.certificate = eherkenning_certificate
     with EHERKENNING_TEST_METADATA_FILE.open("rb") as metadata_file:
