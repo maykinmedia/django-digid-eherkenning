@@ -1,5 +1,4 @@
 from io import StringIO
-from unittest.mock import patch
 
 from django.core.management import CommandError, call_command
 from django.test import TestCase
@@ -20,16 +19,12 @@ from .mixins import EherkenningMetadataMixin
 
 @pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")
 class CreateDienstCatalogusTests(TestCase):
-    @patch("digid_eherkenning.models.eherkenning_metadata_config.uuid.uuid4")
-    def test_wants_assertions_signed_setting_default(self, mock_uuid):
-        mock_uuid.side_effect = [
-            "005f18b8-0114-4a1d-963a-ee8e80a08f3f",
-            "54efe0fe-c1a7-42da-9612-d84bf3c8fb07",
-            "2e167de1-8bef-4d5a-ab48-8fa020e9e631",
-            "9ba1b0ee-c0d3-437e-87ac-f577098c7e15",
-        ]
-
+    def test_wants_assertions_signed_setting_default(self):
         config = EherkenningMetadataConfiguration.get_solo()
+        config.eh_service_uuid = "005f18b8-0114-4a1d-963a-ee8e80a08f3f"
+        config.eh_service_instance_uuid = "54efe0fe-c1a7-42da-9612-d84bf3c8fb07"
+        config.eidas_service_uuid = "2e167de1-8bef-4d5a-ab48-8fa020e9e631"
+        config.eidas_service_instance_uuid = "9ba1b0ee-c0d3-437e-87ac-f577098c7e15"
         config.oin = "00000000000000000000"
         config.makelaar_id = "00000000000000000000"
         config.service_name = "Example"

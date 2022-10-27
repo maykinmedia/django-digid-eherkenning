@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "sessionprofile",
+    "privates",
     "simple_certmanager",
     "solo",
     # own apps
