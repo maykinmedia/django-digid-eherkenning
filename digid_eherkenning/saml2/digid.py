@@ -4,7 +4,7 @@ from ..models import DigidMetadataConfiguration
 from .base import BaseSaml2Client
 
 
-def generate_digid_metadata():
+def generate_digid_metadata() -> bytes:
     client = DigiDClient()
     client.saml2_setting_kwargs = {"sp_validation_only": True}
     return client.create_metadata()

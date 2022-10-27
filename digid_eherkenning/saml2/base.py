@@ -117,7 +117,7 @@ class BaseSaml2Client:
             )
         return self._saml2_settings
 
-    def create_metadata(self):
+    def create_metadata(self) -> bytes:
         return self.saml2_settings.get_sp_metadata()
 
     def create_authn_request(

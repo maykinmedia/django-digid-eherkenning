@@ -2,15 +2,13 @@ from typing import Optional
 
 from django.conf import settings
 from django.contrib import auth, messages
-from django.core.exceptions import ValidationError
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView, View
 
 from ..exceptions import SAML2Error, eHerkenningNoRSINError
 from ..forms import SAML2Form
-from ..models.eherkenning_metadata_config import EherkenningMetadataConfiguration
 from ..saml2.eherkenning import (
     eHerkenningClient,
     generate_dienst_catalogus_metadata,
@@ -112,31 +110,3 @@ class eHerkenningAssertionConsumerServiceView(View):
         auth.login(request, user)
 
         return HttpResponseRedirect(self.get_success_url())
-
-
-def get_xml_eherkenning_metadata(request):
-
-    eherkenning_config = EherkenningMetadataConfiguration.get_solo()
-    try:
-        eherkenning_config.clean()
-    except ValidationError:
-        return HttpResponseBadRequest(
-            _("Something went wrong during metadata recovery. Please, contact ....")
-        )
-
-    eherkenning_metadata = generate_eherkenning_metadata()
-    return HttpResponse(eherkenning_metadata, content_type="text/xml")
-
-
-def get_xml_eherkenning_dienstcatalogus_metadata(request):
-
-    eherkenning_config = EherkenningMetadataConfiguration.get_solo()
-    try:
-        eherkenning_config.clean()
-    except ValidationError:
-        return HttpResponseBadRequest(
-            _("Something went wrong during metadata recovery. Please, contact ....")
-        )
-
-    eherkenning_metadata = generate_dienst_catalogus_metadata(eherkenning_config)
-    return HttpResponse(eherkenning_metadata, content_type="text/xml")
