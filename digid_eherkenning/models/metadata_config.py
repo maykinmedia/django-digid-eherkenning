@@ -94,7 +94,9 @@ class BaseConfiguration(SingletonModel):
         _("entity ID"), help_text=_("Service provider entity ID."), max_length=100
     )
     base_url = models.URLField(
-        _("base URL"), help_text=_("Base URL of the application."), max_length=100
+        _("base URL"),
+        help_text=_("Base URL of the application, without trailing slash."),
+        max_length=100,
     )
     service_name = models.CharField(
         _("service name"),
@@ -154,6 +156,11 @@ class BaseConfiguration(SingletonModel):
 
     def __str__(self):
         return force_str(self._meta.verbose_name)
+
+    def save(self, *args, **kwargs):
+        if self.base_url.endswith("/"):
+            self.base_url = self.base_url[:-1]
+        super().save(*args, **kwargs)
 
     def clean(self):
         if not self.certificate:

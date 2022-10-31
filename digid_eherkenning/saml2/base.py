@@ -1,12 +1,11 @@
 import logging
-import urllib
-import warnings
 from typing import Callable, List
 
 from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 
+from furl import furl
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from onelogin.saml2.errors import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
@@ -32,12 +31,12 @@ def create_saml2_request(base_url, request):
     # X-Forwarded-For is also not an option, because it only forwards the
     # IP-Address.
     #
-    parsed_url = urllib.parse.urlparse(base_url)
+    parsed_url = furl(base_url)
     return {
         "https": "on" if parsed_url.scheme == "https" else "off",
         "http_host": parsed_url.netloc,
         "script_name": request.META["PATH_INFO"],
-        "server_port": parsed_url.port,
+        # "server_port": parsed_url.port,  # deprecated, port should be in http_host
         "get_data": request.GET.copy(),
         "post_data": request.POST.copy(),
         # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
@@ -210,6 +209,10 @@ class BaseSaml2Client:
             certificate = cert_file.read()
             privkey = key_file.read()
 
+        assert not conf["base_url"].endswith(
+            "/"
+        ), "Base URL must not end with a trailing slash"
+        acs_url = furl(conf["base_url"]) / conf["acs_path"]
         setting_dict = {
             "strict": True,
             "security": {
@@ -237,7 +240,7 @@ class BaseSaml2Client:
                 # Specifies info about where and how the <AuthnResponse> message MUST be
                 # returned to the requester, in this case our SP.
                 "assertionConsumerService": {
-                    "url": conf["base_url"] + conf["acs_path"],
+                    "url": acs_url.url,
                     "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                 },
                 # If you need to specify requested attributes, set a
