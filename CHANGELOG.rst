@@ -38,7 +38,7 @@ backwards compatible deprecation layer.
   project.
 * Refactored test setup to be more pytest oriented
 * Code refactors
-* Removed the base metadatageneration methods and generic management command. The
+* Removed the base metadata generation methods and generic management command. The
   explicit commands and Saml2 client subclasses replace this (the original stuff was
   unused).
 * Refactored management commands
