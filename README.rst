@@ -31,10 +31,9 @@ Installation
 Requirements
 ------------
 
-* Python 3.7 or above
+* Python 3.7 or newer
 * setuptools 30.3.0 or above
-* Django 2.2 or newer
-
+* Django 3.2
 
 Install
 -------
@@ -43,21 +42,26 @@ Install with pip:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/maykinmedia/python3-saml@maykin#egg=python3-saml
     pip install django-digid-eherkenning
 
-Add ``digid_eherkenning`` to the ``INSTALLED_APPS`` in your Django project's settings.
-If you want to use Digid Single Logout you need to also add ``sessionprofile`` to the ``INSTALLED_APPS``.
+Add the library and its dependencies to your ``INSTALLED_APPS``:
 
-
-.. code-block:: py
+.. code-block:: python
 
     INSTALLED_APPS = [
         ...,
+        # required for digid-eherkenning
+        "privates",
+        "simple_certmanager",
+        "solo",
         "digid_eherkenning",
-        "sessionprofile",
         ...,
     ]
+
+The ``sessionprofile`` dependency is required if you want to use DigiD Single Logout -
+it is used to keep track of a user's sessions.
+
+**Creating local users**
 
 If you want to create local users as part of the authentication flow, add the
 authentication backend to the settings:
@@ -70,21 +74,47 @@ authentication backend to the settings:
         ...,
     ]
 
-For Digid Single Logout you need also to include ``sessionprofile`` middleware into your settings.
-Note that ``SessionProfileMiddleware`` should be added before ``SessionMiddleware``.
+**DigiD Single Logout**
 
-.. code-block:: py
+DigiD single logout requires the ``sessionprofile`` dependency (automatically installed
+alongside).
 
-    AUTHENTICATION_BACKENDS = [
+Add it to your ``INSTALLED_APPS``:
+
+.. code-block:: python
+
+    INSTALLED_APPS = [
         ...,
-        "sessionprofile.middleware.SessionProfileMiddleware",
+        # required for digid-eherkenning
+        "privates",
+        "simple_certmanager",
+        "solo",
+        # for DigiD single logout
+        "sessionprofile",
+        "digid_eherkenning",
         ...,
     ]
 
+And add the middleware before Django's ``SessionMiddleware``:
 
+.. code-block:: python
+    :linenos:
+    :emphasize-lines: 4,5
 
+    MIDDLEWARE = [
+        ...,
+        "django.middleware.security.SecurityMiddleware",
+        "sessionprofile.middleware.SessionProfileMiddleware",
+        "django.contrib.sessions.middleware.SessionMiddleware",
+        "django.middleware.common.CommonMiddleware",
+        "django.middleware.csrf.CsrfViewMiddleware",
+        "django.contrib.auth.middleware.AuthenticationMiddleware",
+        ...,
+    ]
 
-Finally, at the URL patterns to your root ``urls.py``:
+**Registering URLs**
+
+Finally, add the URL patterns to your root ``urls.py``:
 
 .. code-block:: py
 
@@ -93,42 +123,27 @@ Finally, at the URL patterns to your root ``urls.py``:
 
     urlpatterns = [
         ...,
-        path("digid/", include("digid_eherkenning.digid_urls")),
+        path("", include("digid_eherkenning.urls")),
         ...,
     ]
+
+
+The ``urls`` module exposes DigiD, eHerkenning and the metadata views. If desired,
+you can also include the relevant aspects - see ``digid_eherkenning.urls`` for the
+available URL modules.
 
 Configuration
 -------------
 
-In the settings you can specify the required configuration in ``DIGID`` or ``EHERKENNING`` dictionary.
-This is an example of Digid settings:
+DigiD and eHerkenning are configured in the admin. Additionally, you can use the
+metadata generation commands with the ``--save-config`` option to persist command line
+configuration into the database.
 
-.. code-block:: py
+.. note::
 
-    DIGID = {
-        "base_url": "https://sp.example.nl",  # required
-        "entity_id": "sp.example.nl/digid",  # required
-        "metadata_file": "/path/to/metadata",  # required
-        "key_file": /path/to/key/file.key,  # required
-        "cert_file": /path/to/cert/file.pem,  # required
-        "service_entity_id": "https://example.digid.nl/saml/idp/metadata",  # required
-        "attribute_consuming_service_index": "1",
-        "service_name": "Example",
-        "requested_attributes": [],
-        "login_url": reverse_lazy("admin:login"),
-        "session_age": 15 * 60,
-        "want_assertions_encrypted": False,
-        "want_assertions_signed": False,
-        "signature_algorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1",
-        "digest_algorithm": "",
-        "key_passphrase": "",
-        "technical_contact_person_telephone": "06123123123",
-        "technical_contact_person_email": "test@test.nl",
-        "organization": "Example organization",
-    }
-
-Note that ``signature_algorithm`` setting is used only for requests with HTTP Redirect binding.
-Login request with HTTP Post binding uses ``http://www.w3.org/2001/04/xmldsig-more#rsa-sha256`` algorithm.
+    The ``signature_algorithm`` configuration parameter is used only for requests with
+    HTTP Redirect binding. Login request with HTTP Post binding uses the
+    ``http://www.w3.org/2001/04/xmldsig-more#rsa-sha256`` algorithm.
 
 
 Usage
@@ -186,95 +201,46 @@ Additionally add the URLs for the mock IDP service to run in the same runserver 
 
 For settings to control mock behaviour see ``digid_eherkenning/mock/config.py``.
 
-Generating the DigiD metadata
------------------------------
 
-The metadata for DigiD can be generated with the following command:
+Metadata generation
+===================
 
-.. code-block:: bash
+The easiest way to obtain the metadata is by editing the configuration of each
+flow (DigiD, eHerkenning/eIDAS) in the admin. This also covers the eHerkenning
+dienstcatalogus.
 
-    python manage.py generate_digid_metadata \
-        --want_assertions_encrypted \
-        --want_assertions_signed \
-        --key_file /path/test.key \
-        --cert_file /path/test.certificate \
-        --signature_algorithm "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" \
-        --digest_algorithm "http://www.w3.org/2001/04/xmlenc#sha256" \
-        --entity_id http://test-url.nl \
-        --base_url http://test-url.nl \
-        --service_name "Test name" \
-        --service_description "Test description" \
-        --attribute_consuming_service_index 9050 \
-        --technical_contact_person_telephone 06123123123 \
-        --technical_contact_person_email test@test.nl \
-        --organization_name "Test organisation" \
-        --organization_url http://test-organisation.nl \
-        --slo
+The configuration admin provides links to view the metadata in the browser (or
+download it using cURL or similar tools).
 
-Generating eHerkenning/eIDAS metadata
--------------------------------------
+.. note:: You may want to apply rate-limiting to this metadata endpoints at the
+   webserver level. The metadata is generated on the fly and may be a source of
+   Denial-Of-Service attacks.
 
-The metadata for eHerkenning and eIDAS can be generated with the following command:
+   For convenience reasons these URLs are *public* so they can easily be shared with
+   the identity providers.
+
+If you wish, you can still use management commands to generate the metadata:
+
+* ``generate_digid_metadata``
+* ``generate_eherkenning_metadata``
+* ``generate_eherkenning_dienstcatalogus``
+
+For details, call:
 
 .. code-block:: bash
 
-    python manage.py generate_eherkenning_metadata \
-        --want_assertions_encrypted \
-        --want_assertions_signed \
-        --key_file /path/test.key \
-        --cert_file /path/test.certificate \
-        --signature_algorithm "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" \
-        --digest_algorithm "http://www.w3.org/2001/04/xmlenc#sha256" \
-        --entity_id http://test-url.nl \
-        --base_url http://test-url.nl \
-        --service_name "Test name" \
-        --service_description "Test description" \
-        --eh_attribute_consuming_service_index 9052 \
-        --eidas_attribute_consuming_service_index 9053 \
-        --oin 00000001112223330000 \
-        --technical_contact_person_telephone 06123123123 \
-        --technical_contact_person_email test@test.nl \
-        --organization_name "Test organisation" \
-        --organization_url http://test-organisation.nl
+    python manage.py <command> --help
 
-For information about each option, use:
-
-.. code-block:: bash
-
-    python manage.py generate_eherkenning_metadata --help
-
-To generate the dienstcatalogus:
-
-.. code-block:: bash
-
-    python manage.py generate_eherkenning_dienstcatalogus  \
-        --key_file /path/test.key \
-        --cert_file /path/test.certificate \
-        --entity_id http://test-url.nl \
-        --base_url http://test-url.nl \
-        --service_name "Test name" \
-        --service_description "Test description" \
-        --eh_attribute_consuming_service_index 9052 \
-        --eidas_attribute_consuming_service_index 9053 \
-        --oin 00000001112223330000 \
-        --privacy_policy http://test-url.nl/privacy \
-        --makelaar_id 00000003332223330000 \
-        --organization_name "Test Organisation"
+.. note:: Tip: if you use the ``--save-config`` option, you can update the admin
+   configuration from the command line.
 
 Specific broker settings
 ========================
 
-From 1st of April 2022 certain eHerkenning brokers like OneWelcome and Signicat, require that the artifact resolution
-request has the content-type header ``text/xml`` instead of ``application/soap+xml``. This can be configured by including
-the following parameter in the ``EHERKENNING`` django setting:
-
-.. code-block:: python
-
-    EHERKENNING = {
-        ...
-        "artifact_resolve_content_type": "text/xml",
-        ...
-    }
+From 1st of April 2022 certain eHerkenning brokers like OneWelcome and Signicat,
+require that the artifact resolution request has the content-type header
+``text/xml`` instead of ``application/soap+xml``. This can be configured in the admin
+and management commands.
 
 Background information
 ======================
@@ -290,6 +256,39 @@ exists, but only as a mirror of the Github repository. All future development mu
 happen on Github.
 
 Bitbucket mirror: https://bitbucket.org/maykinmedia/django-digid-eherkenning/
+
+Developers / contributors
+=========================
+
+Setting up the project for local development with all development dependencies is a
+matter of installing the package with all extras:
+
+.. code-block:: bash
+
+    pip install -e .[tests,pep8,coverage,docs,release]
+
+Then you can run tests with:
+
+.. code-block:: bash
+
+    pytest
+
+To run all tests and checks on all supported environments:
+
+.. code-block:: bash
+
+    tox
+
+Local development server
+------------------------
+
+You can spin up a local development server using the tests configuration:
+
+.. code-block:: bash
+
+    export DJANGO_SETTINGS_MODULE=testapp.settings
+    django-admin migrate
+    django-admin runserver
 
 
 .. |build-status| image:: https://github.com/maykinmedia/django-digid-eherkenning/workflows/Run%20CI/badge.svg

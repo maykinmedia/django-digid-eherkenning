@@ -1,8 +1,0 @@
--r base.txt
-
-responses
-freezegun
-pytest
-pytest-django
-tox
-isort
