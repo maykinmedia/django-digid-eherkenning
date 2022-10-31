@@ -4,6 +4,42 @@
 Configuration
 =============
 
+Security considerations
+-----------------------
+
+**Client IP address**
+
+django-digid-eherkenning extracts the client IP address from the ``X-Forwarded-For``
+HTTP request header. This is a common and popular header for reverse-proxy
+configurations, however, it **can** be spoofed by the end-user.
+
+Users of this library are responsible for sanitizing the value of this header. If
+possible, configure your web-server to set this header rather than append to it,
+or apply other sanitations to drop untrusted entries/parts.
+
+If this header is not set or empty, we instead get the value from ``REMOTE_ADDR``.
+
+.. note:: django-ipware is **not** suitable for security-sensitive usage as it does a
+   best-effort attempt at obtaining the client IP.
+
+**Protecting metadata endpoints**
+
+The metdata URLs are open by design to facilitate sharing these URLs with identity
+providers or other interested parties. Because the metadata is generated on the fly,
+there is a Denial-of-Service risk. We recommend to protect these URLs at the web-server
+level by:
+
+* applying an IP address allow-list
+* applying HTTP Basic Auth
+* setting up rate-limiting
+
+This concerns the following paths:
+
+* ``reverse("metadata:digid")``
+* ``reverse("metadata:eherkenning")``
+* ``reverse("metadata:eh-dienstcatalogus")``
+
+
 Django settings
 ---------------
 
@@ -21,5 +57,3 @@ Django settings
   .. note:: This setting is a last resort and it will expire after 15 minutes even if
      there is user activity. Typically you want to define a middleware in your project
      to extend the session duration while there is still activity.
-
-
