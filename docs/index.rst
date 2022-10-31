@@ -26,6 +26,7 @@ Features
    brokers
    mocks
    developers
+   changelog
 
 Indices and tables
 ==================
