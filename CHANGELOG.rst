@@ -2,10 +2,16 @@
 Changelog
 =========
 
-0.5.0 (2022-??-??)
+0.5.0 (2022-10-31)
 ==================
 
-:boom: Breaking changes :warning: !
+💥⚠️ Breaking changes ahead!
+
+This release is an overhaul of the project configuration. We have moved away from
+configuration via Django settings to configuration in the database. There is no
+backwards compatible deprecation layer.
+
+**Changes**
 
 * Moved configuration of DigiD/eHerkenning/eIDAS to the admin. The ``DIGID`` and
   ``EHERKENNING`` settings no longer work.
@@ -13,20 +19,31 @@ Changelog
   - in particular, the ``login_url`` key within these settings is not supported anymore,
     specify Django's ``LOGIN_URL`` setting instead or use the ``RelayState`` GET
     parameter
-
 * Some default values have changed:
 
   - ``want_assertions_signed``: ``False`` -> ``True``
   - ``digestAlgorithm``: empty -> ``"http://www.w3.org/2000/09/xmldsig#sha1"``
-
 * The DigiD ``session_age`` parameter used to be opt-in. This now defaults to 15 minutes
   (the maximum duration according to "DigiDCheck 2.2 T14 -- Sessieduur") through the
   ``DIGID_SESSION_AGE`` setting.
-
 * Dropped support for Django 2.2 which is EOL
-
 * Custom subclasses of ``digid_eherkenning.saml2.base.BaseSaml2Client`` need to implement
   the ``conf`` property - the ``__init__`` method no longer accepts a config dict.
+* Metadata generation can now be done on the fly, in the browser. You'll find links on
+  the admin configuration pages.
+* Re-organized the documentation, which is now hosted on readthedocs.
+* The package metadata now contains all the dependencies, including our python3-saml
+  fork and extra's for local development
+* Documented some security aspects that you need to get right when deploying your
+  project.
+* Refactored test setup to be more pytest oriented
+* Code refactors
+* Removed the base metadata generation methods and generic management command. The
+  explicit commands and Saml2 client subclasses replace this (the original stuff was
+  unused).
+* Refactored management commands
+* Added ``--save-config`` flag to management commands to support CLI-driven configuration
+  and persisting that config to the database.
 
 0.4.1 (2022-07-12)
 ==================
