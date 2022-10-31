@@ -1,5 +1,7 @@
 from django.urls import reverse
 
+from furl import furl
+
 from ..models import DigidConfiguration
 from .base import BaseSaml2Client
 
@@ -25,13 +27,15 @@ class DigiDClient(BaseSaml2Client):
     def create_config_dict(self, conf):
         config_dict = super().create_config_dict(conf)
         if conf["slo"]:
+            slo_url = furl(conf["base_url"]) / reverse("digid:slo-soap")
+            response_url = furl(conf["base_url"]) / reverse("digid:slo-redirect")
             config_dict["sp"]["singleLogoutService"] = {
                 # URL where the <LogoutRequest> from the IdP will be sent (IdP-initiated logout)
-                "url": conf["base_url"] + reverse("digid:slo-soap"),
+                "url": slo_url.url,
                 "binding": "urn:oasis:names:tc:SAML:2.0:bindings:SOAP",
                 # URL Location where the <LogoutResponse> from the IdP will be sent
                 # (SP-initiated logout, reply)
-                "responseUrl": conf["base_url"] + reverse("digid:slo-redirect"),
+                "responseUrl": response_url.url,
                 "responseBinding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
             }
         return config_dict

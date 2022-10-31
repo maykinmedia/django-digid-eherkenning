@@ -161,7 +161,6 @@ class EherkenningConfiguration(BaseConfiguration):
             {
                 "service_uuid": str(self.eh_service_uuid),
                 "service_name": self.service_name,
-                "service_loa": self.loa,
                 "attribute_consuming_service_index": self.eh_attribute_consuming_service_index,
                 "service_instance_uuid": str(self.eh_service_instance_uuid),
                 "service_description": self.service_description,
@@ -192,7 +191,6 @@ class EherkenningConfiguration(BaseConfiguration):
             eidas_service = {
                 "service_uuid": str(self.eidas_service_uuid),
                 "service_name": f"{self.service_name} (eIDAS)",
-                "service_loa": self.loa,
                 "attribute_consuming_service_index": self.eidas_attribute_consuming_service_index,
                 "service_instance_uuid": str(self.eidas_service_instance_uuid),
                 "service_description": self.service_description,
@@ -220,6 +218,7 @@ class EherkenningConfiguration(BaseConfiguration):
             "service_entity_id": self.idp_service_entity_id,
             "oin": self.oin,
             "services": services,
+            "loa": self.loa,
             # optional in runtime code
             "want_assertions_encrypted": self.want_assertions_encrypted,
             "want_assertions_signed": self.want_assertions_signed,

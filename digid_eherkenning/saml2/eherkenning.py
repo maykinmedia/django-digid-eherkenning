@@ -1,13 +1,14 @@
 import binascii
 from base64 import b64encode
 from io import BytesIO
-from typing import List
+from typing import List, Optional
 from uuid import uuid4
 
 from django.urls import reverse
 from django.utils import timezone
 
 from defusedxml.lxml import tostring
+from furl.furl import furl
 from lxml.builder import ElementMaker
 from lxml.etree import Element
 from OpenSSL import crypto
@@ -307,8 +308,6 @@ def create_service_catalogus(conf, validate=True):
         service_uuid = service["service_uuid"]
         service_name = service["service_name"]
         service_description = service["service_description"]
-        # https://afsprakenstelsel.etoegang.nl/display/as/Level+of+assurance
-        service_loa = service["service_loa"]
         # https://afsprakenstelsel.etoegang.nl/display/as/ServiceID
         service_id = "urn:etoegang:DV:{}:services:{}".format(
             conf["oin"], service["attribute_consuming_service_index"]
@@ -332,7 +331,8 @@ def create_service_catalogus(conf, validate=True):
             service_uuid,
             service_name,
             service_description,
-            service_loa,
+            # https://afsprakenstelsel.etoegang.nl/display/as/Level+of+assurance
+            conf["loa"],
             entity_concerned_types_allowed,
             requested_attributes,
             herkenningsmakelaars_id,
@@ -438,6 +438,7 @@ class eHerkenningClient(BaseSaml2Client):
         ) as key_file:
             certificate = cert_file.read()
             privkey = key_file.read()
+        acs_url = furl(conf["base_url"]) / conf["acs_path"]
         config_dict.update(
             {
                 "sp": {
@@ -446,7 +447,7 @@ class eHerkenningClient(BaseSaml2Client):
                     # Specifies info about where and how the <AuthnResponse> message MUST be
                     # returned to the requester, in this case our SP.
                     "assertionConsumerService": {
-                        "url": conf["base_url"] + conf["acs_path"],
+                        "url": acs_url.url,
                         "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
                     },
                     "attributeConsumingServices": attribute_consuming_services,
@@ -476,8 +477,7 @@ class eHerkenningClient(BaseSaml2Client):
                 "metadataCacheDuration": "",
                 "requestedAuthnContextComparison": "minimum",
                 "requestedAuthnContext": [
-                    # TODO: replace with direct config source reference (django-solo model?)
-                    self.conf["services"][0]["service_loa"],
+                    self.conf["loa"],
                 ],
             }
         )

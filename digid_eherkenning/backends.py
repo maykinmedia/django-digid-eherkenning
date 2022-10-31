@@ -33,23 +33,23 @@ class BaseBackend(ModelBackend):
     }
 
     def log_success(self, request, message):
-        logger.info(message)
+        logger.info(message, extra={"request": request})
 
     def log_error(self, request, message, exception=None):
         """
         General technical errors, are logged using this method.
         """
         if exception is not None:
-            logger.exception(message)
+            logger.exception(message, extra={"request": request})
         else:
-            logger.error(message)
+            logger.error(message, extra={"request": request})
 
     def log_auth_failed(self, request, message, exception=None):
         """
         Errors where the user cancelled the request, or where login
         failed are logged here
         """
-        logger.info(message)
+        logger.info(message, extra={"request": request}, exc_info=exception)
 
 
 class BaseSaml2Backend(BaseBackend):
