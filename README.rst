@@ -7,7 +7,7 @@ django-digid-eherkenning
 :Keywords: django, authentication, digid, eherkenning, eidas, dutch, nl, netherlands
 :PythonVersion: 3.7+
 
-|build-status| |code-quality| |black| |coverage|
+|build-status| |code-quality| |black| |coverage| |docs|
 
 |python-versions| |django-versions| |pypi-version|
 
@@ -305,6 +305,10 @@ You can spin up a local development server using the tests configuration:
 .. |coverage| image:: https://codecov.io/gh/maykinmedia/django-digid-eherkenning/branch/master/graph/badge.svg?token=LNK592C9B2
     :target: https://codecov.io/gh/maykinmedia/django-digid-eherkenning
     :alt: Coverage status
+
+.. |docs| image:: https://readthedocs.org/projects/django-digid-eherkenning/badge/?version=latest
+    :target: https://django-digid-eherkenning.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 .. |python-versions| image:: https://img.shields.io/pypi/pyversions/django-digid-eherkenning.svg
 
