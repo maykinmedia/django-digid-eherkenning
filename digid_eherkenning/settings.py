@@ -1,10 +1,10 @@
-import os
+from pathlib import Path
 
 from django.conf import settings
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = Path(__file__).parent.resolve()
 
-EHERKENNING_DS_XSD = os.path.join(BASE_DIR, "xsd", "eherkenning-dc.xml")
+EHERKENNING_DS_XSD = str(BASE_DIR / "xsd" / "eherkenning-dc.xml")
 
 empty = object()
 
