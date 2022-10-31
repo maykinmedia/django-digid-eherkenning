@@ -20,8 +20,12 @@ Features
    :caption: Contents:
 
    quickstart
-
-
+   configuration
+   metadata
+   cli
+   brokers
+   mocks
+   developers
 
 Indices and tables
 ==================
