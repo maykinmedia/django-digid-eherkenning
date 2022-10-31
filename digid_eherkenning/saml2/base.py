@@ -36,7 +36,6 @@ def create_saml2_request(base_url, request):
         "https": "on" if parsed_url.scheme == "https" else "off",
         "http_host": parsed_url.netloc,
         "script_name": request.META["PATH_INFO"],
-        # "server_port": parsed_url.port,  # deprecated, port should be in http_host
         "get_data": request.GET.copy(),
         "post_data": request.POST.copy(),
         # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
