@@ -1,3 +1,6 @@
+"""
+TODO: replace with pytest fixtures?
+"""
 from digid_eherkenning.models import DigidConfiguration, EherkenningConfiguration
 
 
