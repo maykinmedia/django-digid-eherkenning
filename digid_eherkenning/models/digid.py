@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from ..settings import get_setting
-from .metadata_config import BaseConfiguration
+from .base import BaseConfiguration
 
 
 def default_digid_requested_attributes():
@@ -37,7 +37,7 @@ class DigidConfiguration(BaseConfiguration):
     )
 
     class Meta:
-        verbose_name = _("Digid metadata configuration")
+        verbose_name = _("Digid configuration")
 
     def as_dict(self) -> dict:
         """

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-31 14:42+0100\n"
+"POT-Creation-Date: 2022-11-01 09:53+0000\n"
 "PO-Revision-Date: 2020-06-23 16:55+0200\n"
 "Last-Translator: Sergei Maertens <sergei@maykinmedia.nl>\n"
 "Language-Team: Maykin Media <info@maykinmedia.nl>\n"
@@ -59,11 +59,9 @@ msgstr ""
 
 # python-format
 #: backends.py:31
-#, fuzzy, python-format
-#| msgid "User %(user)s%(new_account)s from %(ip)s logged in using %(service)s"
 msgid "User %(user)s%(user_info)s from %(ip)s logged in using %(service)s"
 msgstr ""
-"Gebruiker %(user)s%(new_account)s is met %(service)s ingelogd vanaf %(ip)s."
+"Gebruiker %(user)s%(user_info)s is met %(service)s ingelogd vanaf %(ip)s."
 
 #: backends.py:89
 msgid " (new account)"
@@ -94,16 +92,12 @@ msgid "High (4)"
 msgstr "High (4)"
 
 #: mock/backends.py:20
-#, fuzzy
-#| msgid "Login failed due to no BSN being returned by DigiD."
 msgid "Login failed due to no BSN having more then 9 digits."
-msgstr "Login mislukt doordat er geen BSN is teruggegeven door DigiD."
+msgstr "Login mislukt doordat er geen BSN gevonden is met 9 cijfers."
 
 #: mock/backends.py:21
-#, fuzzy
-#| msgid "Login failed due to no BSN being returned by DigiD."
 msgid "Login failed due to no BSN not being numerical."
-msgstr "Login mislukt doordat er geen BSN is teruggegeven door DigiD."
+msgstr "Login mislukt doordat er geen numeriek BSN gevonden is."
 
 #: mock/idp/forms.py:7
 msgid "DigiD gebruikersnaam"
@@ -127,233 +121,71 @@ msgstr ""
 "nogmaals. Indien deze fout blijft aanhouden, kijk dan op de website https://"
 "www.digid.nl voor de laatste informatie."
 
-#: models/digid_metadata_config.py:20 models/digid_metadata_config.py:23
-msgid "Attribute consuming service index"
-msgstr "Attribute consuming service index"
-
-#: models/digid_metadata_config.py:27 models/eherkenning_metadata_config.py:30
-#: models/eherkenning_metadata_config.py:62
-msgid "requested attributes"
-msgstr "gewenste attributen"
-
-#: models/digid_metadata_config.py:30
-msgid ""
-"A list of strings (or objects) with the requested attributes, e.g. "
-"'[\"bsn\"]'"
-msgstr ""
-"Een lijst van strings (of objecten) met de gewenste attributen, bijvoorbeeld "
-"'[\"bsn\"]'"
-
-#: models/digid_metadata_config.py:34
-msgid "Single logout"
-msgstr "Single logout"
-
-#: models/digid_metadata_config.py:36
-msgid "If enabled, Single Logout is supported"
-msgstr "Single Logout is beschikbaar indien ingeschakeld"
-
-#: models/digid_metadata_config.py:40
-msgid "Digid metadata configuration"
-msgstr "DigiD-configuratie"
-
-#: models/eherkenning_metadata_config.py:15
-msgid "LoA"
-msgstr "LoA"
-
-#: models/eherkenning_metadata_config.py:19
-msgid "Level of Assurance (LoA) to use for all the services."
-msgstr "Betrouwbaarheidsniveau (LoA) voor alle services."
-
-#: models/eherkenning_metadata_config.py:23
-msgid "eHerkenning attribute consuming service index"
-msgstr "eHerkenning attribute consuming service index"
-
-#: models/eherkenning_metadata_config.py:26
-msgid "Attribute consuming service index for the eHerkenning service"
-msgstr "Attribute consuming service index voor de eHerkenningservice"
-
-#: models/eherkenning_metadata_config.py:33
-#: models/eherkenning_metadata_config.py:65
-msgid ""
-"A list of additional requested attributes. A single requested attribute can "
-"be a string (the name of the attribute) or an object with keys 'name' and "
-"'required', where 'name' is a string and 'required' a boolean'."
-msgstr ""
-"Een lijst van extra gewenste attributen. Eén enkel gewenst attribuut kan een string ("
-"de naam van het attribuut) zijn of een object met de sleutels 'name' en 'required', "
-"waarbij 'name' een string is en 'required' een boolean."
-
-#: models/eherkenning_metadata_config.py:39
-#: models/eherkenning_metadata_config.py:47
-msgid "eHerkenning service UUID"
-msgstr "UUID eHerkenningservice"
-
-#: models/eherkenning_metadata_config.py:42
-msgid ""
-"UUID of the eHerkenning service. Once entered into catalogues, changing the "
-"value is a manual process."
-msgstr ""
-"UUID van de eHerkenningservice. Eenmaal dit in catalogi opgenomen is kan de waarde "
-"enkel via een handmatig proces gewijzigd worden."
-
-#: models/eherkenning_metadata_config.py:50
-#: models/eherkenning_metadata_config.py:82
-msgid ""
-"UUID of the eHerkenning service instance. Once entered into catalogues, "
-"changing the value is a manual process."
-msgstr ""
-"UUID van de eHerkenningservice-instantie. Eenmaal dit in catalogi opgenomen is kan "
-"de waarde enkel via een handmatig proces gewijzigd worden."
-
-#: models/eherkenning_metadata_config.py:55
-msgid "eIDAS attribute consuming service index"
-msgstr "eIDAS attribute consuming service index"
-
-#: models/eherkenning_metadata_config.py:58
-msgid "Attribute consuming service index for the eIDAS service"
-msgstr "Attribute consuming service index voor de eIDAS-service"
-
-#: models/eherkenning_metadata_config.py:71
-#: models/eherkenning_metadata_config.py:79
-msgid "eIDAS service UUID"
-msgstr "UUID eIDAS-service"
-
-#: models/eherkenning_metadata_config.py:74
-msgid ""
-"UUID of the eIDAS service. Once entered into catalogues, changing the value "
-"is a manual process."
-msgstr ""
-"UUID van de eIDAS-service. Eenmaal dit in catalogi opgenomen is kan de waarde "
-"enkel via een handmatig proces gewijzigd worden."
-
-#: models/eherkenning_metadata_config.py:87
-msgid "OIN"
-msgstr "OIN"
-
-#: models/eherkenning_metadata_config.py:88
-msgid "The OIN of the company providing the service."
-msgstr "De OIN van het bedrijf dat de service aanbiedt."
-
-#: models/eherkenning_metadata_config.py:93
-msgid "no eIDAS"
-msgstr "zonder eIDAS"
-
-#: models/eherkenning_metadata_config.py:97
-msgid ""
-"If True, then the service catalogue will contain only the eHerkenning "
-"service."
-msgstr ""
-"Indien aangevinkt, dan zal de dienstcatalogus enkel de eHerkenningservice bevatten."
-
-#: models/eherkenning_metadata_config.py:101
-msgid "privacy policy"
-msgstr "privacybeleid"
-
-#: models/eherkenning_metadata_config.py:103
-msgid ""
-"The URL where the privacy policy from the organization providing the service "
-"can be found."
-msgstr ""
-"De URL waar het privacybeleid van de service-aanbieder (organisatie) beschreven staat."
-
-#: models/eherkenning_metadata_config.py:109
-msgid "broker ID"
-msgstr "makelaar-ID"
-
-#: models/eherkenning_metadata_config.py:110
-msgid "OIN of the broker used to set up eHerkenning/eIDAS."
-msgstr "OIN van de makelaar waarmee eHerkenning/eIDAS ingericht is."
-
-#: models/eherkenning_metadata_config.py:115
-msgid "resolve artifact binding content type"
-msgstr "Content-Type 'resolve artifact binding'"
-
-#: models/eherkenning_metadata_config.py:120
-msgid ""
-"'application/soap+xml' is considered legacy and modern brokers typically "
-"expect 'text/xml'."
-msgstr ""
-"'application/soap+xml' wordt als 'legacy' beschouwd. Moderne brokers verwachten "
-"typisch 'text/xml'."
-
-#: models/eherkenning_metadata_config.py:125
-msgid "service language"
-msgstr "servicetaal"
-
-#: models/eherkenning_metadata_config.py:128
-msgid "Metadata for eHerkenning/eidas will contain this language key"
-msgstr "eHerkenning/eIDAS-metadata zal deze taal bevatten"
-
-#: models/eherkenning_metadata_config.py:132
-msgid "Eherkenning/eIDAS metadata configuration"
-msgstr "eHerkenning/eIDAS-configuratie"
-
-#: models/metadata_config.py:25
+#: models/base.py:25
 msgid "key pair"
 msgstr "sleutelpaar"
 
-#: models/metadata_config.py:27
+#: models/base.py:27
 msgid ""
 "The private key and public certificate pair to use during the authentication "
 "flow."
-msgstr ""
-"De private-key en publieke certificaat voor de authenticatie-flow."
+msgstr "De private-key en publieke certificaat voor de authenticatie-flow."
 
-#: models/metadata_config.py:32
+#: models/base.py:32
 msgid "identity provider metadata"
 msgstr "metadata identity provider"
 
-#: models/metadata_config.py:34
+#: models/base.py:34
 msgid "The metadata file of the identity provider."
 msgstr "Het bestand met metadata van de identity provider."
 
-#: models/metadata_config.py:37
+#: models/base.py:37
 msgid "identity provider service entity ID"
 msgstr "identity provider service entity ID"
 
-#: models/metadata_config.py:41
+#: models/base.py:41
 msgid ""
 "Example value: 'https://was-preprod1.digid.nl/saml/idp/metadata'. Note that "
 "this must match the 'entityID' attribute on the 'md:EntityDescriptor' node "
 "found in the Identity Provider's metadata."
 msgstr ""
-"Bijvoorbeeld: 'https://was-preprod1.digid.nl/saml/idp/metadata'. Merk op dat dit moet "
-"overeenkomen met het 'entityID'-attribuut op het 'md-EntityDescriptor'-element in de "
-"metadata van de identity provider."
+"Bijvoorbeeld: 'https://was-preprod1.digid.nl/saml/idp/metadata'. Merk op dat "
+"dit moet overeenkomen met het 'entityID'-attribuut op het 'md-"
+"EntityDescriptor'-element in de metadata van de identity provider."
 
-#: models/metadata_config.py:47
+#: models/base.py:47
 msgid "want assertions signed"
 msgstr "onderteken assertions"
 
-#: models/metadata_config.py:50
+#: models/base.py:50
 msgid ""
 "If True, the XML assertions need to be signed, otherwise the whole response "
 "needs to be signed."
 msgstr ""
-"Indien aangevinkt, dan moeten de XML-assertions ondertekend zijn. In het andere geval "
-"moet de hele response ondertekend zijn."
+"Indien aangevinkt, dan moeten de XML-assertions ondertekend zijn. In het "
+"andere geval moet de hele response ondertekend zijn."
 
-#: models/metadata_config.py:56
+#: models/base.py:56
 msgid "want assertions encrypted"
 msgstr "versleutel assertions"
 
-#: models/metadata_config.py:58
+#: models/base.py:58
 msgid "If True the XML assertions need to be encrypted."
 msgstr "Indien aangevinkt, dan moeten de XML-assertions versleuteld zijn."
 
-#: models/metadata_config.py:62
+#: models/base.py:62
 msgid "key passphrase"
 msgstr "wachtwoordzin private-key"
 
-#: models/metadata_config.py:64
+#: models/base.py:64
 msgid "Passphrase for the private key used by the SOAP client."
 msgstr "Wachtwoord voor de private-key voor de authenticatie-flow."
 
-#: models/metadata_config.py:68
+#: models/base.py:68
 msgid "signature algorithm"
 msgstr "signature algorithm"
 
-#: models/metadata_config.py:73
+#: models/base.py:73
 msgid ""
 "Signature algorithm. Note that DSA_SHA1 and RSA_SHA1 are deprecated, but "
 "RSA_SHA1 is still the default value in the SAMLv2 standard. Warning: there "
@@ -361,15 +193,15 @@ msgid ""
 "than SHA1 due to some hardcoded algorithm."
 msgstr ""
 "Ondertekenalgoritme. Merk op dat DSA_SHA1 en RSA_SHA1 deprecated zijn, maar "
-"RSA_SHA1 is nog steeds de default-waarde ind e SAMLv2-standaard. Opgelet: er zijn "
-"bekende problemen met de single-logoutfunctionaliteit indien je een ander algoritme "
-"dan SHA1 gebruikt (door hardcoded algoritmes)."
+"RSA_SHA1 is nog steeds de default-waarde ind e SAMLv2-standaard. Opgelet: er "
+"zijn bekende problemen met de single-logoutfunctionaliteit indien je een "
+"ander algoritme dan SHA1 gebruikt (door hardcoded algoritmes)."
 
-#: models/metadata_config.py:81
+#: models/base.py:81
 msgid "digest algorithm"
 msgstr "digest algorithm"
 
-#: models/metadata_config.py:86
+#: models/base.py:86
 msgid ""
 "Digest algorithm. Note that SHA1 is deprecated, but still the default value "
 "in the SAMLv2 standard. Warning: there are known issues with single-logout "
@@ -377,97 +209,255 @@ msgid ""
 "algorithm."
 msgstr ""
 
-#: models/metadata_config.py:94
+#: models/base.py:94
 msgid "entity ID"
 msgstr "entity ID"
 
-#: models/metadata_config.py:94
+#: models/base.py:94
 msgid "Service provider entity ID."
 msgstr "Service provider entity ID."
 
-#: models/metadata_config.py:97
+#: models/base.py:97
 msgid "base URL"
 msgstr "Basis-URL"
 
-#: models/metadata_config.py:98
+#: models/base.py:98
 msgid "Base URL of the application, without trailing slash."
 msgstr "De basis-URL van de applicatie, zonder slash op het eind."
 
-#: models/metadata_config.py:102
+#: models/base.py:102
 msgid "service name"
 msgstr "servicenaam"
 
-#: models/metadata_config.py:103
+#: models/base.py:103
 msgid "Name of the service you are providing."
 msgstr "Naam van de service die je aanbiedt."
 
-#: models/metadata_config.py:107
+#: models/base.py:107
 msgid "service description"
 msgstr "Service-omschrijving"
 
-#: models/metadata_config.py:108
+#: models/base.py:108
 msgid "A description of the service you are providing."
 msgstr "Een beschrijving van de service die je aanbiedt."
 
-#: models/metadata_config.py:112
+#: models/base.py:112
 msgid "technical contact: phone number"
 msgstr "technisch contactpersoon: telefoonnummer"
 
-#: models/metadata_config.py:115
+#: models/base.py:115
 msgid ""
 "Telephone number of the technical person responsible for this DigiD/"
 "eHerkenning/eIDAS setup. For it to show up in the metata, you should also "
 "specify the email address."
 msgstr ""
-"Telefoonnummer van de technische contactpersoon voor deze DigiD/eHerkenning/eIDAS-"
-"installatie. Je moet ook het e-mailadres opgeven voor dit in de metadata beschikbaar "
-"is."
+"Telefoonnummer van de technische contactpersoon voor deze DigiD/eHerkenning/"
+"eIDAS-installatie. Je moet ook het e-mailadres opgeven voor dit in de "
+"metadata beschikbaar is."
 
-#: models/metadata_config.py:122
+#: models/base.py:122
 msgid "technical contact: email"
 msgstr "technisch contactpersoon: e-mailadres"
 
-#: models/metadata_config.py:125
+#: models/base.py:125
 msgid ""
 "Email address of the technical person responsible for this DigiD/eHerkenning/"
 "eIDAS setup. For it to show up in the metadata, you should also specify the "
 "phone number."
 msgstr ""
-"E-mailadres van de technische contactpersoon voor deze DigiD/eHerkenning/eIDAS-"
-"installatie. Je moet ook het telefoonnummer opgeven voor dit in de metadata "
-"beschikbaar is."
+"E-mailadres van de technische contactpersoon voor deze DigiD/eHerkenning/"
+"eIDAS-installatie. Je moet ook het telefoonnummer opgeven voor dit in de "
+"metadata beschikbaar is."
 
-#: models/metadata_config.py:132
+#: models/base.py:132
 msgid "organization URL"
 msgstr "organisatie-URL"
 
-#: models/metadata_config.py:135
+#: models/base.py:135
 msgid ""
 "URL of the organization providing the service for which DigiD/eHerkenning/"
 "eIDAS login is configured. For it to show up in the metadata, you should "
 "also specify the organization name."
 msgstr ""
-"URL van de organisatie die de service aanbiedt waarvoor DigiD/eHerkenning/eIDAS-"
-"authenticatie ingericht is. Je moet ook de organisatienaam opgeven voor dit in de "
-"metadata beschikbaar is."
+"URL van de organisatie die de service aanbiedt waarvoor DigiD/eHerkenning/"
+"eIDAS-authenticatie ingericht is. Je moet ook de organisatienaam opgeven "
+"voor dit in de metadata beschikbaar is."
 
-#: models/metadata_config.py:142
+#: models/base.py:142
 msgid "organization name"
 msgstr "organisatienaam"
 
-#: models/metadata_config.py:145
+#: models/base.py:145
 msgid ""
 "URL of the organization providing the service for which DigiD/eHerkenning/"
 "eIDAS login is configured. For it to show up in the metadata, you should "
 "also specify the organization URL."
 msgstr ""
-"Naam van de organisatie die de service aanbiedt waarvoor DigiD/eHerkenning/eIDAS-"
-"authenticatie ingericht is. Je moet ook de URL opgeven voor dit in de "
+"Naam van de organisatie die de service aanbiedt waarvoor DigiD/eHerkenning/"
+"eIDAS-authenticatie ingericht is. Je moet ook de URL opgeven voor dit in de "
 "metadata beschikbaar is."
 
-#: models/metadata_config.py:167
+#: models/base.py:167
 msgid "You must select a certificate"
 msgstr "Je moet een certificaat selecteren"
+
+#: models/digid.py:20 models/digid.py:23
+msgid "Attribute consuming service index"
+msgstr "Attribute consuming service index"
+
+#: models/digid.py:27 models/eherkenning.py:30 models/eherkenning.py:62
+msgid "requested attributes"
+msgstr "gewenste attributen"
+
+#: models/digid.py:30
+msgid ""
+"A list of strings (or objects) with the requested attributes, e.g. "
+"'[\"bsn\"]'"
+msgstr ""
+"Een lijst van strings (of objecten) met de gewenste attributen, bijvoorbeeld "
+"'[\"bsn\"]'"
+
+#: models/digid.py:34
+msgid "Single logout"
+msgstr "Single logout"
+
+#: models/digid.py:36
+msgid "If enabled, Single Logout is supported"
+msgstr "Single Logout is beschikbaar indien ingeschakeld"
+
+#: models/digid.py:40
+msgid "Digid configuration"
+msgstr "DigiD-configuratie"
+
+#: models/eherkenning.py:15
+msgid "LoA"
+msgstr "LoA"
+
+#: models/eherkenning.py:19
+msgid "Level of Assurance (LoA) to use for all the services."
+msgstr "Betrouwbaarheidsniveau (LoA) voor alle services."
+
+#: models/eherkenning.py:23
+msgid "eHerkenning attribute consuming service index"
+msgstr "eHerkenning attribute consuming service index"
+
+#: models/eherkenning.py:26
+msgid "Attribute consuming service index for the eHerkenning service"
+msgstr "Attribute consuming service index voor de eHerkenningservice"
+
+#: models/eherkenning.py:33 models/eherkenning.py:65
+msgid ""
+"A list of additional requested attributes. A single requested attribute can "
+"be a string (the name of the attribute) or an object with keys 'name' and "
+"'required', where 'name' is a string and 'required' a boolean'."
+msgstr ""
+"Een lijst van extra gewenste attributen. Eén enkel gewenst attribuut kan een "
+"string (de naam van het attribuut) zijn of een object met de sleutels 'name' "
+"en 'required', waarbij 'name' een string is en 'required' een boolean."
+
+#: models/eherkenning.py:39 models/eherkenning.py:47
+msgid "eHerkenning service UUID"
+msgstr "UUID eHerkenningservice"
+
+#: models/eherkenning.py:42
+msgid ""
+"UUID of the eHerkenning service. Once entered into catalogues, changing the "
+"value is a manual process."
+msgstr ""
+"UUID van de eHerkenningservice. Eenmaal dit in catalogi opgenomen is kan de "
+"waarde enkel via een handmatig proces gewijzigd worden."
+
+#: models/eherkenning.py:50 models/eherkenning.py:82
+msgid ""
+"UUID of the eHerkenning service instance. Once entered into catalogues, "
+"changing the value is a manual process."
+msgstr ""
+"UUID van de eHerkenningservice-instantie. Eenmaal dit in catalogi opgenomen "
+"is kan de waarde enkel via een handmatig proces gewijzigd worden."
+
+#: models/eherkenning.py:55
+msgid "eIDAS attribute consuming service index"
+msgstr "eIDAS attribute consuming service index"
+
+#: models/eherkenning.py:58
+msgid "Attribute consuming service index for the eIDAS service"
+msgstr "Attribute consuming service index voor de eIDAS-service"
+
+#: models/eherkenning.py:71 models/eherkenning.py:79
+msgid "eIDAS service UUID"
+msgstr "UUID eIDAS-service"
+
+#: models/eherkenning.py:74
+msgid ""
+"UUID of the eIDAS service. Once entered into catalogues, changing the value "
+"is a manual process."
+msgstr ""
+"UUID van de eIDAS-service. Eenmaal dit in catalogi opgenomen is kan de "
+"waarde enkel via een handmatig proces gewijzigd worden."
+
+#: models/eherkenning.py:87
+msgid "OIN"
+msgstr "OIN"
+
+#: models/eherkenning.py:88
+msgid "The OIN of the company providing the service."
+msgstr "De OIN van het bedrijf dat de service aanbiedt."
+
+#: models/eherkenning.py:93
+msgid "no eIDAS"
+msgstr "zonder eIDAS"
+
+#: models/eherkenning.py:97
+msgid ""
+"If True, then the service catalogue will contain only the eHerkenning "
+"service."
+msgstr ""
+"Indien aangevinkt, dan zal de dienstcatalogus enkel de eHerkenningservice "
+"bevatten."
+
+#: models/eherkenning.py:101
+msgid "privacy policy"
+msgstr "privacybeleid"
+
+#: models/eherkenning.py:103
+msgid ""
+"The URL where the privacy policy from the organization providing the service "
+"can be found."
+msgstr ""
+"De URL waar het privacybeleid van de service-aanbieder (organisatie) "
+"beschreven staat."
+
+#: models/eherkenning.py:109
+msgid "broker ID"
+msgstr "makelaar-ID"
+
+#: models/eherkenning.py:110
+msgid "OIN of the broker used to set up eHerkenning/eIDAS."
+msgstr "OIN van de makelaar waarmee eHerkenning/eIDAS ingericht is."
+
+#: models/eherkenning.py:115
+msgid "resolve artifact binding content type"
+msgstr "Content-Type 'resolve artifact binding'"
+
+#: models/eherkenning.py:120
+msgid ""
+"'application/soap+xml' is considered legacy and modern brokers typically "
+"expect 'text/xml'."
+msgstr ""
+"'application/soap+xml' wordt als 'legacy' beschouwd. Moderne brokers "
+"verwachten typisch 'text/xml'."
+
+#: models/eherkenning.py:125
+msgid "service language"
+msgstr "servicetaal"
+
+#: models/eherkenning.py:128
+msgid "Metadata for eHerkenning/eidas will contain this language key"
+msgstr "eHerkenning/eIDAS-metadata zal deze taal bevatten"
+
+#: models/eherkenning.py:132
+msgid "Eherkenning/eIDAS configuration"
+msgstr "eHerkenning/eIDAS-configuratie"
 
 #: templates/admin/digid_eherkenning/digidconfiguration/change_form.html:7
 #: templates/admin/digid_eherkenning/eherkenningconfiguration/change_form.html:6
@@ -492,7 +482,9 @@ msgstr "U bent niet ingelogd met DigiD."
 
 #: views/eherkenning.py:97
 msgid "No RSIN returned by eHerkenning. Login to eHerkenning did not succeed."
-msgstr "eHerkenning gaf geen RSIN terug. Het inloggen moet eHerkenning is niet gelukt."
+msgstr ""
+"eHerkenning gaf geen RSIN terug. Het inloggen moet eHerkenning is niet "
+"gelukt."
 
 #: views/eherkenning.py:102 views/eherkenning.py:107
 msgid "Login to eHerkenning did not succeed. Please try again."
@@ -503,5 +495,6 @@ msgid ""
 "Something went wrong while generating the metadata. Please get in touch with "
 "your technical contact person and inform them the configuration is invalid."
 msgstr ""
-"Er ging iets fout bij het genereren van de metadata. Neem a.u.b. contact op met "
-"uw technisch contactpersoon en informeer hen dat de configuratie ongeldig is."
+"Er ging iets fout bij het genereren van de metadata. Neem a.u.b. contact op "
+"met uw technisch contactpersoon en informeer hen dat de configuratie "
+"ongeldig is."

@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from ..choices import AssuranceLevels, XMLContentTypes
 from ..validators import oin_validator
-from .metadata_config import BaseConfiguration
+from .base import BaseConfiguration
 
 
 class EherkenningConfiguration(BaseConfiguration):
@@ -129,7 +129,7 @@ class EherkenningConfiguration(BaseConfiguration):
     )
 
     class Meta:
-        verbose_name = _("Eherkenning/eIDAS metadata configuration")
+        verbose_name = _("Eherkenning/eIDAS configuration")
 
     def as_dict(self) -> dict:
         """
