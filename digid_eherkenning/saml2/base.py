@@ -269,10 +269,18 @@ class BaseSaml2Client:
         if metadata_file:
             with metadata_file.open("r") as metadata_file:
                 metadata = metadata_file.read()
-            idp_settings = OneLogin_Saml2_IdPMetadataParser.parse(
+
+            parsed_idp_metadata = OneLogin_Saml2_IdPMetadataParser.parse(
                 metadata, entity_id=conf["service_entity_id"]
-            )["idp"]
-            setting_dict["idp"] = idp_settings
+            )
+            if "idp" not in parsed_idp_metadata:
+                logger.warning(
+                    "IDP with entity_id %s not found in metadata, excluding idp "
+                    "from settings_dict",
+                    conf["service_entity_id"],
+                )
+            else:
+                setting_dict["idp"] = parsed_idp_metadata["idp"]
 
         telephone = conf.get("technical_contact_person_telephone")
         email = conf.get("technical_contact_person_email")
