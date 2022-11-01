@@ -8,7 +8,7 @@ from django.db import transaction
 from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.models import Certificate
 
-from ...models.metadata_config import BaseConfiguration
+from ...models.base import BaseConfiguration
 
 try:
     from argparse import BooleanOptionalAction

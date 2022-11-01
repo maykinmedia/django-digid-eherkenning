@@ -1,4 +1,4 @@
-from .digid_metadata_config import DigidConfiguration
-from .eherkenning_metadata_config import EherkenningConfiguration
+from .digid import DigidConfiguration
+from .eherkenning import EherkenningConfiguration
 
 __all__ = ["DigidConfiguration", "EherkenningConfiguration"]

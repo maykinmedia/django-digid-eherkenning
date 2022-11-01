@@ -7,7 +7,7 @@ from django.http.response import HttpResponseBase
 from django.utils.translation import gettext as _
 from django.views import View
 
-from ..models.metadata_config import BaseConfiguration
+from ..models.base import BaseConfiguration
 
 logger = logging.getLogger(__name__)
 

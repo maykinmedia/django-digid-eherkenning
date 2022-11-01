@@ -9,7 +9,7 @@ from django.db import migrations, models
 import privates.fields
 import privates.storages
 
-import digid_eherkenning.models.digid_metadata_config
+import digid_eherkenning.models.digid
 
 
 class Migration(migrations.Migration):
@@ -539,7 +539,7 @@ class Migration(migrations.Migration):
                 (
                     "requested_attributes",
                     models.JSONField(
-                        default=digid_eherkenning.models.digid_metadata_config.default_digid_requested_attributes,
+                        default=digid_eherkenning.models.digid.default_digid_requested_attributes,
                         help_text="A list of strings (or objects) with the requested attributes, e.g. '[\"bsn\"]'",
                         verbose_name="requested attributes",
                     ),
