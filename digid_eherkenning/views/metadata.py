@@ -27,12 +27,29 @@ class MetadataView(View):
                 self.config_model._meta.verbose_name,
                 exc_info=error,
             )
-            error_message = _(
-                "Something went wrong while generating the metadata. Please get in touch "
-                "with your technical contact person and inform them the configuration is "
-                "invalid."
-            )
-            return HttpResponseBadRequest(error_message)
+            return self._get_generic_error_response()
 
-        metadata = self.metadata_generator()
+        try:
+            metadata = self.metadata_generator()
+        except Exception as error:
+            logger.warning(
+                "Failed generating metadata for '%s' at '%s'",
+                self.config_model._meta.verbose_name,
+                request.path,
+                exc_info=error,
+                extra={
+                    "request": request,
+                    "config_model": self.config_model,
+                },
+            )
+            return self._get_generic_error_response()
         return HttpResponse(metadata, content_type="text/xml")
+
+    @staticmethod
+    def _get_generic_error_response() -> HttpResponseBadRequest:
+        error_message = _(
+            "Something went wrong while generating the metadata. Please get in touch "
+            "with your technical contact person and inform them the configuration is "
+            "invalid."
+        )
+        return HttpResponseBadRequest(error_message, content_type="text/plain")
