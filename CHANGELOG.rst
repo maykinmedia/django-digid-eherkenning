@@ -2,6 +2,15 @@
 Changelog
 =========
 
+0.5.1 (2022-11-02)
+==================
+
+Bugfix release
+
+* Fixed missing migration due to changed help texts/labels in the models
+* Added some robustness in metadata generation when the IDP configuration doesn't match
+  the IDP metadata to prevent crashes
+
 0.5.0 (2022-10-31)
 ==================
 
