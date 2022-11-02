@@ -2,7 +2,11 @@ from django.urls import reverse
 
 import pytest
 
-from digid_eherkenning.models import DigidConfiguration, EherkenningConfiguration
+from digid_eherkenning.models import (
+    DigidConfiguration,
+    EherkenningConfiguration,
+    eherkenning,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -31,6 +35,20 @@ def test_eherkenning_metadata_properly_displayed(eherkenning_config, client):
 
 def test_eherkenning_metadata_not_properly_displayed(eherkenning_config, client):
     EherkenningConfiguration.get_solo().delete()
+
+    response = client.get(reverse("metadata:eherkenning"))
+
+    assert response.status_code == 400
+
+
+def test_eherkenning_metadata_not_properly_displayed_without_validation_errors(
+    eherkenning_config, client
+):
+    # make some blank=False fields empty, which passed config.clean()
+    eherkenning_config.entity_id = ""
+    eherkenning_config.makelaar_id = ""
+    eherkenning_config.oin = ""
+    eherkenning_config.save()
 
     response = client.get(reverse("metadata:eherkenning"))
 
