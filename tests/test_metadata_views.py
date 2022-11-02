@@ -1,56 +1,54 @@
-from django.test import TestCase
 from django.urls import reverse
 
 import pytest
 
 from digid_eherkenning.models import DigidConfiguration, EherkenningConfiguration
 
-from .mixins import DigidMetadataMixin, EherkenningMetadataMixin
+pytestmark = pytest.mark.django_db
 
 
-@pytest.mark.usefixtures("digid_config", "temp_private_root")
-class DigidMetadataViewTests(DigidMetadataMixin, TestCase):
-    def test_digid_metadata_properly_displayed(self):
+def test_digid_metadata_properly_displayed(digid_config, client):
 
-        response = self.client.get(reverse("metadata:digid"))
+    response = client.get(reverse("metadata:digid"))
 
-        self.assertEqual(200, response.status_code)
-
-    def test_digid_metadata_not_properly_displayed(self):
-        DigidConfiguration.get_solo().delete()
-
-        response = self.client.get(reverse("metadata:digid"))
-
-        self.assertEqual(400, response.status_code)
+    assert response.status_code == 200
 
 
-@pytest.mark.usefixtures("eherkenning_config", "temp_private_root")
-class EherkenningMetadataViewTests(EherkenningMetadataMixin, TestCase):
-    def test_digid_metadata_properly_displayed(self):
+def test_digid_metadata_not_properly_displayed(digid_config, client):
+    DigidConfiguration.get_solo().delete()
 
-        response = self.client.get(reverse("metadata:eherkenning"))
+    response = client.get(reverse("metadata:digid"))
 
-        self.assertEqual(200, response.status_code)
-
-    def test_digid_metadata_not_properly_displayed(self):
-        EherkenningConfiguration.get_solo().delete()
-
-        response = self.client.get(reverse("metadata:eherkenning"))
-
-        self.assertEqual(400, response.status_code)
+    assert response.status_code == 400
 
 
-@pytest.mark.usefixtures("eherkenning_config", "temp_private_root")
-class DiesntCatalogusMetadataViewTests(EherkenningMetadataMixin, TestCase):
-    def test_digid_metadata_properly_displayed(self):
+def test_eherkenning_metadata_properly_displayed(eherkenning_config, client):
 
-        response = self.client.get(reverse("metadata:eh-dienstcatalogus"))
+    response = client.get(reverse("metadata:eherkenning"))
 
-        self.assertEqual(200, response.status_code)
+    assert response.status_code == 200
 
-    def test_digid_metadata_not_properly_displayed(self):
-        EherkenningConfiguration.get_solo().delete()
 
-        response = self.client.get(reverse("metadata:eh-dienstcatalogus"))
+def test_eherkenning_metadata_not_properly_displayed(eherkenning_config, client):
+    EherkenningConfiguration.get_solo().delete()
 
-        self.assertEqual(400, response.status_code)
+    response = client.get(reverse("metadata:eherkenning"))
+
+    assert response.status_code == 400
+
+
+def test_dienstcatalogus_metadata_properly_displayed(eherkenning_config, client):
+    eherkenning_config.makelaar_id = "00000000000000000022"
+    eherkenning_config.save()
+
+    response = client.get(reverse("metadata:eh-dienstcatalogus"))
+
+    assert response.status_code == 200
+
+
+def test_dienstcatalogus_metadata_not_properly_displayed(eherkenning_config, client):
+    EherkenningConfiguration.get_solo().delete()
+
+    response = client.get(reverse("metadata:eh-dienstcatalogus"))
+
+    assert response.status_code == 400
