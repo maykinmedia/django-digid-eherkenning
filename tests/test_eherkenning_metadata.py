@@ -474,6 +474,19 @@ class EHerkenningClientTests(TestCase):
             ],
         )
 
+    def test_with_bogus_or_bad_idp_metadata(self):
+        config = EherkenningConfiguration.get_solo()
+        # different idp_service_entity_id than what's in the metadata
+        config.idp_service_entity_id = (
+            "not:urn:etoegang:HM:00000003520354760000:entities:9632"
+        )
+        config.save()
+
+        try:
+            generate_eherkenning_metadata()
+        except Exception:
+            self.fail("Metadata generation should not have crashed")
+
 
 @pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")
 class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
