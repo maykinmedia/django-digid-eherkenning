@@ -17,7 +17,6 @@ class ConfigurationManager(models.Manager):
 
 
 class BaseConfiguration(SingletonModel):
-
     certificate = models.ForeignKey(
         Certificate,
         null=True,

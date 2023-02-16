@@ -680,7 +680,6 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         self.assertIsNone(organisation_url_node)
 
     def test_no_eidas_service(self):
-
         self.eherkenning_config.no_eidas = True
         self.eherkenning_config.save()
 

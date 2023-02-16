@@ -19,7 +19,6 @@ class BooleanOptionalAction(Action):  # pragma: no cover
         help=None,
         metavar=None,
     ):
-
         _option_strings = []
         for option_string in option_strings:
             _option_strings.append(option_string)

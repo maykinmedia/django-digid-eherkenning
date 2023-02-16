@@ -8,6 +8,7 @@ EHERKENNING_DS_XSD = str(BASE_DIR / "xsd" / "eherkenning-dc.xml")
 
 empty = object()
 
+
 # Public settings
 class Defaults:
     DIGID_SESSION_AGE: int = 60 * 15  # 15 minutes, in seconds

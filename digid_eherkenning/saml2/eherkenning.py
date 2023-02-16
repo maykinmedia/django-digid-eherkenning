@@ -169,7 +169,6 @@ def create_service_definition(
     requested_attributes,
     makelaar_oin,
 ):
-
     service_name_elements = create_language_elements("ServiceName", service_name)
     service_description_elements = create_language_elements(
         "ServiceDescription", service_description
