@@ -67,7 +67,7 @@ class BaseConfiguration(SingletonModel):
     signature_algorithm = models.CharField(
         _("signature algorithm"),
         blank=True,
-        choices=SignatureAlgorithms,
+        choices=SignatureAlgorithms.choices,
         default=SignatureAlgorithms.rsa_sha1,
         help_text=_(
             "Signature algorithm. Note that DSA_SHA1 and RSA_SHA1 are deprecated, but "
@@ -80,7 +80,7 @@ class BaseConfiguration(SingletonModel):
     digest_algorithm = models.CharField(
         _("digest algorithm"),
         blank=True,
-        choices=DigestAlgorithms,
+        choices=DigestAlgorithms.choices,
         default=DigestAlgorithms.sha1,
         help_text=_(
             "Digest algorithm. Note that SHA1 is deprecated, but still the default "

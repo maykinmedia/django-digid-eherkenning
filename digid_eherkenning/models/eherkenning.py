@@ -14,7 +14,7 @@ class EherkenningConfiguration(BaseConfiguration):
     loa = models.CharField(
         _("LoA"),
         blank=True,
-        choices=AssuranceLevels,
+        choices=AssuranceLevels.choices,
         default=AssuranceLevels.substantial,
         help_text=_("Level of Assurance (LoA) to use for all the services."),
         max_length=100,
@@ -113,7 +113,7 @@ class EherkenningConfiguration(BaseConfiguration):
     )
     artifact_resolve_content_type = models.CharField(
         _("resolve artifact binding content type"),
-        choices=XMLContentTypes,
+        choices=XMLContentTypes.choices,
         default=XMLContentTypes.soap_xml,
         max_length=100,
         help_text=_(
