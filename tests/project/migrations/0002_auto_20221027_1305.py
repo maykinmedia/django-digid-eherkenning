@@ -7,7 +7,6 @@ import djchoices.choices
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("project", "0001_initial"),
     ]

@@ -10,7 +10,6 @@ from .base import BaseConfiguration
 
 
 class EherkenningConfiguration(BaseConfiguration):
-
     loa = models.CharField(
         _("LoA"),
         blank=True,

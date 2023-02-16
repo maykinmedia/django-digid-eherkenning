@@ -13,7 +13,6 @@ import digid_eherkenning.models.digid
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [

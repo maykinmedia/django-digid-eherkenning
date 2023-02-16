@@ -271,7 +271,6 @@ def test_makelaar_oin_is_configurable(eherkenning_config_defaults, temp_private_
 @pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")
 class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
     def test_generate_metadata_all_options_specified(self):
-
         self.eherkenning_config.signature_algorithm = (
             "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
         )
