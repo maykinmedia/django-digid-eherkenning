@@ -2,6 +2,16 @@
 Changelog
 =========
 
+0.6.0 (2023-02-16)
+==================
+
+Small housekeeping release
+
+* Dropped django-choices dependency
+* Updated codecov github action to v3
+* Confirmed support for Django 4.0 and 4.1
+* Format with latest version of black
+
 0.5.1 (2022-11-02)
 ==================
 
