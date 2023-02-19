@@ -1,6 +1,5 @@
-from djchoices import ChoiceItem, DjangoChoices
+from django.db import models
 
-
-class UserLoginType(DjangoChoices):
-    digid = ChoiceItem("digid", "DigiD")
-    eherkenning = ChoiceItem("eherkenning", "eHerkenning")
+class UserLoginType(models.TextChoices):
+    digid = "digid", "DigiD"
+    eherkenning = "eherkenning", "eHerkenning"
