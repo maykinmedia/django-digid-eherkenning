@@ -1,13 +1,14 @@
 {% load static %}
 <html>
     <head>
-        <title>Ga naar DigID</title>
+        <title>U wordt doorgestuurd</title>
+        <link rel="stylesheet" type="text/css" href="{% static 'digid_eherkenning/login_submit.css' %}">
     </head>
     <body>
-        <script src="{% static 'login_submit.js' %}"></script>
-        <form method="post" action="{{ url }}" name="login">
-            {{ form.as_p }}
-            <input type="submit" value="Ga naar DigID" />
-        </form>
+      <script src="{% static 'digid_eherkenning/login_submit.js' %}"></script>
+      <form class="submit_form" method="post" action="{{ url }}" name="login">
+        {{ form.as_p }}
+        <input type="submit" value="U wordt doorgestuurd" />
+      </form>
     </body>
 </html>
