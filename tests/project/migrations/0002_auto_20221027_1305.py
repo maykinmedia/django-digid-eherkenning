@@ -3,8 +3,6 @@
 import django.contrib.auth.models
 from django.db import migrations, models
 
-import djchoices.choices
-
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -31,11 +29,6 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[("digid", "DigiD"), ("eherkenning", "eHerkenning")],
                 max_length=20,
-                validators=[
-                    djchoices.choices.ChoicesValidator(
-                        {"digid": "DigiD", "eherkenning": "eHerkenning"}
-                    )
-                ],
             ),
         ),
     ]

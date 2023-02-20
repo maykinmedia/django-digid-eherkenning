@@ -6,8 +6,6 @@ import django.db.models.manager
 import django.utils.timezone
 from django.db import migrations, models
 
-import djchoices.choices
-
 
 class Migration(migrations.Migration):
     initial = True
@@ -104,11 +102,6 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[("digid", "DigiD")],
                         max_length=20,
-                        validators=[
-                            djchoices.choices.ChoicesValidator(
-                                {"digid": "DigiD", "eherkenning": "eHerkenning"}
-                            )
-                        ],
                     ),
                 ),
                 ("bsn", models.CharField(max_length=9)),
