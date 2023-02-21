@@ -2,6 +2,16 @@
 Changelog
 =========
 
+0.7.0 (2023-02-21)
+==================
+
+Quality of life updates
+
+* [#27] Removed Python 3.7 and 3.8 from test matrix (3.7 is EOL, 3.8 is not used in our
+  envs anymore)
+* [#25] Removed Django Choices usage in tests
+* The post-binding form is now hidden from the end-user
+
 0.6.0 (2023-02-16)
 ==================
 
