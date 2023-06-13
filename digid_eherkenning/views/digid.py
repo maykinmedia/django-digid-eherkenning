@@ -17,7 +17,7 @@ from django.views.generic.base import TemplateView, View
 from onelogin.saml2.soap_logout_request import Soap_Logout_Request
 from onelogin.saml2.utils import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 
-from ..choices import SectorType
+from ..choices import DigiDAssuranceLevels, SectorType
 from ..forms import SAML2Form
 from ..saml2.digid import DigiDClient
 from ..utils import logout_user
@@ -35,6 +35,9 @@ class DigiDLoginView(TemplateView):
 
     template_name = "digid_eherkenning/post_binding.html"
 
+    def get_level_of_assurance(self):
+        return DigiDAssuranceLevels.middle
+
     def get_relay_state(self):
         """
         TODO: It might be a good idea to sign the relay state.
@@ -51,7 +54,8 @@ class DigiDLoginView(TemplateView):
     #
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        client = DigiDClient()
+        client = DigiDClient(loa=self.get_level_of_assurance())
+
         location, parameters = client.create_authn_request(self.request)
 
         context_data.update(
