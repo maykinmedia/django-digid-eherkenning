@@ -27,6 +27,7 @@ class eHerkenningLoginView(TemplateView):
         Override the AssuranceLevel from the global `EherkenningConfiguration`.
 
         To use the level from the global config, return `None`
+        NB When overriding this, remember the user has control over the request!
         """
         return None
 

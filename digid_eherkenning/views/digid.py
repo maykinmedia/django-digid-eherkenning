@@ -36,6 +36,11 @@ class DigiDLoginView(TemplateView):
     template_name = "digid_eherkenning/post_binding.html"
 
     def get_level_of_assurance(self):
+        """
+        Override the default Lever of Assurnace (middle).
+
+        When overriding this, remember the user has control over the request!
+        """
         return DigiDAssuranceLevels.middle
 
     def get_relay_state(self):
