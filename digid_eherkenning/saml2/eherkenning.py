@@ -424,7 +424,7 @@ class eHerkenningClient(BaseSaml2Client):
     def __init__(
         self,
         *args,
-        loa: AssuranceLevels | None = None,
+        loa: Optional[AssuranceLevels] = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)

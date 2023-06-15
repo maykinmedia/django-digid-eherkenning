@@ -22,7 +22,7 @@ from .base import get_redirect_url
 class eHerkenningLoginView(TemplateView):
     template_name = "digid_eherkenning/post_binding.html"
 
-    def get_level_of_assurance(self) -> AssuranceLevels | None:
+    def get_level_of_assurance(self) -> Optional[AssuranceLevels]:
         """
         Override the AssuranceLevel from the global `EherkenningConfiguration`.
 
