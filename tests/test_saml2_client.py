@@ -36,6 +36,37 @@ class DigidClientTests(TestCase):
         self.assertIn("wantAssertionsSigned", config_dict["security"])
         self.assertFalse(config_dict["security"]["wantAssertionsSigned"])
 
+    def test_artifact_resolve_content_type_settings_default(self):
+        config = DigidConfiguration.get_solo()
+
+        conf = config.as_dict()
+        conf.setdefault("acs_path", reverse("digid:acs"))
+
+        digid_client = DigiDClient()
+        config_dict = digid_client.create_config_dict(conf)
+
+        self.assertIn("resolveArtifactBindingContentType", config_dict["idp"])
+        self.assertIn(
+            "application/soap+xml",
+            config_dict["idp"]["resolveArtifactBindingContentType"],
+        )
+
+    def test_artifact_resolve_content_type_settings(self):
+        config = DigidConfiguration.get_solo()
+        config.artifact_resolve_content_type = "text/xml"
+        config.save()
+
+        conf = config.as_dict()
+        conf.setdefault("acs_path", reverse("digid:acs"))
+
+        digid_client = DigiDClient()
+        config_dict = digid_client.create_config_dict(conf)
+
+        self.assertIn("resolveArtifactBindingContentType", config_dict["idp"])
+        self.assertIn(
+            "text/xml", config_dict["idp"]["resolveArtifactBindingContentType"]
+        )
+
 
 @pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")
 class EHerkenningClientTests(TestCase):

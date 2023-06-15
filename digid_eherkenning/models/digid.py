@@ -88,4 +88,5 @@ class DigidConfiguration(BaseConfiguration):
             "organization": organization,
             "session_age": get_setting("DIGID_SESSION_AGE"),
             "slo": self.slo,
+            "artifact_resolve_content_type": self.artifact_resolve_content_type,
         }

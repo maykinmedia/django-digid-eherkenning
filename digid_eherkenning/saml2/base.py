@@ -281,6 +281,9 @@ class BaseSaml2Client:
                 )
             else:
                 setting_dict["idp"] = parsed_idp_metadata["idp"]
+                setting_dict["idp"]["resolveArtifactBindingContentType"] = conf.get(
+                    "artifact_resolve_content_type", "application/soap+xml"
+                )
 
         telephone = conf.get("technical_contact_person_telephone")
         email = conf.get("technical_contact_person_email")
