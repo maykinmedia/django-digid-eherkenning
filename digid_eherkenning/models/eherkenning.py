@@ -4,7 +4,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from ..choices import AssuranceLevels, XMLContentTypes
+from ..choices import AssuranceLevels
 from ..validators import oin_validator
 from .base import BaseConfiguration
 
@@ -109,16 +109,6 @@ class EherkenningConfiguration(BaseConfiguration):
         help_text=_("OIN of the broker used to set up eHerkenning/eIDAS."),
         max_length=100,
         validators=[oin_validator],
-    )
-    artifact_resolve_content_type = models.CharField(
-        _("resolve artifact binding content type"),
-        choices=XMLContentTypes.choices,
-        default=XMLContentTypes.soap_xml,
-        max_length=100,
-        help_text=_(
-            "'application/soap+xml' is considered legacy and modern brokers typically "
-            "expect 'text/xml'."
-        ),
     )
     service_language = models.CharField(
         _("service language"),

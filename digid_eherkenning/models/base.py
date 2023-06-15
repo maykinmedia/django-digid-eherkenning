@@ -7,7 +7,7 @@ from privates.fields import PrivateMediaFileField
 from simple_certmanager.models import Certificate
 from solo.models import SingletonModel
 
-from ..choices import DigestAlgorithms, SignatureAlgorithms
+from ..choices import DigestAlgorithms, SignatureAlgorithms, XMLContentTypes
 
 
 class ConfigurationManager(models.Manager):
@@ -56,6 +56,16 @@ class BaseConfiguration(SingletonModel):
         default=False,
         help_text=_("If True the XML assertions need to be encrypted."),
         max_length=100,
+    )
+    artifact_resolve_content_type = models.CharField(
+        _("resolve artifact binding content type"),
+        choices=XMLContentTypes.choices,
+        default=XMLContentTypes.soap_xml,
+        max_length=100,
+        help_text=_(
+            "'application/soap+xml' is considered legacy and modern brokers typically "
+            "expect 'text/xml'."
+        ),
     )
     key_passphrase = models.CharField(
         _("key passphrase"),

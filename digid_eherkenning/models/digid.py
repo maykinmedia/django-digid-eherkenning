@@ -2,7 +2,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from ..choices import XMLContentTypes
 from ..settings import get_setting
 from .base import BaseConfiguration
 
@@ -35,17 +34,6 @@ class DigidConfiguration(BaseConfiguration):
         _("Single logout"),
         default=True,
         help_text=_("If enabled, Single Logout is supported"),
-    )
-
-    artifact_resolve_content_type = models.CharField(
-        _("resolve artifact binding content type"),
-        choices=XMLContentTypes.choices,
-        default=XMLContentTypes.soap_xml,
-        max_length=100,
-        help_text=_(
-            "'application/soap+xml' is considered legacy and modern brokers typically "
-            "expect 'text/xml'."
-        ),
     )
 
     class Meta:
