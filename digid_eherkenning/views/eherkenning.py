@@ -7,18 +7,28 @@ from django.shortcuts import resolve_url
 from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView, View
 
+from ..choices import AssuranceLevels
 from ..exceptions import SAML2Error, eHerkenningNoRSINError
 from ..forms import SAML2Form
-from ..saml2.eherkenning import (
-    eHerkenningClient,
-    generate_dienst_catalogus_metadata,
-    generate_eherkenning_metadata,
-)
+
+# These two unused imports may be imported from here by 3rd party client code
+# ignoring F401 for now
+from ..saml2.eherkenning import generate_dienst_catalogus_metadata  # noqa: F401
+from ..saml2.eherkenning import generate_eherkenning_metadata  # noqa: F401
+from ..saml2.eherkenning import eHerkenningClient
 from .base import get_redirect_url
 
 
 class eHerkenningLoginView(TemplateView):
     template_name = "digid_eherkenning/post_binding.html"
+
+    def get_level_of_assurance(self) -> AssuranceLevels | None:
+        """
+        Override the AssuranceLevel from the global `EherkenningConfiguration`.
+
+        To use the level from the global config, return `None`
+        """
+        return None
 
     def get_relay_state(self):
         """
@@ -42,7 +52,7 @@ class eHerkenningLoginView(TemplateView):
     #
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        client = eHerkenningClient()
+        client = eHerkenningClient(loa=self.get_level_of_assurance())
         location, parameters = client.create_authn_request(
             self.request,
             attr_consuming_service_index=self.get_attribute_consuming_service_index(),
