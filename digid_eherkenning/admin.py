@@ -34,6 +34,7 @@ class DigidConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
                 "fields": (
                     "entity_id",
                     "base_url",
+                    "artifact_resolve_content_type",
                     "want_assertions_signed",
                     "want_assertions_encrypted",
                     "signature_algorithm",

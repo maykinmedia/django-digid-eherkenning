@@ -33,6 +33,26 @@ class AssuranceLevels(models.TextChoices):
     high = "urn:etoegang:core:assurance-class:loa4", _("High (4)")
 
 
+# ref: https://www.logius.nl/domeinen/toegang/digid/documentatie/koppelvlakspecificatie-digid-saml-authenticatie#index-23
+class DigiDAssuranceLevels(models.TextChoices):
+    base = (
+        "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
+        _("DigiD Basis"),
+    )
+    middle = (
+        "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract",
+        _("DigiD Midden"),
+    )
+    substantial = (
+        "urn:oasis:names:tc:SAML:2.0:ac:classes:Smartcard",
+        _("DigiD Substantieel"),
+    )
+    high = (
+        "urn:oasis:names:tc:SAML:2.0:ac:classes:SmartcardPKI",
+        _("DigiD Hoog"),
+    )
+
+
 class XMLContentTypes(models.TextChoices):
     soap_xml = OneLogin_Saml2_Constants.SOAP_XML, "application/soap+xml"
     text_xml = OneLogin_Saml2_Constants.TEXT_XML, "text/xml"

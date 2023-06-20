@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib import auth
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -15,6 +15,9 @@ import responses
 from freezegun import freeze_time
 from lxml import etree
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
+
+from digid_eherkenning.choices import DigiDAssuranceLevels
+from digid_eherkenning.views import DigiDLoginView
 
 from .project.models import User
 from .utils import create_example_artifact, get_saml_element
@@ -163,6 +166,35 @@ class DigidLoginViewTests(TestCase):
             etree.tostring(
                 etree.fromstring(expected_signature), pretty_print=True
             ).decode("utf-8"),
+        )
+
+    def test_login_views_can_override_minimum_loa(self):
+        class CustomLoginView(DigiDLoginView):
+            def get_level_of_assurance(self):
+                return (
+                    DigiDAssuranceLevels.substantial
+                    if "special" in self.request.GET.get("next")
+                    else DigiDAssuranceLevels.middle
+                )
+
+        request = RequestFactory().get(reverse("digid:login") + "?next=/special")
+
+        response = CustomLoginView.as_view()(request)
+
+        saml_request = b64decode(
+            response.context_data["form"].initial["SAMLRequest"].encode("utf-8")
+        )
+        tree = etree.fromstring(saml_request)
+        auth_context_class_ref = tree.xpath(
+            "samlp:RequestedAuthnContext[@Comparison='minimum']/saml:AuthnContextClassRef",
+            namespaces={
+                "samlp": "urn:oasis:names:tc:SAML:2.0:protocol",
+                "saml": "urn:oasis:names:tc:SAML:2.0:assertion",
+            },
+        )[0]
+
+        self.assertEqual(
+            auth_context_class_ref.text, DigiDAssuranceLevels.substantial.value
         )
 
 

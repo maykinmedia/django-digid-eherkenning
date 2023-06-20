@@ -2,6 +2,7 @@ from django.urls import reverse
 
 from furl import furl
 
+from ..choices import DigiDAssuranceLevels
 from ..models import DigidConfiguration
 from .base import BaseSaml2Client
 
@@ -20,6 +21,15 @@ def generate_digid_metadata() -> bytes:
 class DigiDClient(BaseSaml2Client):
     cache_key_prefix = "digid"
     cache_timeout = 60 * 60  # 1 hour
+
+    def __init__(
+        self,
+        *args,
+        loa: DigiDAssuranceLevels = DigiDAssuranceLevels.middle,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.loa = loa
 
     @property
     def conf(self) -> dict:
@@ -55,9 +65,7 @@ class DigiDClient(BaseSaml2Client):
                 "metadataValidUntil": "",
                 "metadataCacheDuration": "",
                 "requestedAuthnContextComparison": "minimum",
-                "requestedAuthnContext": [
-                    "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract",
-                ],
+                "requestedAuthnContext": [self.loa],
             }
         )
         return super().create_config(config_dict)

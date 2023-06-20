@@ -3,7 +3,7 @@ from base64 import b64decode
 from unittest.mock import patch
 
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -14,7 +14,9 @@ from furl import furl
 from lxml import etree
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
+from digid_eherkenning.choices import AssuranceLevels
 from digid_eherkenning.models import EherkenningConfiguration
+from digid_eherkenning.views import eHerkenningLoginView
 
 from .project.models import User
 from .utils import create_example_artifact, get_saml_element
@@ -117,6 +119,33 @@ class eHerkenningLoginViewTests(TestCase):
                 etree.fromstring(expected_signature), pretty_print=True
             ).decode("utf-8"),
         )
+
+    def test_login_views_can_override_minimum_loa(self):
+        class CustomLoginView(eHerkenningLoginView):
+            def get_level_of_assurance(self):
+                return (
+                    AssuranceLevels.high
+                    if "special" in self.request.GET.get("next")
+                    else AssuranceLevels.middle
+                )
+
+        request = RequestFactory().get(reverse("eherkenning:login") + "?next=/special")
+
+        response = CustomLoginView.as_view()(request)
+
+        saml_request = b64decode(
+            response.context_data["form"].initial["SAMLRequest"].encode("utf-8")
+        )
+        tree = etree.fromstring(saml_request)
+        auth_context_class_ref = tree.xpath(
+            "samlp:RequestedAuthnContext[@Comparison='minimum']/saml:AuthnContextClassRef",
+            namespaces={
+                "samlp": "urn:oasis:names:tc:SAML:2.0:protocol",
+                "saml": "urn:oasis:names:tc:SAML:2.0:assertion",
+            },
+        )[0]
+
+        self.assertEqual(auth_context_class_ref.text, AssuranceLevels.high.value)
 
     @freeze_time("2020-04-09T08:31:46Z")
     @patch("onelogin.saml2.utils.uuid4")

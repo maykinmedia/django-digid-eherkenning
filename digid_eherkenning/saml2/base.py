@@ -177,6 +177,15 @@ class BaseSaml2Client:
                 OneLogin_Saml2_ValidationError.WRONG_INRESPONSETO,
             )
 
+        # I remember reading somewhere that the assurance level on the response
+        # SHOULD be checked. But they might not be present on the response.
+        # From the SAML spec (saml-core-2.0-os):
+        #
+        # If the <RequestedAuthnContext> element is present in the query, at least one
+        # <AuthnStatement> element in the set of returned assertions MUST contain an
+        # <AuthnContext> element that satisfies the element in the query (see Section 3.3.2.2.1). It is
+        # OPTIONAL for the complete set of all such matching assertions to be returned in the response.
+
     def create_config(self, config_dict):
         """
         Convert to the format expected by the OneLogin SAML2 library.

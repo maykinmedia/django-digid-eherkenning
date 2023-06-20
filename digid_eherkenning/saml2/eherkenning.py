@@ -1,7 +1,7 @@
 import binascii
 from base64 import b64encode
 from io import BytesIO
-from typing import List, Optional
+from typing import List, Literal, Union
 from uuid import uuid4
 
 from django.urls import reverse
@@ -13,6 +13,7 @@ from lxml.builder import ElementMaker
 from lxml.etree import Element
 from OpenSSL import crypto
 
+from ..choices import AssuranceLevels
 from ..models import EherkenningConfiguration
 from ..settings import EHERKENNING_DS_XSD
 from ..utils import validate_xml
@@ -425,6 +426,15 @@ class eHerkenningClient(BaseSaml2Client):
     cache_key_prefix = "eherkenning"
     cache_timeout = 60 * 60  # 1 hour
 
+    def __init__(
+        self,
+        *args,
+        loa: Union[AssuranceLevels, Literal[""]] = "",
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.loa = loa
+
     @property
     def conf(self) -> dict:
         if not hasattr(self, "_conf"):
@@ -476,7 +486,7 @@ class eHerkenningClient(BaseSaml2Client):
                 "metadataCacheDuration": "",
                 "requestedAuthnContextComparison": "minimum",
                 "requestedAuthnContext": [
-                    self.conf["loa"],
+                    self.loa or self.conf["loa"],
                 ],
             }
         )
