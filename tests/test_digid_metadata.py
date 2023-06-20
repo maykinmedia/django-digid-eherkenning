@@ -48,7 +48,7 @@ class DigidMetadataManagementCommandTests(TestCase):
         )
 
         output = stdout.getvalue()
-        entity_descriptor_node = etree.XML(output)
+        entity_descriptor_node = etree.XML(output.encode("utf-8"))
 
         self.assertEqual(
             "http://test-entity.id", entity_descriptor_node.attrib["entityID"]
@@ -203,7 +203,7 @@ class DigidMetadataManagementCommandTests(TestCase):
         )
 
         output = stdout.getvalue()
-        entity_descriptor_node = etree.XML(output)
+        entity_descriptor_node = etree.XML(output.encode("utf-8"))
 
         contact_email_node = entity_descriptor_node.find(
             ".//md:EmailAddress",
@@ -238,7 +238,7 @@ class DigidMetadataManagementCommandTests(TestCase):
         )
 
         output = stdout.getvalue()
-        entity_descriptor_node = etree.XML(output)
+        entity_descriptor_node = etree.XML(output.encode("utf-8"))
 
         organisation_name_node = entity_descriptor_node.find(
             ".//md:OrganizationName",
@@ -277,7 +277,7 @@ class DigidMetadataManagementCommandTests(TestCase):
         )
 
         output = stdout.getvalue()
-        entity_descriptor_node = etree.XML(output)
+        entity_descriptor_node = etree.XML(output.encode("utf-8"))
 
         single_logout_service_node = entity_descriptor_node.find(
             ".//md:SingleLogoutService",
@@ -358,6 +358,7 @@ class DigidMetadataGenerationTests(DigidMetadataMixin, TestCase):
         self.digid_config.save()
 
         digid_metadata = generate_digid_metadata()
+        self.assertEqual(digid_metadata[:5], b"<?xml")
 
         entity_descriptor_node = etree.XML(digid_metadata)
 

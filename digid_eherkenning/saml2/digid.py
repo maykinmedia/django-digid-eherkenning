@@ -9,7 +9,12 @@ from .base import BaseSaml2Client
 def generate_digid_metadata() -> bytes:
     client = DigiDClient()
     client.saml2_setting_kwargs = {"sp_validation_only": True}
-    return client.create_metadata()
+    metadata = client.create_metadata()
+    return (
+        b"<?xml version='1.0' encoding='UTF-8'?>" + metadata
+        if not metadata.startswith(b"<?xml")
+        else metadata
+    )
 
 
 class DigiDClient(BaseSaml2Client):

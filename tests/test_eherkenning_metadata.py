@@ -52,7 +52,7 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
         )
 
         output = stdout.getvalue()
-        entity_descriptor_node = etree.XML(output)
+        entity_descriptor_node = etree.XML(output.encode("utf-8"))
 
         self.assertEqual(
             "http://test-entity.id", entity_descriptor_node.attrib["entityID"]
@@ -209,7 +209,7 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
         )
 
         output = stdout.getvalue()
-        entity_descriptor_node = etree.XML(output)
+        entity_descriptor_node = etree.XML(output.encode("utf-8"))
 
         contact_email_node = entity_descriptor_node.find(
             ".//md:EmailAddress",
@@ -244,7 +244,7 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
         )
 
         output = stdout.getvalue()
-        entity_descriptor_node = etree.XML(output)
+        entity_descriptor_node = etree.XML(output.encode("utf-8"))
 
         organisation_name_node = entity_descriptor_node.find(
             ".//md:OrganizationName",
@@ -291,7 +291,7 @@ class EHerkenningMetadataManagementCommandTests(TestCase):
         )
 
         output = stdout.getvalue()
-        entity_descriptor_node = etree.XML(output)
+        entity_descriptor_node = etree.XML(output.encode("utf-8"))
 
         attribute_consuming_service_nodes = entity_descriptor_node.findall(
             ".//md:AttributeConsumingService",
@@ -504,6 +504,7 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.save()
 
         eherkenning_metadata = generate_eherkenning_metadata()
+        self.assertEqual(eherkenning_metadata[:5], b"<?xml")
         entity_descriptor_node = etree.XML(eherkenning_metadata)
 
         self.assertEqual(
