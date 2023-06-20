@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional, Union
 
 from django.conf import settings
 from django.contrib import auth, messages
@@ -10,11 +10,6 @@ from django.views.generic.base import TemplateView, View
 from ..choices import AssuranceLevels
 from ..exceptions import SAML2Error, eHerkenningNoRSINError
 from ..forms import SAML2Form
-
-# These two unused imports may be imported from here by 3rd party client code
-# ignoring F401 for now
-from ..saml2.eherkenning import generate_dienst_catalogus_metadata  # noqa: F401
-from ..saml2.eherkenning import generate_eherkenning_metadata  # noqa: F401
 from ..saml2.eherkenning import eHerkenningClient
 from .base import get_redirect_url
 
@@ -22,14 +17,14 @@ from .base import get_redirect_url
 class eHerkenningLoginView(TemplateView):
     template_name = "digid_eherkenning/post_binding.html"
 
-    def get_level_of_assurance(self) -> Optional[AssuranceLevels]:
+    def get_level_of_assurance(self) -> Union[AssuranceLevels, Literal[""]]:
         """
         Override the AssuranceLevel from the global `EherkenningConfiguration`.
 
-        To use the level from the global config, return `None`
+        To use the level from the global config, return `""`
         NB When overriding this, remember the user has control over the request!
         """
-        return None
+        return ""
 
     def get_relay_state(self):
         """

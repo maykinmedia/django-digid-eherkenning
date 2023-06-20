@@ -1,7 +1,7 @@
 import binascii
 from base64 import b64encode
 from io import BytesIO
-from typing import List, Optional
+from typing import List, Literal, Union
 from uuid import uuid4
 
 from django.urls import reverse
@@ -424,7 +424,7 @@ class eHerkenningClient(BaseSaml2Client):
     def __init__(
         self,
         *args,
-        loa: Optional[AssuranceLevels] = None,
+        loa: Union[AssuranceLevels, Literal[""]] = "",
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
