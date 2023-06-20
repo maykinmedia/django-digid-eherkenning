@@ -18,6 +18,7 @@ from onelogin.saml2.soap_logout_request import Soap_Logout_Request
 from onelogin.saml2.utils import OneLogin_Saml2_Error, OneLogin_Saml2_ValidationError
 
 from ..choices import DigiDAssuranceLevels, SectorType
+from ..compat import get_next_page
 from ..forms import SAML2Form
 from ..saml2.digid import DigiDClient
 from ..utils import logout_user
@@ -144,7 +145,7 @@ class DigiDLogoutView(LogoutView):
             raise PermissionDenied(_("You are not authenticated with Digid"))
 
         client = DigiDClient()
-        return_to = self.get_next_page()
+        return_to = get_next_page(self)
         logout_url = client.create_logout_request(
             request, return_to=return_to, name_id=name_id
         )
