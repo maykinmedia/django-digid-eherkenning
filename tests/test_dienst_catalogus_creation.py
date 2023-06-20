@@ -286,6 +286,7 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
         eherkenning_dienstcatalogus_metadata = generate_dienst_catalogus_metadata(
             self.eherkenning_config
         )
+        self.assertEqual(eherkenning_dienstcatalogus_metadata[:5], b"<?xml")
         service_catalogue_node = etree.XML(eherkenning_dienstcatalogus_metadata)
 
         signature_algorithm_node = service_catalogue_node.find(

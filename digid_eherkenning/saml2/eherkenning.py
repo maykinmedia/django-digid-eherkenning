@@ -53,7 +53,12 @@ def generate_dienst_catalogus_metadata(eherkenning_config=None):
 def generate_eherkenning_metadata():
     client = eHerkenningClient()
     client.saml2_setting_kwargs = {"sp_validation_only": True}
-    return client.create_metadata()
+    metadata = client.create_metadata()
+    return (
+        b"<?xml version='1.0' encoding='UTF-8'?>" + metadata
+        if not metadata.startswith(b"<?xml")
+        else metadata
+    )
 
 
 def xml_datetime(d):
