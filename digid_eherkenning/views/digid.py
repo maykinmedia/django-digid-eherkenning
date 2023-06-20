@@ -37,7 +37,7 @@ class DigiDLoginView(TemplateView):
 
     def get_level_of_assurance(self):
         """
-        Override the default Lever of Assurnace (middle).
+        Override the default Level of Assurance (middle).
 
         When overriding this, remember the user has control over the request!
         """
