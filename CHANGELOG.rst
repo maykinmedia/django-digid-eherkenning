@@ -8,7 +8,7 @@ Changelog
 Feature release
 
 * Added configurable Content-Type header for DigiD SAML
-* Implemented dynamic Level Of Assurance (LOA), using the global configuration defaults
+* Implemented a way to override the global configuration defaults for Level Of Assurance (LOA)
 * [#30] Ensure generated metadata has xml tag
 * [#35] Confirmed support for Django 4.2
 
