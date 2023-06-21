@@ -2,6 +2,16 @@
 Changelog
 =========
 
+0.8.0 (2023-06-21)
+==================
+
+Feature release
+
+* Added configurable Content-Type header for DigiD SAML
+* Implemented a way to override the global configuration defaults for Level Of Assurance (LOA)
+* [#30] Ensure generated metadata has xml tag
+* [#35] Confirmed support for Django 4.2
+
 0.7.0 (2023-02-21)
 ==================
 
