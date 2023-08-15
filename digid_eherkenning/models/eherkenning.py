@@ -12,7 +12,6 @@ from .base import BaseConfiguration
 class EherkenningConfiguration(BaseConfiguration):
     loa = models.CharField(
         _("LoA"),
-        blank=True,
         choices=AssuranceLevels.choices,
         default=AssuranceLevels.substantial,
         help_text=_("Level of Assurance (LoA) to use for all the services."),
@@ -119,6 +118,11 @@ class EherkenningConfiguration(BaseConfiguration):
 
     class Meta:
         verbose_name = _("Eherkenning/eIDAS configuration")
+        constraints = [
+            models.constraints.CheckConstraint(
+                name="valid_loa", check=models.Q(loa__in=AssuranceLevels)
+            ),
+        ]
 
     def as_dict(self) -> dict:
         """
