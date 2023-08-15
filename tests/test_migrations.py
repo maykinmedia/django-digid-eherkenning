@@ -1,3 +1,5 @@
+from django.db import IntegrityError
+
 import pytest
 
 from digid_eherkenning.choices import AssuranceLevels
@@ -23,3 +25,8 @@ def test_fixing_misconfigured_eherkenning(migrator):
     )
     config = EherkenningConfiguration.objects.get()
     assert config.loa == AssuranceLevels.low_plus
+
+    # impossible to misconfigure
+    config.loa = ""
+    with pytest.raises(IntegrityError):
+        config.save()

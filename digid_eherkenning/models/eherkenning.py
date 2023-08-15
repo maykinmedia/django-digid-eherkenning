@@ -118,6 +118,11 @@ class EherkenningConfiguration(BaseConfiguration):
 
     class Meta:
         verbose_name = _("Eherkenning/eIDAS configuration")
+        constraints = [
+            models.constraints.CheckConstraint(
+                name="valid_loa", check=models.Q(loa__in=AssuranceLevels)
+            ),
+        ]
 
     def as_dict(self) -> dict:
         """
