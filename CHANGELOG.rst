@@ -5,13 +5,13 @@ Changelog
 0.8.1 (2023-08-15)
 ==================
 
- * Made EHerkenningConfiguration.loa required
-   It was previously possible to accidentally misconfigure by selecting the
-   empty option for the LOA in the admin.
+* Made EHerkenningConfiguration.loa required
+  It was previously possible to accidentally misconfigure by selecting the
+  empty option for the LOA in the admin.
 
-   This patch contains a migration that will set undefined eHerkennning LOAs to
-   low_plus. But if you have an invalid LOA set, the migration will fail with
-   an IntegrityError. In case this happens, go to the admin and select a LOA.
+  This patch contains a migration that will set undefined eHerkennning LOAs to
+  low_plus. But if you have an invalid LOA set, the migration will fail with
+  an IntegrityError. In case this happens, go to the admin and select a LOA.
 
 
 0.8.0 (2023-06-21)
