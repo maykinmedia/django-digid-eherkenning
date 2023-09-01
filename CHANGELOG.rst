@@ -2,6 +2,15 @@
 Changelog
 =========
 
+0.8.2 (2023-09-01)
+==================
+
+Nothing functional. Changed the verbose names of
+
+* eHerkenning service *instance* UUID
+* eIDAS service *instance* UUID
+
+
 0.8.1 (2023-08-15)
 ==================
 
