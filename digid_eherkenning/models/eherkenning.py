@@ -42,7 +42,7 @@ class EherkenningConfiguration(BaseConfiguration):
         ),
     )
     eh_service_instance_uuid = models.UUIDField(
-        _("eHerkenning service UUID"),
+        _("eHerkenning service instance UUID"),
         default=uuid.uuid4,
         help_text=_(
             "UUID of the eHerkenning service instance. Once entered into catalogues, "
@@ -74,10 +74,10 @@ class EherkenningConfiguration(BaseConfiguration):
         ),
     )
     eidas_service_instance_uuid = models.UUIDField(
-        _("eIDAS service UUID"),
+        _("eIDAS service instance UUID"),
         default=uuid.uuid4,
         help_text=_(
-            "UUID of the eHerkenning service instance. Once entered into catalogues, "
+            "UUID of the eIDAS service instance. Once entered into catalogues, "
             "changing the value is a manual process."
         ),
     )
