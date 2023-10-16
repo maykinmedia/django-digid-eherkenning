@@ -9,6 +9,7 @@ from .models import DigidConfiguration, EherkenningConfiguration
 
 @admin.register(DigidConfiguration)
 class DigidConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
+    readonly_fields = ("idp_service_entity_id",)
     fieldsets = (
         (
             _("X.509 Certificate"),
@@ -23,8 +24,9 @@ class DigidConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
             _("Identity provider"),
             {
                 "fields": (
-                    "idp_metadata_file",
+                    "metadata_file_source",
                     "idp_service_entity_id",
+                    "idp_metadata_file",
                 ),
             },
         ),
@@ -72,6 +74,7 @@ class DigidConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
 
 @admin.register(EherkenningConfiguration)
 class EherkenningConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
+    readonly_fields = ("idp_service_entity_id",)
     fieldsets = (
         (
             _("X.509 Certificate"),
@@ -86,8 +89,9 @@ class EherkenningConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
             _("Identity provider"),
             {
                 "fields": (
-                    "idp_metadata_file",
+                    "metadata_file_source",
                     "idp_service_entity_id",
+                    "idp_metadata_file",
                 ),
             },
         ),

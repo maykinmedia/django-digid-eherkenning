@@ -24,7 +24,7 @@ If this header is not set or empty, we instead get the value from ``REMOTE_ADDR`
 
 **Protecting metadata endpoints**
 
-The metdata URLs are open by design to facilitate sharing these URLs with identity
+The metadata URLs are open by design to facilitate sharing these URLs with identity
 providers or other interested parties. Because the metadata is generated on the fly,
 there is a Denial-of-Service risk. We recommend to protect these URLs at the web-server
 level by:
@@ -57,3 +57,7 @@ Django settings
   .. note:: This setting is a last resort and it will expire after 15 minutes even if
      there is user activity. Typically you want to define a middleware in your project
      to extend the session duration while there is still activity.
+
+``METADATA_URLS_CACHE_TIMEOUT``
+  The library uses django cache in order to store some useful urls. This prevents reading an XML file
+  if this has not been updated. Defaults to 86400 (1 day).

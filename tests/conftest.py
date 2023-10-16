@@ -12,6 +12,13 @@ BASE_DIR = Path(__file__).parent.resolve()
 
 
 DIGID_TEST_METADATA_FILE = BASE_DIR / "files" / "digid" / "metadata"
+DIGID_TEST_METADATA_FILE_SLO_POST = (
+    BASE_DIR / "files" / "digid" / "metadata_with_slo_POST"
+)
+DIGID_TEST_METADATA_FILE_SLO_POST_2 = (
+    BASE_DIR / "files" / "digid" / "metadata_with_slo_POST_2"
+)
+
 DIGID_TEST_KEY_FILE = BASE_DIR / "files" / "snakeoil-cert" / "ssl-cert-snakeoil.key"
 DIGID_TEST_CERTIFICATE_FILE = (
     BASE_DIR / "files" / "snakeoil-cert" / "ssl-cert-snakeoil.pem"
