@@ -12,7 +12,6 @@ empty = object()
 # Public settings
 class Defaults:
     DIGID_SESSION_AGE: int = 60 * 15  # 15 minutes, in seconds
-    METADATA_URLS_CACHE_TIMEOUT = 86400
 
 
 def get_setting(name: str):

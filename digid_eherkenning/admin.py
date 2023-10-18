@@ -2,13 +2,22 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from privates.admin import PrivateMediaMixin
+from privates.widgets import PrivateFileWidget
 from solo.admin import SingletonModelAdmin
 
 from .models import DigidConfiguration, EherkenningConfiguration
 
 
+class CustomPrivateFileWidget(PrivateFileWidget):
+    template_name = "admin/digid_eherkenning/widgets/custom_file_input.html"
+
+
+class CustomPrivateMediaMixin(PrivateMediaMixin):
+    private_media_file_widget = CustomPrivateFileWidget
+
+
 @admin.register(DigidConfiguration)
-class DigidConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
+class DigidConfigurationAdmin(CustomPrivateMediaMixin, SingletonModelAdmin):
     readonly_fields = ("idp_service_entity_id",)
     fieldsets = (
         (
@@ -73,7 +82,7 @@ class DigidConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
 
 
 @admin.register(EherkenningConfiguration)
-class EherkenningConfigurationAdmin(PrivateMediaMixin, SingletonModelAdmin):
+class EherkenningConfigurationAdmin(CustomPrivateMediaMixin, SingletonModelAdmin):
     readonly_fields = ("idp_service_entity_id",)
     fieldsets = (
         (

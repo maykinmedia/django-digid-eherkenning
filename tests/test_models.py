@@ -1,13 +1,10 @@
-import datetime
 from unittest.mock import patch
 
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils.translation import gettext as _
 
 import pytest
-from freezegun import freeze_time
 
 from digid_eherkenning.models import DigidConfiguration, EherkenningConfiguration
 
@@ -20,14 +17,6 @@ from .conftest import (
 
 @pytest.mark.usefixtures("digid_config_defaults", "temp_private_root")
 class BaseModelTests(TestCase):
-    def setUp(self):
-        cache.clear()
-        return super().setUp()
-
-    def tearDown(self):
-        cache.clear()
-        return super().tearDown()
-
     @patch(
         "onelogin.saml2.idp_metadata_parser.OneLogin_Saml2_IdPMetadataParser.get_metadata"
     )
@@ -113,38 +102,24 @@ class BaseModelTests(TestCase):
 
         with self.assertRaisesMessage(
             ValidationError,
-            _(
-                "An error has occured while processing the xml file. Make sure the file is valid"
-            ),
+            _("Start tag expected, '<' not found, line 1, column 1 (<string>, line 1)"),
         ):
             config.save()
 
-    @override_settings(METADATA_URLS_CACHE_TIMEOUT=2)
+    @patch("onelogin.saml2.idp_metadata_parser.OneLogin_Saml2_IdPMetadataParser.parse")
     @patch(
         "onelogin.saml2.idp_metadata_parser.OneLogin_Saml2_IdPMetadataParser.get_metadata"
     )
-    def test_urls_caching(self, get_matadata):
+    def test_no_idp_in_xml_raises_validation_error(self, get_matadata, parse):
         config = DigidConfiguration.get_solo()
 
-        with freeze_time("2023-05-22 12:00:00Z") as frozen_datetime:
-            with DIGID_TEST_METADATA_FILE_SLO_POST.open("rb") as metadata_file:
-                metadata_content = metadata_file.read().decode("utf-8")
-                get_matadata.return_value = metadata_content
-                config.metadata_file_source = (
-                    "https://was-preprod1.digid.nl/saml/idp/metadata"
-                )
-                config.save()
-
-            with DIGID_TEST_METADATA_FILE_SLO_POST_2.open("rb") as metadata_file:
-                metadata_content = metadata_file.read().decode("utf-8")
-                get_matadata.return_value = metadata_content
-                config.metadata_file_source = "https://example.com"
-                config.save()
-
-            self.assertEqual(
-                cache.get("DigidConfiguration")["entityId"], "https://example.com"
+        with DIGID_TEST_METADATA_FILE_SLO_POST_2.open("rb") as metadata_file:
+            metadata_content = metadata_file.read().decode("utf-8")
+            get_matadata.return_value = metadata_content
+            config.metadata_file_source = (
+                "https://was-preprod1.digid.nl/saml/idp/metadata"
             )
+            parse.return_value = {"test_no_idp": ""}
 
-            frozen_datetime.tick(delta=datetime.timedelta(seconds=3))
-
-            self.assertIsNone(cache.get("DigidConfiguration"))
+        with self.assertRaisesMessage(ValidationError, _("The provided URL is wrong")):
+            config.save()

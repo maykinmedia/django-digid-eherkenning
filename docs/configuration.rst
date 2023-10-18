@@ -57,7 +57,3 @@ Django settings
   .. note:: This setting is a last resort and it will expire after 15 minutes even if
      there is user activity. Typically you want to define a middleware in your project
      to extend the session duration while there is still activity.
-
-``METADATA_URLS_CACHE_TIMEOUT``
-  The library uses django cache in order to store some useful urls. This prevents reading an XML file
-  if this has not been updated. Defaults to 86400 (1 day).

@@ -1,4 +1,3 @@
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
@@ -12,7 +11,6 @@ from simple_certmanager.models import Certificate
 from solo.models import SingletonModel
 
 from ..choices import DigestAlgorithms, SignatureAlgorithms, XMLContentTypes
-from ..settings import get_setting
 
 
 class ConfigurationManager(models.Manager):
@@ -35,7 +33,6 @@ class BaseConfiguration(SingletonModel):
     idp_metadata_file = PrivateMediaFileField(
         _("identity provider metadata"),
         blank=True,
-        null=True,
         help_text=_(
             "The metadata file of the identity provider. This is auto populated "
             "by the retrieved metadata XML file."
@@ -45,7 +42,6 @@ class BaseConfiguration(SingletonModel):
         _("identity provider service entity ID"),
         max_length=255,
         blank=True,
-        null=True,
         help_text=_(
             "Example value: 'https://was-preprod1.digid.nl/saml/idp/metadata'. Note "
             "that this must match the 'entityID' attribute on the "
@@ -185,7 +181,7 @@ class BaseConfiguration(SingletonModel):
     def __str__(self):
         return force_str(self._meta.verbose_name)
 
-    def populate_xml_fields(self, urls, xml):
+    def populate_xml_fields(self, urls: dict[str, str], xml: str) -> None:
         """
         Populates the idp_metadata_file and idp_service_entity_id fields based on the
         fetched xml metadata
@@ -194,70 +190,46 @@ class BaseConfiguration(SingletonModel):
         content = ContentFile(xml.encode("utf-8"))
         self.idp_metadata_file.save("metadata.xml", content, save=False)
 
-    def fetch_xml_metadata(self):
-        """
-        Retrieves the xml metadata from the provided url (metadata_file_source)
-
-        :return a string of the xml metadata.
-        """
-        return OneLogin_Saml2_IdPMetadataParser.get_metadata(self.metadata_file_source)
-
-    def parse_data_from_xml_source(self):
+    def process_metadata_from_xml_source(self) -> tuple[dict[str, str], str]:
         """
         Parses the xml metadata
 
         :return a tuple of a dictionary with the useful urls and the xml string itself.
         """
-        urls = {}
-        xml = ""
-
         try:
-            xml = self.fetch_xml_metadata()
+            xml = OneLogin_Saml2_IdPMetadataParser.get_metadata(
+                self.metadata_file_source
+            )
             parsed_idp_metadata = OneLogin_Saml2_IdPMetadataParser.parse(
                 xml,
                 required_sso_binding=OneLogin_Saml2_Constants.BINDING_HTTP_POST,
                 required_slo_binding=OneLogin_Saml2_Constants.BINDING_HTTP_POST,
             )
-        except Exception:
-            raise ValidationError(
-                _(
-                    "An error has occured while processing the xml file. Make sure the file is valid"
-                )
-            )
+        except Exception as exc:
+            raise ValidationError(_(str(exc)))
 
-        if idp := parsed_idp_metadata.get("idp"):
-            # sometimes the xml file contains urn instead of a url as an entity ID
-            # use the provided url instead
-            urls = {
-                "entityId": (
-                    idp.get("entityId")
-                    if not idp.get("entityId").startswith("urn")
-                    else self.metadata_file_source
-                ),
-                "sso_url": idp.get("singleSignOnService", {}).get("url"),
-                "slo_url": idp.get("singleLogoutService", {}).get("url"),
-            }
+        if not parsed_idp_metadata.get("idp"):
+            raise ValidationError(_("The provided URL is wrong"))
 
-            if cache.get(self._meta.object_name):
-                cache.delete(self._meta.object_name)
+        idp = parsed_idp_metadata.get("idp")
+        # sometimes the xml file contains urn instead of a url as an entity ID
+        # use the provided url instead
+        urls = {
+            "entityId": (
+                entity_id
+                if not (entity_id := idp.get("entityId")).startswith("urn:")
+                else self.metadata_file_source
+            ),
+            "sso_url": idp.get("singleSignOnService", {}).get("url"),
+            "slo_url": idp.get("singleLogoutService", {}).get("url"),
+        }
 
         return (urls, xml)
 
     def save(self, *args, **kwargs):
         if self.pk and self.metadata_file_source:
-            if (
-                cache.get(self._meta.object_name, {}).get("entityId")
-                != self.metadata_file_source
-            ):
-                urls, xml = self.parse_data_from_xml_source()
-
-                if urls and xml:
-                    self.populate_xml_fields(urls, xml)
-                    cache.set(
-                        self._meta.object_name,
-                        urls,
-                        get_setting("METADATA_URLS_CACHE_TIMEOUT"),
-                    )
+            urls, xml = self.process_metadata_from_xml_source()
+            self.populate_xml_fields(urls, xml)
 
         if self.base_url.endswith("/"):
             self.base_url = self.base_url[:-1]

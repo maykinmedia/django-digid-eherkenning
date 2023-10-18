@@ -27,7 +27,7 @@ class UpdateStoredMetadataTests(TestCase):
             )
             config.save()
 
-            call_command("update_stored_metadata", "--digid")
+            call_command("update_stored_metadata", "digid")
 
         self.assertTrue(get_matadata.called_once())
 
@@ -46,7 +46,7 @@ class UpdateStoredMetadataTests(TestCase):
             )
             config.save()
 
-            call_command("update_stored_metadata", "--eherkenning", stdout=output)
+            call_command("update_stored_metadata", "eherkenning", stdout=output)
 
         self.assertTrue(get_matadata.called_once())
         self.assertEqual(output.getvalue(), "Update was successful\n")
@@ -59,12 +59,12 @@ class UpdateStoredMetadataTests(TestCase):
 
         self.assertEqual(
             error_message,
-            "A required argument is missing. Please provide either digid or eherkenning.",
+            "Error: the following arguments are required: config_model",
         )
 
     def test_command_fails_when_no_metadata_file_source(self):
         output = StringIO()
-        call_command("update_stored_metadata", "--digid", stdout=output)
+        call_command("update_stored_metadata", "digid", stdout=output)
 
         self.assertEqual(
             output.getvalue(),
