@@ -35,7 +35,7 @@ class BaseConfiguration(SingletonModel):
         blank=True,
         help_text=_(
             "The metadata file of the identity provider. This is auto populated "
-            "by the retrieved metadata XML file."
+            "from the configured source URL."
         ),
     )
     idp_service_entity_id = models.CharField(
@@ -46,7 +46,7 @@ class BaseConfiguration(SingletonModel):
             "Example value: 'https://was-preprod1.digid.nl/saml/idp/metadata'. Note "
             "that this must match the 'entityID' attribute on the "
             "'md:EntityDescriptor' node found in the Identity Provider's metadata. "
-            "This is auto populated by the retrieved metadata XML file."
+            "This is auto populated from the configured source URL."
         ),
     )
     metadata_file_source = models.URLField(
@@ -205,13 +205,19 @@ class BaseConfiguration(SingletonModel):
                 required_sso_binding=OneLogin_Saml2_Constants.BINDING_HTTP_POST,
                 required_slo_binding=OneLogin_Saml2_Constants.BINDING_HTTP_POST,
             )
+        #  python3-saml library does not use proper-namespaced exceptions
         except Exception as exc:
-            raise ValidationError(_(str(exc)))
+            raise ValidationError(
+                _("Failed to parse the metadata, got error: {err}").format(err=str(exc))
+            ) from exc
 
-        if not parsed_idp_metadata.get("idp"):
-            raise ValidationError(_("The provided URL is wrong"))
+        if not (idp := parsed_idp_metadata.get("idp")):
+            raise ValidationError(
+                _(
+                    "Could not find any identity provider information in the metadata at the provided URL."
+                )
+            )
 
-        idp = parsed_idp_metadata.get("idp")
         # sometimes the xml file contains urn instead of a url as an entity ID
         # use the provided url instead
         urls = {
@@ -227,7 +233,7 @@ class BaseConfiguration(SingletonModel):
         return (urls, xml)
 
     def save(self, *args, **kwargs):
-        if self.pk and self.metadata_file_source:
+        if self.metadata_file_source:
             urls, xml = self.process_metadata_from_xml_source()
             self.populate_xml_fields(urls, xml)
 

@@ -102,7 +102,9 @@ class BaseModelTests(TestCase):
 
         with self.assertRaisesMessage(
             ValidationError,
-            _("Start tag expected, '<' not found, line 1, column 1 (<string>, line 1)"),
+            _(
+                "Failed to parse the metadata, got error: Start tag expected, '<' not found, line 1, column 1"
+            ),
         ):
             config.save()
 
@@ -121,5 +123,10 @@ class BaseModelTests(TestCase):
             )
             parse.return_value = {"test_no_idp": ""}
 
-        with self.assertRaisesMessage(ValidationError, _("The provided URL is wrong")):
+        with self.assertRaisesMessage(
+            ValidationError,
+            _(
+                "Could not find any identity provider information in the metadata at the provided URL."
+            ),
+        ):
             config.save()
