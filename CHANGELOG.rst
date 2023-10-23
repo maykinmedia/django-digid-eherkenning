@@ -2,6 +2,20 @@
 Changelog
 =========
 
+0.9.0 (2023-10-23)
+==================
+
+Quality of life update
+
+* [#45] Added automatic metadata retrieval
+
+    * You can now configure a metadata source URL, which will download and process the
+      metadata automatically.
+    * Added a management command ``update_stored_metadata`` to refetch the metadata and
+      process any updates.
+
+* Added BSN validation to mock login form.
+
 0.8.2 (2023-09-01)
 ==================
 
