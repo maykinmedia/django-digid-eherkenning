@@ -1,8 +1,11 @@
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.db import models
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
+from onelogin.saml2.constants import OneLogin_Saml2_Constants
+from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 from privates.fields import PrivateMediaFileField
 from simple_certmanager.models import Certificate
 from solo.models import SingletonModel
@@ -29,17 +32,29 @@ class BaseConfiguration(SingletonModel):
     )
     idp_metadata_file = PrivateMediaFileField(
         _("identity provider metadata"),
-        blank=False,
-        help_text=_("The metadata file of the identity provider."),
+        blank=True,
+        help_text=_(
+            "The metadata file of the identity provider. This is auto populated "
+            "from the configured source URL."
+        ),
     )
     idp_service_entity_id = models.CharField(
         _("identity provider service entity ID"),
         max_length=255,
-        blank=False,
+        blank=True,
         help_text=_(
             "Example value: 'https://was-preprod1.digid.nl/saml/idp/metadata'. Note "
             "that this must match the 'entityID' attribute on the "
-            "'md:EntityDescriptor' node found in the Identity Provider's metadata."
+            "'md:EntityDescriptor' node found in the Identity Provider's metadata. "
+            "This is auto populated from the configured source URL."
+        ),
+    )
+    metadata_file_source = models.URLField(
+        _("metadata file(XML) URL"),
+        max_length=255,
+        default="",
+        help_text=_(
+            "The URL-source where the XML metadata file can be retrieved from."
         ),
     )
     want_assertions_signed = models.BooleanField(
@@ -166,7 +181,62 @@ class BaseConfiguration(SingletonModel):
     def __str__(self):
         return force_str(self._meta.verbose_name)
 
+    def populate_xml_fields(self, urls: dict[str, str], xml: str) -> None:
+        """
+        Populates the idp_metadata_file and idp_service_entity_id fields based on the
+        fetched xml metadata
+        """
+        self.idp_service_entity_id = urls["entityId"]
+        content = ContentFile(xml.encode("utf-8"))
+        self.idp_metadata_file.save("metadata.xml", content, save=False)
+
+    def process_metadata_from_xml_source(self) -> tuple[dict[str, str], str]:
+        """
+        Parses the xml metadata
+
+        :return a tuple of a dictionary with the useful urls and the xml string itself.
+        """
+        try:
+            xml = OneLogin_Saml2_IdPMetadataParser.get_metadata(
+                self.metadata_file_source
+            )
+            parsed_idp_metadata = OneLogin_Saml2_IdPMetadataParser.parse(
+                xml,
+                required_sso_binding=OneLogin_Saml2_Constants.BINDING_HTTP_POST,
+                required_slo_binding=OneLogin_Saml2_Constants.BINDING_HTTP_POST,
+            )
+        #  python3-saml library does not use proper-namespaced exceptions
+        except Exception as exc:
+            raise ValidationError(
+                _("Failed to parse the metadata, got error: {err}").format(err=str(exc))
+            ) from exc
+
+        if not (idp := parsed_idp_metadata.get("idp")):
+            raise ValidationError(
+                _(
+                    "Could not find any identity provider information in the metadata at the provided URL."
+                )
+            )
+
+        # sometimes the xml file contains urn instead of a url as an entity ID
+        # use the provided url instead
+        urls = {
+            "entityId": (
+                entity_id
+                if not (entity_id := idp.get("entityId")).startswith("urn:")
+                else self.metadata_file_source
+            ),
+            "sso_url": idp.get("singleSignOnService", {}).get("url"),
+            "slo_url": idp.get("singleLogoutService", {}).get("url"),
+        }
+
+        return (urls, xml)
+
     def save(self, *args, **kwargs):
+        if self.metadata_file_source:
+            urls, xml = self.process_metadata_from_xml_source()
+            self.populate_xml_fields(urls, xml)
+
         if self.base_url.endswith("/"):
             self.base_url = self.base_url[:-1]
         super().save(*args, **kwargs)

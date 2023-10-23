@@ -1,0 +1,14 @@
+<!-- Update the django-privates template in order to remove the clear and upload buttons since this field
+is automatically updated. User should only be able to download the file. -->
+
+{% if widget.is_initial %}
+    {% if download_allowed %}
+        <p class="file-upload">{{ widget.initial_text }}: <a href="{{ url }}">{{ display_value }}</a>
+    {% else %}
+        <p class="file-upload">{{ widget.initial_text }}: {{ display_value }}
+    {% endif %}
+    {% if not widget.required %}
+        <span class="clearable-file-input">
+    {% endif %}
+    <br />
+{% endif %}

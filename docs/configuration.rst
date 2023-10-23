@@ -24,7 +24,7 @@ If this header is not set or empty, we instead get the value from ``REMOTE_ADDR`
 
 **Protecting metadata endpoints**
 
-The metdata URLs are open by design to facilitate sharing these URLs with identity
+The metadata URLs are open by design to facilitate sharing these URLs with identity
 providers or other interested parties. Because the metadata is generated on the fly,
 there is a Denial-of-Service risk. We recommend to protect these URLs at the web-server
 level by:

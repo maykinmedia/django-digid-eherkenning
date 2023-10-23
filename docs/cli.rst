@@ -9,6 +9,7 @@ django-digid-eherkenning ships with a couple of Django management commands:
 * ``generate_digid_metadata``
 * ``generate_eherkenning_metadata``
 * ``generate_eherkenning_dienstcatalogus``
+* ``update_stored_metadata``
 
 For details, call:
 
