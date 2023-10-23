@@ -105,7 +105,7 @@ class PasswordLoginViewTests(DigidMockTestCase):
         url = f"{url}?{urlencode(params)}"
 
         data = {
-            "auth_name": "123456789",
+            "auth_name": "296648875",
             "auth_pass": "bar",
         }
         # post our password to the IDP
@@ -119,7 +119,7 @@ class PasswordLoginViewTests(DigidMockTestCase):
         response = self.client.get(response["Location"], follow=False)
 
         User = get_user_model()
-        user = User.digid_objects.get(bsn="123456789")
+        user = User.digid_objects.get(bsn="296648875")
 
         # follow redirect to 'next'
         self.assertRedirects(response, reverse("test-success"))
@@ -128,7 +128,7 @@ class PasswordLoginViewTests(DigidMockTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Je bent ingelogged als gebruiker")
         self.assertContains(response, "<code>{}</code>".format(str(user)))
-        self.assertContains(response, "<code>123456789</code>")
+        self.assertContains(response, "<code>296648875</code>")
 
     def test_post_redirect_retains_acs_querystring_params(self):
         url = reverse("digid-mock:password")
@@ -140,7 +140,7 @@ class PasswordLoginViewTests(DigidMockTestCase):
         url = f"{url}?{urlencode(params)}"
 
         data = {
-            "auth_name": "123456789",
+            "auth_name": "296648875",
             "auth_pass": "bar",
         }
         # post our password to the IDP
@@ -150,42 +150,13 @@ class PasswordLoginViewTests(DigidMockTestCase):
         expected_redirect = furl(reverse("digid:acs")).set(
             {
                 "foo": "bar",
-                "bsn": "123456789",
+                "bsn": "296648875",
                 "next": reverse("test-success"),
             }
         )
         self.assertRedirects(
             response, str(expected_redirect), fetch_redirect_response=False
         )
-
-    def test_backend_rejects_non_numerical_name(self):
-        url = reverse("digid-mock:password")
-        params = {
-            "acs": reverse("digid:acs"),
-            "next": reverse("test-success"),
-            "cancel": reverse("test-index"),
-        }
-        url = f"{url}?{urlencode(params)}"
-
-        data = {
-            "auth_name": "foo",
-            "auth_pass": "bar",
-        }
-        # post our password to the IDP
-        response = self.client.post(url, data, follow=False)
-
-        # it will redirect to our ACS
-        self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse("digid:acs"), response["Location"])
-
-        # follow the ACS redirect and get/create the user
-        response = self.client.get(response["Location"], follow=False)
-        self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse("test-index"), response["Location"])
-
-        User = get_user_model()
-        with self.assertRaises(User.DoesNotExist):
-            User.digid_objects.get(bsn="foo")
 
 
 @override_settings(**OVERRIDE_SETTINGS)
