@@ -170,11 +170,24 @@ class BaseSaml2Client:
         #
         authn_ip_address = authn_request["client_ip_address"]
         if authn_ip_address != client_ip_address:
-            raise OneLogin_Saml2_ValidationError(
-                f"A different IP address ({authn_ip_address})"
-                f"was used when retrieving the AuthNRequest then for retrieving"
-                f" the request to the ACS ({client_ip_address}).",
-                OneLogin_Saml2_ValidationError.WRONG_INRESPONSETO,
+            # Relaxed validation - IP address changes between mobile towers are not
+            # necessarily a common occurrence (typically the mobile provider manages
+            # your mobile IP address), but what does happen is switching between wifi/VPN
+            # or mobile network in the user's office (or even on the go, with a Dual SIM
+            # set up for example). So instead of complicating the error messages for
+            # these edge cases and given the very low likelyhook an attacker is able to
+            # steal the session cookie/data, we opt for detection and logging instead.
+            logger.warning(
+                "A different IP address (%s) was used when retrieving the AuthNRequest "
+                "than for resolving the SAML artifact in the ACS (%s).",
+                authn_ip_address,
+                client_ip_address,
+                # record meta information for potential audit trails
+                extra={
+                    "authn_ip_address": authn_ip_address,
+                    "client_ip_address": client_ip_address,
+                    "security": True,
+                },
             )
 
         # I remember reading somewhere that the assurance level on the response
