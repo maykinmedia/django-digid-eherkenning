@@ -2,6 +2,17 @@
 Changelog
 =========
 
+0.10.0 (2023-12-05)
+==================
+
+Introduced a small behaviour change
+
+Before, when returning from the DigiD/eHerkenning login flow and consuming the SAML
+artifact (in the assertion consumer service), we checked whether the IP address of the
+client was still the same IP address that initiated the authentication context. From
+error monitoring, it was clear this leads to false positives, so the fatal error has now
+been relaxed to a warning.
+
 0.9.0 (2023-10-23)
 ==================
 
