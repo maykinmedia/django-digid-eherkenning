@@ -3,7 +3,7 @@ Changelog
 =========
 
 0.10.0 (2023-12-05)
-==================
+===================
 
 Introduced a small behaviour change
 
