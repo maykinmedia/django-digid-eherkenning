@@ -22,15 +22,15 @@ jobs:
       matrix:
         toxenv: [isort, black, docs]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Install OS dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libxml2-dev libxmlsec1-dev libxmlsec1-openssl gettext
+          sudo apt-get install --yes libxml2-dev libxmlsec1-dev libxmlsec1-openssl gettext
 
       - name: Install dependencies
         run: pip install tox
