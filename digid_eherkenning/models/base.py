@@ -181,20 +181,20 @@ class BaseConfiguration(SingletonModel):
     def __str__(self):
         return force_str(self._meta.verbose_name)
 
-    def populate_xml_fields(self, urls: dict[str, str], xml: str) -> None:
+    def populate_xml_fields(self, urls: dict[str, str], xml: bytes) -> None:
         """
         Populates the idp_metadata_file and idp_service_entity_id fields based on the
         fetched xml metadata
         """
         self.idp_service_entity_id = urls["entityId"]
-        content = ContentFile(xml.encode("utf-8"))
+        content = ContentFile(xml)
         self.idp_metadata_file.save("metadata.xml", content, save=False)
 
-    def process_metadata_from_xml_source(self) -> tuple[dict[str, str], str]:
+    def process_metadata_from_xml_source(self) -> tuple[dict[str, str], bytes]:
         """
         Parses the xml metadata
 
-        :return a tuple of a dictionary with the useful urls and the xml string itself.
+        :return a tuple of a dictionary with the useful urls and the xml bytes.
         """
         try:
             xml = OneLogin_Saml2_IdPMetadataParser.get_metadata(
