@@ -2,6 +2,24 @@
 Changelog
 =========
 
+0.11.0 (2024-02-15)
+===================
+
+Maintenance and bugfix release
+
+There are no expected breaking/backwards changes, but we did publish a new version of
+maykin-python3-saml which has changed build/project tooling. We recommend properly
+testing this flow on test/staging environments.
+
+* Fixed the documentation build
+* Updated deprecated CI actions
+* Addressed build failures with lmxl 5+
+* Replaced deprecated defusedxml.lxml module usage
+* Removed explicit defusedxml dependency
+* Fixed the handling of metadata incorrectly assumed to be string rather than bytes
+* Pin lxml 4.7.1 lower bound
+* Pin maykin-python3-saml lower bound (which removes the defusedxml dependency)
+
 0.10.0 (2023-12-05)
 ===================
 

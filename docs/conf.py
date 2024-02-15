@@ -26,7 +26,7 @@ copyright = "2020, Maykin Media"
 author = "Maykin Media"
 
 # The full version, including alpha/beta/rc tags
-release = "0.10.0"
+release = "0.11.0"
 
 
 # -- General configuration ---------------------------------------------------
