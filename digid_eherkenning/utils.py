@@ -2,8 +2,9 @@ from importlib import import_module
 
 from django.conf import settings
 
-from defusedxml.lxml import parse
 from lxml import etree
+
+from ._xml import parse
 
 
 def get_client_ip(request):

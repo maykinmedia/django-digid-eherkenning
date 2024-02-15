@@ -7,10 +7,9 @@ from uuid import uuid4
 from django.urls import reverse
 from django.utils import timezone
 
-from defusedxml.lxml import tostring
 from furl.furl import furl
 from lxml.builder import ElementMaker
-from lxml.etree import Element
+from lxml.etree import Element, tostring
 from OpenSSL import crypto
 
 from ..choices import AssuranceLevels
