@@ -7,10 +7,11 @@ from uuid import uuid4
 from django.urls import reverse
 from django.utils import timezone
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.x509 import load_pem_x509_certificate
 from furl.furl import furl
 from lxml.builder import ElementMaker
 from lxml.etree import Element, tostring
-from OpenSSL import crypto
 
 from ..choices import AssuranceLevels
 from ..models import EherkenningConfiguration
@@ -268,18 +269,16 @@ def create_classifiers_element(classifiers: list) -> ElementMaker:
     return ESC("Classifiers", *classifiers_elements)
 
 
-def create_key_descriptor(x509_certificate_content):
-    x509_certificate = crypto.load_certificate(
-        crypto.FILETYPE_PEM, x509_certificate_content
-    )
-    key_descriptor_cert = b64encode(
-        crypto.dump_certificate(crypto.FILETYPE_ASN1, x509_certificate)
-    ).decode("ascii")
-
-    certificate = x509_certificate.to_cryptography()
+def create_key_descriptor(x509_certificate_content: bytes):
+    certificate = load_pem_x509_certificate(x509_certificate_content)
     key_name = binascii.hexlify(
         certificate.fingerprint(certificate.signature_hash_algorithm)
     ).decode("ascii")
+
+    # grab the actual base64 data describding the certificate, but without the
+    # BEGIN/END CERTIFICATE headers and footers and stripped of line breaks.
+    certificate_content = certificate.public_bytes(serialization.Encoding.DER)
+    key_descriptor_cert = b64encode(certificate_content).decode("ascii")
 
     args = [
         DS(
@@ -297,7 +296,7 @@ def create_service_catalogus(conf, validate=True):
     https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
     """
     with conf["cert_file"].open("rb") as cert_file:
-        x509_certificate_content = cert_file.read()
+        x509_certificate_content: bytes = cert_file.read()
 
     sc_id = str(uuid4())
     service_provider_id = conf["oin"]
