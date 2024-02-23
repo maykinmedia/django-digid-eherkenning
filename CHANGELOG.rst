@@ -2,6 +2,20 @@
 Changelog
 =========
 
+0.12.0 (2024-02-23)
+===================
+
+Maintenance release
+
+Note that older versions of django-digid-eherkenning have an upper bound of
+``maykin-python3-saml==1.16.0.post1`` due to the implicit PyOpenSSL dependency. If you
+upgrade maykin-python3-saml, you also need to update to
+``django-digid-eherkenning>=0.12.0``.
+
+* Dropped the (implicit) dependency on PyOpenSSL. Now the cryptography package is used
+  directly.
+* Made the cryptography dependency explicit.
+
 0.11.0 (2024-02-15)
 ===================
 
