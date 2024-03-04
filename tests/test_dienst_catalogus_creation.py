@@ -281,6 +281,9 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.technical_contact_person_email = "test@test.nl"
         self.eherkenning_config.organization_name = "Test Organisation"
         self.eherkenning_config.organization_url = "http://test-organisation.nl"
+        self.eherkenning_config.service_description_url = (
+            "http://test-organisation.nl/service-description/"
+        )
         self.eherkenning_config.save()
 
         eherkenning_dienstcatalogus_metadata = generate_dienst_catalogus_metadata(
@@ -353,6 +356,14 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
             namespaces=NAMESPACES,
         )
         self.assertEqual("Test Service Description", service_description_node.text)
+        service_description_url_node = eherkenning_definition_node.find(
+            ".//esc:ServiceDescriptionURL",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(
+            "http://test-organisation.nl/service-description/",
+            service_description_url_node.text,
+        )
 
         loa_node = eherkenning_definition_node.find(
             ".//saml:AuthnContextClassRef",
