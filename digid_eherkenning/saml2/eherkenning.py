@@ -48,6 +48,11 @@ def generate_dienst_catalogus_metadata(eherkenning_config=None):
         privacy_policy_url = service["privacy_policy_url"]
         service["privacy_policy_url"] = {"nl": privacy_policy_url}
 
+        service_description_url = service["service_description_url"]
+        service["service_description_url"] = (
+            {"nl": service_description_url} if service_description_url else None
+        )
+
     return create_service_catalogus(settings)
 
 
@@ -66,7 +71,9 @@ def xml_datetime(d):
     return d.isoformat(timespec="seconds")
 
 
-def create_language_elements(element_name, option_value, default_language="en"):
+def create_language_elements(
+    element_name: str, option_value: dict | str | None, default_language: str = "en"
+) -> list[Element]:
     """
     Convert a configuration option into zero or more eHerkenning dienstcatalogus
     elements
@@ -78,16 +85,16 @@ def create_language_elements(element_name, option_value, default_language="en"):
     """
 
     if option_value is None:
-        options = []
+        return []
 
-    options = (
+    option_in_different_langs = (
         option_value
         if isinstance(option_value, dict)
         else {default_language: option_value}
     )
 
     elements = []
-    for lang, option in options.items():
+    for lang, option in option_in_different_langs.items():
         xml_lang = {"{http://www.w3.org/XML/1998/namespace}lang": lang}
         elements.append(
             ESC(element_name, option, **xml_lang),
@@ -170,6 +177,7 @@ def create_service_definition(
     service_uuid,
     service_name,
     service_description,
+    service_description_url,
     loa,
     entity_concerned_types_allowed,
     requested_attributes,
@@ -179,12 +187,16 @@ def create_service_definition(
     service_description_elements = create_language_elements(
         "ServiceDescription", service_description
     )
+    service_description_url_elements = create_language_elements(
+        "ServiceDescriptionURL", service_description_url
+    )
 
     ns = namespaces["esc"]
     args = [
         ESC("ServiceUUID", service_uuid),
         *service_name_elements,
         *service_description_elements,
+        *service_description_url_elements,
         SAML("AuthnContextClassRef", loa),
         ESC("HerkenningsmakelaarId", makelaar_oin),
     ]
@@ -323,6 +335,9 @@ def create_service_catalogus(conf, validate=True):
         privacy_policy_url = service.get(
             "privacy_policy_url",
         )
+        service_description_url = service.get(
+            "service_description_url",
+        )
         herkenningsmakelaars_id = service.get(
             "herkenningsmakelaars_id",
         )
@@ -334,6 +349,7 @@ def create_service_catalogus(conf, validate=True):
             service_uuid,
             service_name,
             service_description,
+            service_description_url,
             # https://afsprakenstelsel.etoegang.nl/display/as/Level+of+assurance
             conf["loa"],
             entity_concerned_types_allowed,

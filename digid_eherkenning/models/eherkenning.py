@@ -103,6 +103,12 @@ class EherkenningConfiguration(BaseConfiguration):
         ),
         max_length=255,
     )
+    service_description_url = models.URLField(
+        _("service description URL"),
+        help_text=_("The URL where the service description can be found."),
+        max_length=255,
+        default="",
+    )
     makelaar_id = models.CharField(
         _("broker ID"),
         help_text=_("OIN of the broker used to set up eHerkenning/eIDAS."),
@@ -157,6 +163,7 @@ class EherkenningConfiguration(BaseConfiguration):
                 "attribute_consuming_service_index": self.eh_attribute_consuming_service_index,
                 "service_instance_uuid": str(self.eh_service_instance_uuid),
                 "service_description": self.service_description,
+                "service_description_url": self.service_description_url,
                 "service_url": self.base_url,
                 "privacy_policy_url": self.privacy_policy,
                 "herkenningsmakelaars_id": self.makelaar_id,
@@ -187,6 +194,7 @@ class EherkenningConfiguration(BaseConfiguration):
                 "attribute_consuming_service_index": self.eidas_attribute_consuming_service_index,
                 "service_instance_uuid": str(self.eidas_service_instance_uuid),
                 "service_description": self.service_description,
+                "service_description_url": self.service_description_url,
                 "service_url": self.base_url,
                 "privacy_policy_url": self.privacy_policy,
                 "herkenningsmakelaars_id": self.makelaar_id,
