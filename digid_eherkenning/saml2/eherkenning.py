@@ -72,26 +72,33 @@ def xml_datetime(d):
 
 
 def create_language_elements(
-    element_name: str, option_value: dict | str | None, default_language: str = "en"
+    element_name: str,
+    option_value: dict[str, str] | str | None,
+    languages: list[str] | None = None,
 ) -> list[Element]:
     """
     Convert a configuration option into zero or more eHerkenning dienstcatalogus
     elements
 
-    :param element_name Name of the XML element to be generated
-    :param option_value Configuration option being either a string or a dictionary
+    :param element_name: Name of the XML element to be generated
+    :param option_value: Configuration option being either a string or a dictionary
                         containing the language code as key, and the option as value.
-    :return list of etree elements
+    :param languages: A node for each language will be made if option_value is a string
+    :return list: of etree elements
     """
+    default_language = "en"
 
     if option_value is None:
         return []
 
-    option_in_different_langs = (
-        option_value
-        if isinstance(option_value, dict)
-        else {default_language: option_value}
-    )
+    if isinstance(option_value, str):
+        option_in_different_langs = (
+            {language: option_value for language in languages}
+            if languages
+            else {default_language: option_value}
+        )
+    else:
+        option_in_different_langs = option_value
 
     elements = []
     for lang, option in option_in_different_langs.items():
@@ -257,6 +264,9 @@ def create_service_instance(
 ):
     ns = namespaces["esc"]
 
+    service_url_elements = create_language_elements(
+        "ServiceURL", service_url, languages=["nl", "en"]
+    )
     privacy_url_elements = create_language_elements(
         "PrivacyPolicyURL", privacy_policy_url
     )
@@ -265,7 +275,7 @@ def create_service_instance(
         ESC("ServiceID", service_id),
         ESC("ServiceUUID", service_uuid),
         ESC("InstanceOfService", instance_of_service),
-        ESC("ServiceURL", service_url, **xml_nl_lang),
+        *service_url_elements,
         *privacy_url_elements,
         ESC("HerkenningsmakelaarId", herkenningsmakelaars_id),
         ESC("SSOSupport", "false"),
