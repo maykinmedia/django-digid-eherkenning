@@ -83,6 +83,10 @@ def test_wants_assertions_signed_setting_default(
         _xpath(service_node_0, ".//esc:EntityConcernedTypesAllowed")
         == "urn:etoegang:1.9:EntityConcernedID:RSIN"
     )
+    assert (
+        _xpath(service_node_0, ".//esc:ServiceRestrictionsAllowed")
+        == "urn:etoegang:1.9:ServiceRestriction:Vestigingsnr"
+    )
 
     service_node_1 = service_definition_nodes[1]
     assert (
