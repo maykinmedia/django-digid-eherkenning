@@ -182,6 +182,7 @@ def create_service_definition(
     entity_concerned_types_allowed,
     requested_attributes,
     makelaar_oin,
+    service_restrictions_allowed,
 ):
     service_name_elements = create_language_elements("ServiceName", service_name)
     service_description_elements = create_language_elements(
@@ -211,6 +212,9 @@ def create_service_definition(
         args.append(
             ESC("EntityConcernedTypesAllowed", entity["name"], **kwargs),
         )
+
+    if service_restrictions_allowed:
+        args.append(ESC("ServiceRestrictionsAllowed", service_restrictions_allowed))
 
     for requested_attribute in requested_attributes:
         if isinstance(requested_attribute, dict):
@@ -342,6 +346,7 @@ def create_service_catalogus(conf, validate=True):
             "herkenningsmakelaars_id",
         )
         entity_concerned_types_allowed = service.get("entity_concerned_types_allowed")
+        service_restrictions_allowed = service.get("service_restrictions_allowed")
         requested_attributes = service.get("requested_attributes", [])
         classifiers = service.get("classifiers", [])
 
@@ -355,6 +360,7 @@ def create_service_catalogus(conf, validate=True):
             entity_concerned_types_allowed,
             requested_attributes,
             herkenningsmakelaars_id,
+            service_restrictions_allowed,
         )
         service_instance = create_service_instance(
             service_id,

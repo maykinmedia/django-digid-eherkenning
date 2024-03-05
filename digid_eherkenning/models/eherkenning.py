@@ -168,6 +168,7 @@ class EherkenningConfiguration(BaseConfiguration):
                 "privacy_policy_url": self.privacy_policy,
                 "herkenningsmakelaars_id": self.makelaar_id,
                 "requested_attributes": self.eh_requested_attributes,
+                "service_restrictions_allowed": "urn:etoegang:1.9:ServiceRestriction:Vestigingsnr",
                 "entity_concerned_types_allowed": [
                     {
                         "set_number": "1",
