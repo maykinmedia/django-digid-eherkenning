@@ -288,6 +288,32 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.service_description_url = (
             "http://test-organisation.nl/service-description/"
         )
+        self.eherkenning_config.eh_requested_attributes = [
+            {
+                "name": "urn:etoegang:1.9:attribute:FirstName",
+                "required": True,
+                "en": "A reason for the first name",
+                "nl": "Een reden voor de voornaam",
+            },
+            {
+                "name": "urn:etoegang:1.9:attribute:FamilyName",
+                "required": True,
+                "en": "A reason for the last name",
+                "nl": "Een reden voor de achternaam",
+            },
+            {
+                "name": "urn:etoegang:1.9:attribute:DateOfBirth",
+                "required": True,
+                "en": "A reason for the date of birth",
+                "nl": "Een reden voor de geboortedatum",
+            },
+            {
+                "name": "urn:etoegang:1.11:attribute-represented:CompanyName",
+                "required": True,
+                "en": "A reason for the company name",
+                "nl": "Een reden voor de bedrijfnaam",
+            },
+        ]
         self.eherkenning_config.save()
 
         eherkenning_dienstcatalogus_metadata = generate_dienst_catalogus_metadata(
@@ -398,6 +424,31 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
         self.assertEqual(
             "urn:etoegang:1.9:EntityConcernedID:KvKnr", entity_concerned_nodes[2].text
         )
+
+        requested_attribute_nodes = eherkenning_definition_node.findall(
+            ".//esc:RequestedAttribute", namespaces=NAMESPACES
+        )
+        self.assertEqual(len(requested_attribute_nodes), 4)
+        self.assertEqual(
+            requested_attribute_nodes[0].attrib["Name"],
+            "urn:etoegang:1.9:attribute:FirstName",
+        )
+        self.assertEqual(requested_attribute_nodes[0].attrib["isRequired"], "true")
+        self.assertEqual(
+            requested_attribute_nodes[1].attrib["Name"],
+            "urn:etoegang:1.9:attribute:FamilyName",
+        )
+        self.assertEqual(requested_attribute_nodes[1].attrib["isRequired"], "true")
+        self.assertEqual(
+            requested_attribute_nodes[2].attrib["Name"],
+            "urn:etoegang:1.9:attribute:DateOfBirth",
+        )
+        self.assertEqual(requested_attribute_nodes[2].attrib["isRequired"], "true")
+        self.assertEqual(
+            requested_attribute_nodes[3].attrib["Name"],
+            "urn:etoegang:1.11:attribute-represented:CompanyName",
+        )
+        self.assertEqual(requested_attribute_nodes[3].attrib["isRequired"], "true")
 
         # eIDAS service definition
         uuid_node = eidas_definition_node.find(
