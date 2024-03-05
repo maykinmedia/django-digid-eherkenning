@@ -73,8 +73,8 @@ def xml_datetime(d):
 
 def create_language_elements(
     element_name: str,
-    option_value: dict[str, str] | str | None,
-    languages: list[str] | None = None,
+    option_value: Union[dict[str, str], str, None],
+    languages: Union[list[str], None] = None,
 ) -> list[Element]:
     """
     Convert a configuration option into zero or more eHerkenning dienstcatalogus
