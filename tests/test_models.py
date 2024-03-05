@@ -60,7 +60,7 @@ class BaseModelTests(TestCase):
         )
         self.assertEqual(
             config.idp_service_entity_id,
-            "https://eh01.staging.iwelcome.nl/broker/sso/1.13",
+            "urn:etoegang:HM:00000003520354760000:entities:9632",
         )
 
     @patch(

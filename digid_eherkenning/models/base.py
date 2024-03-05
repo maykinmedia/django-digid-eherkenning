@@ -221,11 +221,7 @@ class BaseConfiguration(SingletonModel):
         # sometimes the xml file contains urn instead of a url as an entity ID
         # use the provided url instead
         urls = {
-            "entityId": (
-                entity_id
-                if not (entity_id := idp.get("entityId")).startswith("urn:")
-                else self.metadata_file_source
-            ),
+            "entityId": idp.get("entityId"),
             "sso_url": idp.get("singleSignOnService", {}).get("url"),
             "slo_url": idp.get("singleLogoutService", {}).get("url"),
         }
