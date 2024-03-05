@@ -268,7 +268,7 @@ def create_service_instance(
         "ServiceURL", service_url, languages=["nl", "en"]
     )
     privacy_url_elements = create_language_elements(
-        "PrivacyPolicyURL", privacy_policy_url
+        "PrivacyPolicyURL", privacy_policy_url, languages=["nl", "en"]
     )
 
     args = [
