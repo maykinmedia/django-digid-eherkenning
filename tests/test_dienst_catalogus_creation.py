@@ -125,10 +125,31 @@ def test_wants_assertions_signed_setting_default(
     ) is not None
     assert (instance_node_0.find(".//esc:Classifiers", namespaces=NAMESPACES)) is None
 
-    service_url_nodes = instance_node_0.findall(".//esc:ServiceURL", namespaces=NAMESPACES)
-    assert (len(service_url_nodes) == 2)
-    assert (service_url_nodes[0].attrib["{http://www.w3.org/XML/1998/namespace}lang"] == "nl")
-    assert (service_url_nodes[1].attrib["{http://www.w3.org/XML/1998/namespace}lang"] == "en")
+    service_url_nodes = instance_node_0.findall(
+        ".//esc:ServiceURL", namespaces=NAMESPACES
+    )
+    assert len(service_url_nodes) == 2
+    assert (
+        service_url_nodes[0].attrib["{http://www.w3.org/XML/1998/namespace}lang"]
+        == "nl"
+    )
+    assert (
+        service_url_nodes[1].attrib["{http://www.w3.org/XML/1998/namespace}lang"]
+        == "en"
+    )
+
+    privacy_policy_nodes = instance_node_0.findall(
+        ".//esc:PrivacyPolicyURL", namespaces=NAMESPACES
+    )
+    assert len(privacy_policy_nodes) == 2
+    assert (
+        privacy_policy_nodes[0].attrib["{http://www.w3.org/XML/1998/namespace}lang"]
+        == "nl"
+    )
+    assert (
+        privacy_policy_nodes[1].attrib["{http://www.w3.org/XML/1998/namespace}lang"]
+        == "en"
+    )
 
     instance_node_1 = service_instance_nodes[1]
     assert (
@@ -144,9 +165,9 @@ def test_wants_assertions_signed_setting_default(
         == "2e167de1-8bef-4d5a-ab48-8fa020e9e631"
     )
     assert (
-        instance_node_1
-        .find(".//esc:ServiceCertificate", namespaces=NAMESPACES)
-        .find(".//md:KeyDescriptor", namespaces=NAMESPACES)
+        instance_node_1.find(".//esc:ServiceCertificate", namespaces=NAMESPACES).find(
+            ".//md:KeyDescriptor", namespaces=NAMESPACES
+        )
     ) is not None
     assert (
         instance_node_1.find(".//esc:Classifiers", namespaces=NAMESPACES)
