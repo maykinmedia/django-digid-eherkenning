@@ -61,7 +61,7 @@ def generate_eherkenning_metadata():
     client.saml2_setting_kwargs = {"sp_validation_only": True}
     metadata = client.create_metadata()
     return (
-        b"<?xml version='1.0' encoding='UTF-8'?>" + metadata
+        b'<?xml version="1.0" encoding="UTF-8"?>' + metadata
         if not metadata.startswith(b"<?xml")
         else metadata
     )
@@ -118,7 +118,7 @@ def create_service_catalogue(id, issue_instant, signature, service_provider):
     kwargs = {
         "ID": id,
         f"{{{ns}}}IssueInstant": xml_datetime(issue_instant),
-        f"{{{ns}}}Version": "urn:etoegang:1.10:53",
+        f"{{{ns}}}Version": "urn:etoegang:1.13:53",
     }
     return ESC("ServiceCatalogue", *args, **kwargs)
 
