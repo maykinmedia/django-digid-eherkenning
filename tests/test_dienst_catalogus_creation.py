@@ -191,6 +191,7 @@ def test_catalogus_with_requested_attributes_with_purpose_statement(
             },
         }
     ]
+    config.eidas_requested_attributes = []
     config.save()
 
     conf = config.as_dict()
@@ -232,6 +233,7 @@ def test_catalogus_with_requested_attributes_without_purpose_statement(
             "required": False,
         }
     ]
+    config.eidas_requested_attributes = []
     config.save()
 
     conf = config.as_dict()
@@ -275,12 +277,6 @@ def test_makelaar_oin_is_configurable(eherkenning_config_defaults, temp_private_
     config.service_name = "Example"
     config.oin = "00000000000000000000"
     config.makelaar_id = "00000000000000000123"
-    config.eh_requested_attributes = [
-        {
-            "name": "Test Attribute",
-            "required": False,
-        }
-    ]
     config.save()
     conf = config.as_dict()
 
@@ -312,30 +308,38 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.service_description_url = (
             "http://test-organisation.nl/service-description/"
         )
-        self.eherkenning_config.eh_requested_attributes = [
+        self.eherkenning_config.eidas_requested_attributes = [
             {
                 "name": "urn:etoegang:1.9:attribute:FirstName",
                 "required": True,
-                "en": "A reason for the first name",
-                "nl": "Een reden voor de voornaam",
+                "purpose_statements": {
+                    "en": "A reason for the first name",
+                    "nl": "Een reden voor de voornaam",
+                },
             },
             {
                 "name": "urn:etoegang:1.9:attribute:FamilyName",
                 "required": True,
-                "en": "A reason for the last name",
-                "nl": "Een reden voor de achternaam",
+                "purpose_statements": {
+                    "en": "A reason for the last name",
+                    "nl": "Een reden voor de achternaam",
+                },
             },
             {
                 "name": "urn:etoegang:1.9:attribute:DateOfBirth",
                 "required": True,
-                "en": "A reason for the date of birth",
-                "nl": "Een reden voor de geboortedatum",
+                "purpose_statements": {
+                    "en": "A reason for the date of birth",
+                    "nl": "Een reden voor de geboortedatum",
+                },
             },
             {
                 "name": "urn:etoegang:1.11:attribute-represented:CompanyName",
                 "required": True,
-                "en": "A reason for the company name",
-                "nl": "Een reden voor de bedrijfnaam",
+                "purpose_statements": {
+                    "en": "A reason for the company name",
+                    "nl": "Een reden voor de bedrijfnaam",
+                },
             },
         ]
         self.eherkenning_config.save()
@@ -449,31 +453,6 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
             "urn:etoegang:1.9:EntityConcernedID:KvKnr", entity_concerned_nodes[2].text
         )
 
-        requested_attribute_nodes = eherkenning_definition_node.findall(
-            ".//esc:RequestedAttribute", namespaces=NAMESPACES
-        )
-        self.assertEqual(len(requested_attribute_nodes), 4)
-        self.assertEqual(
-            requested_attribute_nodes[0].attrib["Name"],
-            "urn:etoegang:1.9:attribute:FirstName",
-        )
-        self.assertEqual(requested_attribute_nodes[0].attrib["isRequired"], "true")
-        self.assertEqual(
-            requested_attribute_nodes[1].attrib["Name"],
-            "urn:etoegang:1.9:attribute:FamilyName",
-        )
-        self.assertEqual(requested_attribute_nodes[1].attrib["isRequired"], "true")
-        self.assertEqual(
-            requested_attribute_nodes[2].attrib["Name"],
-            "urn:etoegang:1.9:attribute:DateOfBirth",
-        )
-        self.assertEqual(requested_attribute_nodes[2].attrib["isRequired"], "true")
-        self.assertEqual(
-            requested_attribute_nodes[3].attrib["Name"],
-            "urn:etoegang:1.11:attribute-represented:CompanyName",
-        )
-        self.assertEqual(requested_attribute_nodes[3].attrib["isRequired"], "true")
-
         # eIDAS service definition
         uuid_node = eidas_definition_node.find(
             ".//esc:ServiceUUID",
@@ -513,6 +492,31 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
         self.assertEqual(
             "urn:etoegang:1.9:EntityConcernedID:Pseudo", entity_concerned_nodes[0].text
         )
+
+        requested_attribute_nodes = eidas_definition_node.findall(
+            ".//esc:RequestedAttribute", namespaces=NAMESPACES
+        )
+        self.assertEqual(len(requested_attribute_nodes), 4)
+        self.assertEqual(
+            requested_attribute_nodes[0].attrib["Name"],
+            "urn:etoegang:1.9:attribute:FirstName",
+        )
+        self.assertEqual(requested_attribute_nodes[0].attrib["isRequired"], "true")
+        self.assertEqual(
+            requested_attribute_nodes[1].attrib["Name"],
+            "urn:etoegang:1.9:attribute:FamilyName",
+        )
+        self.assertEqual(requested_attribute_nodes[1].attrib["isRequired"], "true")
+        self.assertEqual(
+            requested_attribute_nodes[2].attrib["Name"],
+            "urn:etoegang:1.9:attribute:DateOfBirth",
+        )
+        self.assertEqual(requested_attribute_nodes[2].attrib["isRequired"], "true")
+        self.assertEqual(
+            requested_attribute_nodes[3].attrib["Name"],
+            "urn:etoegang:1.11:attribute-represented:CompanyName",
+        )
+        self.assertEqual(requested_attribute_nodes[3].attrib["isRequired"], "true")
 
         # Service instances
         service_instance_nodes = service_catalogue_node.findall(
