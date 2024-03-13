@@ -83,6 +83,10 @@ def test_wants_assertions_signed_setting_default(
         _xpath(service_node_0, ".//esc:EntityConcernedTypesAllowed")
         == "urn:etoegang:1.9:EntityConcernedID:RSIN"
     )
+    assert (
+        _xpath(service_node_0, ".//esc:ServiceRestrictionsAllowed")
+        == "urn:etoegang:1.9:ServiceRestriction:Vestigingsnr"
+    )
 
     service_node_1 = service_definition_nodes[1]
     assert (
@@ -121,6 +125,32 @@ def test_wants_assertions_signed_setting_default(
     ) is not None
     assert (instance_node_0.find(".//esc:Classifiers", namespaces=NAMESPACES)) is None
 
+    service_url_nodes = instance_node_0.findall(
+        ".//esc:ServiceURL", namespaces=NAMESPACES
+    )
+    assert len(service_url_nodes) == 2
+    assert (
+        service_url_nodes[0].attrib["{http://www.w3.org/XML/1998/namespace}lang"]
+        == "nl"
+    )
+    assert (
+        service_url_nodes[1].attrib["{http://www.w3.org/XML/1998/namespace}lang"]
+        == "en"
+    )
+
+    privacy_policy_nodes = instance_node_0.findall(
+        ".//esc:PrivacyPolicyURL", namespaces=NAMESPACES
+    )
+    assert len(privacy_policy_nodes) == 2
+    assert (
+        privacy_policy_nodes[0].attrib["{http://www.w3.org/XML/1998/namespace}lang"]
+        == "nl"
+    )
+    assert (
+        privacy_policy_nodes[1].attrib["{http://www.w3.org/XML/1998/namespace}lang"]
+        == "en"
+    )
+
     instance_node_1 = service_instance_nodes[1]
     assert (
         _xpath(instance_node_1, ".//esc:ServiceID")
@@ -134,15 +164,13 @@ def test_wants_assertions_signed_setting_default(
         _xpath(instance_node_1, ".//esc:InstanceOfService")
         == "2e167de1-8bef-4d5a-ab48-8fa020e9e631"
     )
-
-    instance_node_1 = service_instance_nodes[1]
     assert (
-        service_instance_nodes[1]
-        .find(".//esc:ServiceCertificate", namespaces=NAMESPACES)
-        .find(".//md:KeyDescriptor", namespaces=NAMESPACES)
+        instance_node_1.find(".//esc:ServiceCertificate", namespaces=NAMESPACES).find(
+            ".//md:KeyDescriptor", namespaces=NAMESPACES
+        )
     ) is not None
     assert (
-        service_instance_nodes[1].find(".//esc:Classifiers", namespaces=NAMESPACES)
+        instance_node_1.find(".//esc:Classifiers", namespaces=NAMESPACES)
     ) is not None
 
 
@@ -163,6 +191,7 @@ def test_catalogus_with_requested_attributes_with_purpose_statement(
             },
         }
     ]
+    config.eidas_requested_attributes = []
     config.save()
 
     conf = config.as_dict()
@@ -204,6 +233,7 @@ def test_catalogus_with_requested_attributes_without_purpose_statement(
             "required": False,
         }
     ]
+    config.eidas_requested_attributes = []
     config.save()
 
     conf = config.as_dict()
@@ -247,12 +277,6 @@ def test_makelaar_oin_is_configurable(eherkenning_config_defaults, temp_private_
     config.service_name = "Example"
     config.oin = "00000000000000000000"
     config.makelaar_id = "00000000000000000123"
-    config.eh_requested_attributes = [
-        {
-            "name": "Test Attribute",
-            "required": False,
-        }
-    ]
     config.save()
     conf = config.as_dict()
 
@@ -281,6 +305,43 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.technical_contact_person_email = "test@test.nl"
         self.eherkenning_config.organization_name = "Test Organisation"
         self.eherkenning_config.organization_url = "http://test-organisation.nl"
+        self.eherkenning_config.service_description_url = (
+            "http://test-organisation.nl/service-description/"
+        )
+        self.eherkenning_config.eidas_requested_attributes = [
+            {
+                "name": "urn:etoegang:1.9:attribute:FirstName",
+                "required": True,
+                "purpose_statements": {
+                    "en": "A reason for the first name",
+                    "nl": "Een reden voor de voornaam",
+                },
+            },
+            {
+                "name": "urn:etoegang:1.9:attribute:FamilyName",
+                "required": True,
+                "purpose_statements": {
+                    "en": "A reason for the last name",
+                    "nl": "Een reden voor de achternaam",
+                },
+            },
+            {
+                "name": "urn:etoegang:1.9:attribute:DateOfBirth",
+                "required": True,
+                "purpose_statements": {
+                    "en": "A reason for the date of birth",
+                    "nl": "Een reden voor de geboortedatum",
+                },
+            },
+            {
+                "name": "urn:etoegang:1.11:attribute-represented:CompanyName",
+                "required": True,
+                "purpose_statements": {
+                    "en": "A reason for the company name",
+                    "nl": "Een reden voor de bedrijfnaam",
+                },
+            },
+        ]
         self.eherkenning_config.save()
 
         eherkenning_dienstcatalogus_metadata = generate_dienst_catalogus_metadata(
@@ -353,6 +414,14 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
             namespaces=NAMESPACES,
         )
         self.assertEqual("Test Service Description", service_description_node.text)
+        service_description_url_node = eherkenning_definition_node.find(
+            ".//esc:ServiceDescriptionURL",
+            namespaces=NAMESPACES,
+        )
+        self.assertEqual(
+            "http://test-organisation.nl/service-description/",
+            service_description_url_node.text,
+        )
 
         loa_node = eherkenning_definition_node.find(
             ".//saml:AuthnContextClassRef",
@@ -423,6 +492,31 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
         self.assertEqual(
             "urn:etoegang:1.9:EntityConcernedID:Pseudo", entity_concerned_nodes[0].text
         )
+
+        requested_attribute_nodes = eidas_definition_node.findall(
+            ".//esc:RequestedAttribute", namespaces=NAMESPACES
+        )
+        self.assertEqual(len(requested_attribute_nodes), 4)
+        self.assertEqual(
+            requested_attribute_nodes[0].attrib["Name"],
+            "urn:etoegang:1.9:attribute:FirstName",
+        )
+        self.assertEqual(requested_attribute_nodes[0].attrib["isRequired"], "true")
+        self.assertEqual(
+            requested_attribute_nodes[1].attrib["Name"],
+            "urn:etoegang:1.9:attribute:FamilyName",
+        )
+        self.assertEqual(requested_attribute_nodes[1].attrib["isRequired"], "true")
+        self.assertEqual(
+            requested_attribute_nodes[2].attrib["Name"],
+            "urn:etoegang:1.9:attribute:DateOfBirth",
+        )
+        self.assertEqual(requested_attribute_nodes[2].attrib["isRequired"], "true")
+        self.assertEqual(
+            requested_attribute_nodes[3].attrib["Name"],
+            "urn:etoegang:1.11:attribute-represented:CompanyName",
+        )
+        self.assertEqual(requested_attribute_nodes[3].attrib["isRequired"], "true")
 
         # Service instances
         service_instance_nodes = service_catalogue_node.findall(

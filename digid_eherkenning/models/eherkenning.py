@@ -9,6 +9,56 @@ from ..validators import oin_validator
 from .base import BaseConfiguration
 
 
+def get_default_requested_attributes_eherkenning():
+    return [
+        {
+            "name": "urn:etoegang:1.11:attribute-represented:CompanyName",
+            "required": True,
+            "purpose_statements": {
+                "en": "For testing purposes.",
+                "nl": "Voor testdoeleinden.",
+            },
+        }
+    ]
+
+
+def get_default_requested_attributes_eidas():
+    return [
+        {
+            "name": "urn:etoegang:1.9:attribute:FirstName",
+            "required": True,
+            "purpose_statements": {
+                "en": "For testing purposes.",
+                "nl": "Voor testdoeleinden.",
+            },
+        },
+        {
+            "name": "urn:etoegang:1.9:attribute:FamilyName",
+            "required": True,
+            "purpose_statements": {
+                "en": "For testing purposes.",
+                "nl": "Voor testdoeleinden.",
+            },
+        },
+        {
+            "name": "urn:etoegang:1.9:attribute:DateOfBirth",
+            "required": True,
+            "purpose_statements": {
+                "en": "For testing purposes.",
+                "nl": "Voor testdoeleinden.",
+            },
+        },
+        {
+            "name": "urn:etoegang:1.11:attribute-represented:CompanyName",
+            "required": True,
+            "purpose_statements": {
+                "en": "For testing purposes.",
+                "nl": "Voor testdoeleinden.",
+            },
+        },
+    ]
+
+
 class EherkenningConfiguration(BaseConfiguration):
     loa = models.CharField(
         _("LoA"),
@@ -26,7 +76,7 @@ class EherkenningConfiguration(BaseConfiguration):
     )
     eh_requested_attributes = models.JSONField(
         _("requested attributes"),
-        default=list,
+        default=get_default_requested_attributes_eherkenning,
         help_text=_(
             "A list of additional requested attributes. A single requested attribute "
             "can be a string (the name of the attribute) or an object with keys 'name' "
@@ -58,7 +108,7 @@ class EherkenningConfiguration(BaseConfiguration):
     )
     eidas_requested_attributes = models.JSONField(
         _("requested attributes"),
-        default=list,
+        default=get_default_requested_attributes_eidas,
         help_text=_(
             "A list of additional requested attributes. A single requested attribute "
             "can be a string (the name of the attribute) or an object with keys 'name' "
@@ -102,6 +152,12 @@ class EherkenningConfiguration(BaseConfiguration):
             "service can be found."
         ),
         max_length=255,
+    )
+    service_description_url = models.URLField(
+        _("service description URL"),
+        help_text=_("The URL where the service description can be found."),
+        max_length=255,
+        default="",
     )
     makelaar_id = models.CharField(
         _("broker ID"),
@@ -157,10 +213,12 @@ class EherkenningConfiguration(BaseConfiguration):
                 "attribute_consuming_service_index": self.eh_attribute_consuming_service_index,
                 "service_instance_uuid": str(self.eh_service_instance_uuid),
                 "service_description": self.service_description,
+                "service_description_url": self.service_description_url,
                 "service_url": self.base_url,
                 "privacy_policy_url": self.privacy_policy,
                 "herkenningsmakelaars_id": self.makelaar_id,
                 "requested_attributes": self.eh_requested_attributes,
+                "service_restrictions_allowed": "urn:etoegang:1.9:ServiceRestriction:Vestigingsnr",
                 "entity_concerned_types_allowed": [
                     {
                         "set_number": "1",
@@ -187,6 +245,7 @@ class EherkenningConfiguration(BaseConfiguration):
                 "attribute_consuming_service_index": self.eidas_attribute_consuming_service_index,
                 "service_instance_uuid": str(self.eidas_service_instance_uuid),
                 "service_description": self.service_description,
+                "service_description_url": self.service_description_url,
                 "service_url": self.base_url,
                 "privacy_policy_url": self.privacy_policy,
                 "herkenningsmakelaars_id": self.makelaar_id,

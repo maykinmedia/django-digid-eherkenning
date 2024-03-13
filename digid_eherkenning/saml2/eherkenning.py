@@ -48,6 +48,11 @@ def generate_dienst_catalogus_metadata(eherkenning_config=None):
         privacy_policy_url = service["privacy_policy_url"]
         service["privacy_policy_url"] = {"nl": privacy_policy_url}
 
+        service_description_url = service["service_description_url"]
+        service["service_description_url"] = (
+            {"nl": service_description_url} if service_description_url else None
+        )
+
     return create_service_catalogus(settings)
 
 
@@ -56,7 +61,7 @@ def generate_eherkenning_metadata():
     client.saml2_setting_kwargs = {"sp_validation_only": True}
     metadata = client.create_metadata()
     return (
-        b"<?xml version='1.0' encoding='UTF-8'?>" + metadata
+        b'<?xml version="1.0" encoding="UTF-8"?>' + metadata
         if not metadata.startswith(b"<?xml")
         else metadata
     )
@@ -66,28 +71,37 @@ def xml_datetime(d):
     return d.isoformat(timespec="seconds")
 
 
-def create_language_elements(element_name, option_value, default_language="en"):
+def create_language_elements(
+    element_name: str,
+    option_value: Union[dict[str, str], str, None],
+    languages: Union[list[str], None] = None,
+) -> list[Element]:
     """
     Convert a configuration option into zero or more eHerkenning dienstcatalogus
     elements
 
-    :param element_name Name of the XML element to be generated
-    :param option_value Configuration option being either a string or a dictionary
+    :param element_name: Name of the XML element to be generated
+    :param option_value: Configuration option being either a string or a dictionary
                         containing the language code as key, and the option as value.
-    :return list of etree elements
+    :param languages: A node for each language will be made if option_value is a string
+    :return list: of etree elements
     """
+    default_language = "en"
 
     if option_value is None:
-        options = []
+        return []
 
-    options = (
-        option_value
-        if isinstance(option_value, dict)
-        else {default_language: option_value}
-    )
+    if isinstance(option_value, str):
+        option_in_different_langs = (
+            {language: option_value for language in languages}
+            if languages
+            else {default_language: option_value}
+        )
+    else:
+        option_in_different_langs = option_value
 
     elements = []
-    for lang, option in options.items():
+    for lang, option in option_in_different_langs.items():
         xml_lang = {"{http://www.w3.org/XML/1998/namespace}lang": lang}
         elements.append(
             ESC(element_name, option, **xml_lang),
@@ -104,7 +118,7 @@ def create_service_catalogue(id, issue_instant, signature, service_provider):
     kwargs = {
         "ID": id,
         f"{{{ns}}}IssueInstant": xml_datetime(issue_instant),
-        f"{{{ns}}}Version": "urn:etoegang:1.10:53",
+        f"{{{ns}}}Version": "urn:etoegang:1.13:53",
     }
     return ESC("ServiceCatalogue", *args, **kwargs)
 
@@ -170,14 +184,19 @@ def create_service_definition(
     service_uuid,
     service_name,
     service_description,
+    service_description_url,
     loa,
     entity_concerned_types_allowed,
     requested_attributes,
     makelaar_oin,
+    service_restrictions_allowed,
 ):
     service_name_elements = create_language_elements("ServiceName", service_name)
     service_description_elements = create_language_elements(
         "ServiceDescription", service_description
+    )
+    service_description_url_elements = create_language_elements(
+        "ServiceDescriptionURL", service_description_url
     )
 
     ns = namespaces["esc"]
@@ -185,6 +204,7 @@ def create_service_definition(
         ESC("ServiceUUID", service_uuid),
         *service_name_elements,
         *service_description_elements,
+        *service_description_url_elements,
         SAML("AuthnContextClassRef", loa),
         ESC("HerkenningsmakelaarId", makelaar_oin),
     ]
@@ -199,6 +219,9 @@ def create_service_definition(
         args.append(
             ESC("EntityConcernedTypesAllowed", entity["name"], **kwargs),
         )
+
+    if service_restrictions_allowed:
+        args.append(ESC("ServiceRestrictionsAllowed", service_restrictions_allowed))
 
     for requested_attribute in requested_attributes:
         if isinstance(requested_attribute, dict):
@@ -241,15 +264,18 @@ def create_service_instance(
 ):
     ns = namespaces["esc"]
 
+    service_url_elements = create_language_elements(
+        "ServiceURL", service_url, languages=["nl", "en"]
+    )
     privacy_url_elements = create_language_elements(
-        "PrivacyPolicyURL", privacy_policy_url
+        "PrivacyPolicyURL", privacy_policy_url, languages=["nl", "en"]
     )
 
     args = [
         ESC("ServiceID", service_id),
         ESC("ServiceUUID", service_uuid),
         ESC("InstanceOfService", instance_of_service),
-        ESC("ServiceURL", service_url, **xml_nl_lang),
+        *service_url_elements,
         *privacy_url_elements,
         ESC("HerkenningsmakelaarId", herkenningsmakelaars_id),
         ESC("SSOSupport", "false"),
@@ -323,10 +349,14 @@ def create_service_catalogus(conf, validate=True):
         privacy_policy_url = service.get(
             "privacy_policy_url",
         )
+        service_description_url = service.get(
+            "service_description_url",
+        )
         herkenningsmakelaars_id = service.get(
             "herkenningsmakelaars_id",
         )
         entity_concerned_types_allowed = service.get("entity_concerned_types_allowed")
+        service_restrictions_allowed = service.get("service_restrictions_allowed")
         requested_attributes = service.get("requested_attributes", [])
         classifiers = service.get("classifiers", [])
 
@@ -334,11 +364,13 @@ def create_service_catalogus(conf, validate=True):
             service_uuid,
             service_name,
             service_description,
+            service_description_url,
             # https://afsprakenstelsel.etoegang.nl/display/as/Level+of+assurance
             conf["loa"],
             entity_concerned_types_allowed,
             requested_attributes,
             herkenningsmakelaars_id,
+            service_restrictions_allowed,
         )
         service_instance = create_service_instance(
             service_id,

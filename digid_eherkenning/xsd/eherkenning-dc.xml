@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Schema for AS_1.14 Release
+    $Date: 2020-09-07
+    $Author:rahulkumar.gupta@kpn.com
+    https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
+-->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
     xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
@@ -7,8 +13,8 @@
     targetNamespace="urn:etoegang:1.13:service-catalog"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified">
- 
-    <!--
+
+    <!-- Using the local version instead of the remote
     <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="http://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd"/>
     -->
     <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
@@ -16,7 +22,7 @@
     <xs:import namespace="urn:oasis:names:tc:SAML:2.0:assertion" schemaLocation="saml-schema-assertion-2.0.xsd"/>
     <!-- <xs:import namespace="urn:oasis:names:tc:SAML:2.0:metadata" schemaLocation="http://docs.oasis-open.org/security/saml/v2.0/saml-schema-metadata-2.0.xsd"/> -->
     <xs:import namespace="urn:oasis:names:tc:SAML:2.0:metadata" schemaLocation="saml-schema-metadata-2.0.xsd"/>
- 
+
     <!--Elements-->
     <xs:element name="ServiceDefinition" type="esc:ServiceDefinitionType" />
     <xs:complexType name="ServiceDefinitionType">
@@ -28,6 +34,7 @@
             <xs:element ref="saml2:AuthnContextClassRef"/>
             <xs:element ref="esc:HerkenningsmakelaarId"/>
             <xs:element ref="esc:EntityConcernedTypesAllowed" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element ref="esc:ActingSubjectTypesAllowed" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element ref="esc:ServiceRestrictionsAllowed" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element ref="esc:RequestedAttribute" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
@@ -38,23 +45,22 @@
         <xs:sequence>
             <xs:element ref="esc:ServiceID" minOccurs="1"/>
             <xs:element ref="esc:ServiceUUID" />
-            <xs:choice>
-                <xs:element ref="esc:InstanceOfService" />
-                <xs:element ref="esc:IntermediatedService"/>
-            </xs:choice>
+            <xs:element ref="esc:InstanceOfService" minOccurs="0" maxOccurs="1"/>
+            <xs:element ref="esc:IntermediatedService" minOccurs="0" maxOccurs="1"/>
             <xs:element ref="esc:ServiceURL" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element ref="esc:PrivacyPolicyURL" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element ref="esc:HerkenningsmakelaarId"/>
             <xs:element ref="esc:AdditionalHerkenningsmakelaarId" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element name="SSOSupport" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
-            <xs:element ref="esc:EntityConcernedTypesAllowed" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element ref="esc:ServiceCertificate" minOccurs="0" maxOccurs="unbounded"/>
             <xs:element ref="esc:ServiceIntermediation" minOccurs="0" />
             <xs:element ref="esc:Classifiers" minOccurs="0" />
+            <xs:element ref="esc:BsnkStructureVersion" minOccurs="0"/>
+            <xs:element ref="esc:BsnkRecipientKeySetVersion" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute ref="esc:IsPublic" use="required"/>
     </xs:complexType>
- 
+
     <xs:element name="ServiceCatalogue">
         <xs:complexType>
             <xs:sequence>
@@ -75,6 +81,15 @@
             </xs:simpleContent>
         </xs:complexType>
     </xs:element>
+    <xs:element name="ActingSubjectTypesAllowed">
+    <xs:complexType>
+      <xs:simpleContent>
+       <xs:extension base="xs:anyURI">
+                    <xs:attribute name="setNumber" type="xs:nonNegativeInteger" use="optional"/>
+       </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
     <xs:element name="ServiceRestrictionsAllowed">
         <xs:complexType>
             <xs:simpleContent>
@@ -120,6 +135,8 @@
     </xs:element>
     <xs:element name="ServiceID" type="xs:anyURI"/>
     <xs:element name="ServiceUUID" type="xs:string"/>
+  <xs:element name="BsnkStructureVersion" type="xs:string"/>
+  <xs:element name="BsnkRecipientKeySetVersion" type="xs:string"/>
     <xs:element name="ServiceName">
         <xs:complexType>
             <xs:simpleContent>
@@ -207,10 +224,10 @@
             <xs:element name="Classifier" type="xs:string" maxOccurs="unbounded"/>
         </xs:sequence>
     </xs:complexType>
- 
+
     <!--Attributes-->
     <xs:attribute name="IssueInstant" type="xs:dateTime"/>
     <xs:attribute name="IsPublic" type="xs:boolean"/>
     <xs:attribute name="Version" type="xs:anyURI"/>
- 
+
 </xs:schema>
