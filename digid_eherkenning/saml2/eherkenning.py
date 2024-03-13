@@ -1,7 +1,7 @@
 import binascii
 from base64 import b64encode
 from io import BytesIO
-from typing import List, Literal, Union
+from typing import Literal, Union
 from uuid import uuid4
 
 from django.urls import reverse
@@ -12,10 +12,12 @@ from cryptography.x509 import load_pem_x509_certificate
 from furl.furl import furl
 from lxml.builder import ElementMaker
 from lxml.etree import Element, tostring
+from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
 from ..choices import AssuranceLevels
 from ..models import EherkenningConfiguration
 from ..settings import EHERKENNING_DS_XSD
+from ..types import EHerkenningConfig, EHerkenningSAMLConfig, ServiceConfig
 from ..utils import validate_xml
 from .base import BaseSaml2Client, get_service_description, get_service_name
 
@@ -36,7 +38,7 @@ xml_nl_lang = {"{http://www.w3.org/XML/1998/namespace}lang": "nl"}
 
 def generate_dienst_catalogus_metadata(eherkenning_config=None):
     eherkenning_config = eherkenning_config or EherkenningConfiguration.get_solo()
-    settings = eherkenning_config.as_dict()
+    settings: EHerkenningConfig = eherkenning_config.as_dict()
     # ensure that the single language strings are output in both nl and en
     for service in settings["services"]:
         name = service["service_name"]
@@ -295,7 +297,7 @@ def create_classifiers_element(classifiers: list) -> ElementMaker:
     return ESC("Classifiers", *classifiers_elements)
 
 
-def create_key_descriptor(x509_certificate_content: bytes):
+def create_key_descriptor(x509_certificate_content: bytes) -> ElementMaker:
     certificate = load_pem_x509_certificate(x509_certificate_content)
     key_name = binascii.hexlify(
         certificate.fingerprint(certificate.signature_hash_algorithm)
@@ -317,7 +319,7 @@ def create_key_descriptor(x509_certificate_content: bytes):
     return MD("KeyDescriptor", *args, **kwargs)
 
 
-def create_service_catalogus(conf, validate=True):
+def create_service_catalogus(conf: EHerkenningConfig, validate: bool = True) -> bytes:
     """
     https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
     """
@@ -403,8 +405,8 @@ def create_service_catalogus(conf, validate=True):
 
 
 def get_metadata_eherkenning_requested_attributes(
-    conf: dict, service_id: str
-) -> List[dict]:
+    conf: ServiceConfig, service_id: str
+) -> list[dict]:
     # There needs to be a RequestedAttribute element where the name is the ServiceID
     # https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
     requested_attributes = [{"name": service_id, "isRequired": False}]
@@ -427,7 +429,7 @@ def get_metadata_eherkenning_requested_attributes(
     return requested_attributes
 
 
-def create_attribute_consuming_services(conf: dict) -> list:
+def create_attribute_consuming_services(conf: EHerkenningConfig) -> list[dict]:
     attribute_consuming_services = []
 
     for service in conf["services"]:
@@ -466,15 +468,15 @@ class eHerkenningClient(BaseSaml2Client):
         self.loa = loa
 
     @property
-    def conf(self) -> dict:
+    def conf(self) -> EHerkenningConfig:
         if not hasattr(self, "_conf"):
             db_config = EherkenningConfiguration.get_solo()
             self._conf = db_config.as_dict()
             self._conf.setdefault("acs_path", reverse("eherkenning:acs"))
         return self._conf
 
-    def create_config_dict(self, conf):
-        config_dict = super().create_config_dict(conf)
+    def create_config_dict(self, conf: EHerkenningConfig) -> EHerkenningSAMLConfig:
+        config_dict: EHerkenningSAMLConfig = super().create_config_dict(conf)
 
         attribute_consuming_services = create_attribute_consuming_services(conf)
         with conf["cert_file"].open("r") as cert_file, conf["key_file"].open(
@@ -504,7 +506,9 @@ class eHerkenningClient(BaseSaml2Client):
         )
         return config_dict
 
-    def create_config(self, config_dict):
+    def create_config(
+        self, config_dict: EHerkenningSAMLConfig
+    ) -> OneLogin_Saml2_Settings:
         config_dict["security"].update(
             {
                 # See comment in the python3-saml for in  OneLogin_Saml2_Response.validate_num_assertions (onelogin/saml2/response.py)

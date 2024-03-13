@@ -43,7 +43,7 @@ class eHerkenningLoginView(TemplateView):
 
     #
     # TODO: It might be a good idea to change this to a post-verb.
-    # I can't think of any realy attack-vectors, but seems like a good
+    # I can't think of any relay attack-vectors, but seems like a good
     # idea anyways.
     #
     def get_context_data(self, **kwargs):
