@@ -366,7 +366,7 @@ def create_service_catalogus(conf, validate=True):
             service_description,
             service_description_url,
             # https://afsprakenstelsel.etoegang.nl/display/as/Level+of+assurance
-            conf["loa"],
+            service["loa"],
             entity_concerned_types_allowed,
             requested_attributes,
             herkenningsmakelaars_id,
@@ -515,9 +515,7 @@ class eHerkenningClient(BaseSaml2Client):
                 "metadataValidUntil": "",
                 "metadataCacheDuration": "",
                 "requestedAuthnContextComparison": "minimum",
-                "requestedAuthnContext": [
-                    self.loa or self.conf["loa"],
-                ],
+                "requestedAuthnContext": False if not self.loa else [self.loa],
             }
         )
         return super().create_config(config_dict)

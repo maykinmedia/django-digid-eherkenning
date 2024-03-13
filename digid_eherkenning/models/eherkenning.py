@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from ..choices import AssuranceLevels
+from ..types import EHerkenningConfig
 from ..validators import oin_validator
 from .base import BaseConfiguration
 
@@ -60,11 +61,11 @@ def get_default_requested_attributes_eidas():
 
 
 class EherkenningConfiguration(BaseConfiguration):
-    loa = models.CharField(
-        _("LoA"),
+    eh_loa = models.CharField(
+        _("eHerkenning LoA"),
         choices=AssuranceLevels.choices,
         default=AssuranceLevels.substantial,
-        help_text=_("Level of Assurance (LoA) to use for all the services."),
+        help_text=_("Level of Assurance (LoA) to use for the eHerkenning service."),
         max_length=100,
     )
     eh_attribute_consuming_service_index = models.CharField(
@@ -98,6 +99,13 @@ class EherkenningConfiguration(BaseConfiguration):
             "UUID of the eHerkenning service instance. Once entered into catalogues, "
             "changing the value is a manual process."
         ),
+    )
+    eidas_loa = models.CharField(
+        _("eIDAS LoA"),
+        choices=AssuranceLevels.choices,
+        default=AssuranceLevels.substantial,
+        help_text=_("Level of Assurance (LoA) to use for the eIDAS service."),
+        max_length=100,
     )
     eidas_attribute_consuming_service_index = models.CharField(
         _("eIDAS attribute consuming service index"),
@@ -176,11 +184,15 @@ class EherkenningConfiguration(BaseConfiguration):
         verbose_name = _("Eherkenning/eIDAS configuration")
         constraints = [
             models.constraints.CheckConstraint(
-                name="valid_loa", check=models.Q(loa__in=AssuranceLevels)
+                name="valid_loa",
+                check=models.Q(
+                    models.Q(eh_loa__in=AssuranceLevels)
+                    & models.Q(eidas_loa__in=AssuranceLevels)
+                ),
             ),
         ]
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> EHerkenningConfig:
         """
         Emit the configuration as a dictionary compatible with the old settings format.
         """
@@ -215,6 +227,7 @@ class EherkenningConfiguration(BaseConfiguration):
                 "service_description": self.service_description,
                 "service_description_url": self.service_description_url,
                 "service_url": self.base_url,
+                "loa": self.eh_loa,
                 "privacy_policy_url": self.privacy_policy,
                 "herkenningsmakelaars_id": self.makelaar_id,
                 "requested_attributes": self.eh_requested_attributes,
@@ -247,6 +260,7 @@ class EherkenningConfiguration(BaseConfiguration):
                 "service_description": self.service_description,
                 "service_description_url": self.service_description_url,
                 "service_url": self.base_url,
+                "loa": self.eidas_loa,
                 "privacy_policy_url": self.privacy_policy,
                 "herkenningsmakelaars_id": self.makelaar_id,
                 "requested_attributes": self.eidas_requested_attributes,
@@ -270,7 +284,6 @@ class EherkenningConfiguration(BaseConfiguration):
             "service_entity_id": self.idp_service_entity_id,
             "oin": self.oin,
             "services": services,
-            "loa": self.loa,
             # optional in runtime code
             "want_assertions_encrypted": self.want_assertions_encrypted,
             "want_assertions_signed": self.want_assertions_signed,
