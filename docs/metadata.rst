@@ -28,7 +28,7 @@ In the field ``RequestedAttribute`` one can specify all the attributes that may 
 when a company/person logs in with eHerkenning or eIDAS.
 
 The values specified need to come from the "`Attribuutcatalogus <https://afsprakenstelsel.etoegang.nl/display/as/Attribuutcatalogus>`_"
-(there are a 'generiek', 'natuurlijke personen' and 'non-natuurlijke personen' catalogue).
+(there are multiple catalogues: 'generiek', 'natuurlijke personen' and 'non-natuurlijke personen').
 
 In the admin, these can be specified as a list of dictionaries. For example, for eIDAS one could use the following JSON
 to request the first name of the person who logged in:
