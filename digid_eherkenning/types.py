@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import TypedDict
+from typing import Optional, TypedDict, Union
 
 
 class ServiceConfig(TypedDict):
@@ -17,7 +17,7 @@ class ServiceConfig(TypedDict):
     service_restrictions_allowed: str
     entity_concerned_types_allowed: list[dict]
     language: str
-    classifiers: list[str] | None
+    classifiers: Optional[list[str]]
 
 
 class EHerkenningConfig(TypedDict):
@@ -35,8 +35,8 @@ class EHerkenningConfig(TypedDict):
     key_passphrase: str
     signature_algorithm: str
     digest_algorithm: str
-    technical_contact_person_telephone: str | None
-    technical_contact_person_email: str | None
+    technical_contact_person_telephone: Optional[str]
+    technical_contact_person_email: Optional[str]
     organization: str
     organization_name: str
     artifact_resolve_content_type: str
@@ -50,7 +50,7 @@ class ServiceProviderSAMLConfig(TypedDict):
     NameIDFormat: str
     x509cert: str
     privateKey: str
-    privateKeyPassphrase: str | None
+    privateKeyPassphrase: Optional[str]
 
 
 class IdentityProviderSAMLConfig(TypedDict):
@@ -72,11 +72,11 @@ class SecuritySAMLConfig(TypedDict):
     wantNameId: bool
     wantNameIdEncrypted: bool
     wantAttributeStatement: bool
-    requestedAuthnContext: bool | list[str]
+    requestedAuthnContext: Union[bool, list[str]]
     requestedAuthnContextComparison: str
     failOnAuthnContextMismatch: bool
-    metadataValidUntil: str | None
-    metadataCacheDuration: str | None
+    metadataValidUntil: Optional[str]
+    metadataCacheDuration: Optional[str]
     allowSingleLabelDomains: bool
     signatureAlgorithm: str
     digestAlgorithm: str
