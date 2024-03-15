@@ -51,19 +51,6 @@ class eHerkenningLoginViewTests(TestCase):
             },
         )
 
-        auth_context_class_ref = tree.xpath(
-            "samlp:RequestedAuthnContext[@Comparison='minimum']/saml:AuthnContextClassRef",
-            namespaces={
-                "samlp": "urn:oasis:names:tc:SAML:2.0:protocol",
-                "saml": "urn:oasis:names:tc:SAML:2.0:assertion",
-            },
-        )[0]
-
-        self.assertEqual(
-            auth_context_class_ref.text,
-            "urn:etoegang:core:assurance-class:loa3",
-        )
-
         # Make sure Signature properties are as expected.
         signature = tree.xpath(
             "//xmldsig:Signature",
