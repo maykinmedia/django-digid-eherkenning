@@ -7,7 +7,10 @@ SERVICE_CATALOG_URLS = {
     "prod": "https://aggregator.etoegang.nl/1.13/servicecatalog.xml",
     "preprod": "https://aggregator.etoegang.nl/test/1.13/servicecatalog.xml",
 }
-NAMESPACES = {"esc": "urn:etoegang:1.13:service-catalog"}
+NAMESPACES = {
+    "esc": "urn:etoegang:1.13:service-catalog",
+    "saml": "urn:oasis:names:tc:SAML:2.0:assertion",
+}
 
 
 class Command(BaseCommand):
@@ -26,10 +29,18 @@ class Command(BaseCommand):
             type=str,
             help="The organisation OIN (government identification number).",
         )
+        parser.add_argument(
+            "--show-attributes",
+            dest="show_attrs",
+            action="store_true",
+            default=False,
+            help="Also show all requested attributes for a service definition.",
+        )
 
     def handle(self, **options):
         env = options.get("env")
         oin = options.get("oin")
+        show_attrs = options.get("show_attrs")
 
         service_catalog_url = SERVICE_CATALOG_URLS.get(env)
 
@@ -56,7 +67,8 @@ class Command(BaseCommand):
             )
 
             org_name = service_provider.xpath(
-                "esc:OrganizationDisplayName[@xml:lang='nl']/text()", namespaces=NAMESPACES
+                "esc:OrganizationDisplayName[@xml:lang='nl']/text()",
+                namespaces=NAMESPACES,
             )[0]
 
             self.stdout.write(f"Service provider organization: {org_name}")
@@ -66,10 +78,37 @@ class Command(BaseCommand):
                     "esc:ServiceName[@xml:lang='nl']/text()", namespaces=NAMESPACES
                 )[0]
                 sd_description = sd.xpath(
-                    "esc:ServiceDescription[@xml:lang='nl']/text()", namespaces=NAMESPACES
+                    "esc:ServiceDescription[@xml:lang='nl']/text()",
+                    namespaces=NAMESPACES,
                 )[0]
 
-                self.stdout.write(f"+-- Service definition: {sd_name} ({sd_description})")
+                sd_loa = sd.xpath(
+                    "saml:AuthnContextClassRef/text()", namespaces=NAMESPACES
+                )[0].split(":")[-1]
+                self.stdout.write(
+                    f"+-- Service definition: {sd_name}:{sd_loa} ({sd_description})"
+                )
+
+                if show_attrs:
+                    sd_ect_allowed = sd.xpath(
+                        f"esc:EntityConcernedTypesAllowed/text()",
+                        namespaces=NAMESPACES,
+                    )
+
+                    if sd_ect_allowed:
+                        self.stdout.write(f"    +-- Entity concerned types allowed")
+                        for sdea in sd_ect_allowed:
+                            self.stdout.write(f"        +-- {sdea}")
+
+                    sd_requested_attrs = sd.xpath(
+                        f"esc:RequestedAttribute/@Name",
+                        namespaces=NAMESPACES,
+                    )
+
+                    if sd_requested_attrs:
+                        self.stdout.write(f"    +-- Requested attributes")
+                        for sra in sd_requested_attrs:
+                            self.stdout.write(f"        +-- {sra}")
 
                 service_instance_ids = service_provider.xpath(
                     f"esc:ServiceInstance[esc:InstanceOfService[text()='{sd_uuid}']]/esc:ServiceID/text()",
