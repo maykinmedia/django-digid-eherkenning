@@ -6,6 +6,7 @@ from django.test import TestCase
 import pytest
 from lxml import etree
 
+from digid_eherkenning.choices import AssuranceLevels
 from digid_eherkenning.models import EherkenningConfiguration
 from digid_eherkenning.saml2.eherkenning import (
     create_service_catalogus,
@@ -308,6 +309,8 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.service_description_url = (
             "http://test-organisation.nl/service-description/"
         )
+        self.eherkenning_config.eh_loa = AssuranceLevels.high
+        self.eherkenning_config.eidas_loa = AssuranceLevels.low
         self.eherkenning_config.eidas_requested_attributes = [
             {
                 "name": "urn:etoegang:1.9:attribute:FirstName",
@@ -427,7 +430,7 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
             ".//saml:AuthnContextClassRef",
             namespaces=NAMESPACES,
         )
-        self.assertEqual("urn:etoegang:core:assurance-class:loa3", loa_node.text)
+        self.assertEqual("urn:etoegang:core:assurance-class:loa4", loa_node.text)
 
         makelaar_id_node = eherkenning_definition_node.find(
             ".//esc:HerkenningsmakelaarId",
@@ -476,7 +479,7 @@ class DienstCatalogusMetadataTests(EherkenningMetadataMixin, TestCase):
             ".//saml:AuthnContextClassRef",
             namespaces=NAMESPACES,
         )
-        self.assertEqual("urn:etoegang:core:assurance-class:loa3", loa_node.text)
+        self.assertEqual("urn:etoegang:core:assurance-class:loa2", loa_node.text)
 
         makelaar_id_node = eidas_definition_node.find(
             ".//esc:HerkenningsmakelaarId",

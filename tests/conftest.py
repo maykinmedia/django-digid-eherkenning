@@ -46,7 +46,8 @@ EHERKENNING_TEST_CONFIG = {
     "service_name": "Example eHerkenning",  # TODO: eidas variant?
     "want_assertions_signed": False,
     "organization_name": "Example",
-    "loa": "urn:etoegang:core:assurance-class:loa3",
+    "eh_loa": "urn:etoegang:core:assurance-class:loa3",
+    "eidas_loa": "urn:etoegang:core:assurance-class:loa3",
     "eh_attribute_consuming_service_index": "1",
     "eidas_attribute_consuming_service_index": "2",
     "oin": "00000000000000000000",
