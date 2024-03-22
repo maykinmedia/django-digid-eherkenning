@@ -1,7 +1,7 @@
 import binascii
 from base64 import b64encode
 from io import BytesIO
-from typing import Literal, Union
+from typing import Union
 from uuid import uuid4
 
 from django.urls import reverse
@@ -14,7 +14,6 @@ from lxml.builder import ElementMaker
 from lxml.etree import Element, tostring
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
-from ..choices import AssuranceLevels
 from ..models import EherkenningConfiguration
 from ..settings import EHERKENNING_DS_XSD
 from ..types import EHerkenningConfig, EHerkenningSAMLConfig, ServiceConfig
@@ -458,15 +457,6 @@ class eHerkenningClient(BaseSaml2Client):
     cache_key_prefix = "eherkenning"
     cache_timeout = 60 * 60  # 1 hour
 
-    def __init__(
-        self,
-        *args,
-        loa: Union[AssuranceLevels, Literal[""]] = "",
-        **kwargs,
-    ):
-        super().__init__(*args, **kwargs)
-        self.loa = loa
-
     @property
     def conf(self) -> EHerkenningConfig:
         if not hasattr(self, "_conf"):
@@ -518,8 +508,7 @@ class eHerkenningClient(BaseSaml2Client):
                 # there is no need for an expiry date.
                 "metadataValidUntil": "",
                 "metadataCacheDuration": "",
-                "requestedAuthnContextComparison": "minimum",
-                "requestedAuthnContext": False if not self.loa else [self.loa],
+                "requestedAuthnContext": False,
             }
         )
         return super().create_config(config_dict)

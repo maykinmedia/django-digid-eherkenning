@@ -107,33 +107,6 @@ class eHerkenningLoginViewTests(TestCase):
             ).decode("utf-8"),
         )
 
-    def test_login_views_can_override_minimum_loa(self):
-        class CustomLoginView(eHerkenningLoginView):
-            def get_level_of_assurance(self):
-                return (
-                    AssuranceLevels.high
-                    if "special" in self.request.GET.get("next")
-                    else AssuranceLevels.middle
-                )
-
-        request = RequestFactory().get(reverse("eherkenning:login") + "?next=/special")
-
-        response = CustomLoginView.as_view()(request)
-
-        saml_request = b64decode(
-            response.context_data["form"].initial["SAMLRequest"].encode("utf-8")
-        )
-        tree = etree.fromstring(saml_request)
-        auth_context_class_ref = tree.xpath(
-            "samlp:RequestedAuthnContext[@Comparison='minimum']/saml:AuthnContextClassRef",
-            namespaces={
-                "samlp": "urn:oasis:names:tc:SAML:2.0:protocol",
-                "saml": "urn:oasis:names:tc:SAML:2.0:assertion",
-            },
-        )[0]
-
-        self.assertEqual(auth_context_class_ref.text, AssuranceLevels.high.value)
-
     @freeze_time("2020-04-09T08:31:46Z")
     @patch("onelogin.saml2.utils.uuid4")
     def test_login_with_attribute_consuming_service_index(self, uuid_mock):

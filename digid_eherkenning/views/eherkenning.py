@@ -17,15 +17,6 @@ from .base import get_redirect_url
 class eHerkenningLoginView(TemplateView):
     template_name = "digid_eherkenning/post_binding.html"
 
-    def get_level_of_assurance(self) -> Union[AssuranceLevels, Literal[""]]:
-        """
-        Override the AssuranceLevel from the global `EherkenningConfiguration`.
-
-        To use the level from the global config, return `""`
-        NB When overriding this, remember the user has control over the request!
-        """
-        return ""
-
     def get_relay_state(self):
         """
         TODO: It might be a good idea to sign the relay state.
@@ -48,7 +39,7 @@ class eHerkenningLoginView(TemplateView):
     #
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        client = eHerkenningClient(loa=self.get_level_of_assurance())
+        client = eHerkenningClient()
         location, parameters = client.create_authn_request(
             self.request,
             attr_consuming_service_index=self.get_attribute_consuming_service_index(),
