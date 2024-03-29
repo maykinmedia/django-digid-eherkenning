@@ -2,6 +2,14 @@
 Changelog
 =========
 
+0.13.0 (2024-03-29)
+===================
+
+* [#58] Do not replace the entityID for eHerkenning with a URL when it should be a URN (happened when parsing metadata).
+* [open-formulieren/open-forms#3950] Improved the eHerkenning service catalogue to be compatible with Signicat.
+* [open-formulieren/open-forms#3950] Make eIDAS and eHerkenning LoA configuration independent of each other.
+* [open-formulieren/open-forms#3969] Remove support for overriding the LoA in the Authentication Request for eHerkenning and eIDAS.
+
 0.12.0 (2024-02-23)
 ===================
 
