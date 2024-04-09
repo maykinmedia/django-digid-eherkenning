@@ -2,6 +2,11 @@
 Changelog
 =========
 
+0.13.1 (2024-04-08)
+===================
+
+* [#67] Fixed admin crash due to split up EH/eIDAS LOA fields.
+
 0.13.0 (2024-03-29)
 ===================
 
