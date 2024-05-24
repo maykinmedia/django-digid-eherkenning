@@ -168,7 +168,7 @@ class LogoutViewTests(TestCase):
         self.client.force_login(user)
 
         url = reverse("digid:logout")
-        response = self.client.get(url)
+        response = self.client.post(url)
 
         self.assertEqual(response.status_code, 302)
         self.assertFalse("_auth_user_id" in self.client.session)
