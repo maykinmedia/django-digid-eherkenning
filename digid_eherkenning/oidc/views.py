@@ -5,6 +5,15 @@ from django.http import HttpResponseRedirect
 
 from mozilla_django_oidc_db.views import (
     OIDCAuthenticationCallbackView as BaseCallbackView,
+    OIDCInit,
+    OIDInit,
+)
+
+from .models import (
+    OpenIDConnectDigiDMachtigenConfig,
+    OpenIDConnectEHerkenningBewindvoeringConfig,
+    OpenIDConnectEHerkenningConfig,
+    OpenIDConnectPublicConfig,
 )
 
 logger = logging.getLogger(__name__)
@@ -60,3 +69,11 @@ class OIDCAuthenticationCallbackView(BaseCallbackView):
             return super().login_success()
 
         return HttpResponseRedirect(self.success_url)
+
+
+didid_init = OIDCInit.as_view(config_class=OpenIDConnectPublicConfig)
+eh_init = OIDCInit.as_view(config_class=OpenIDConnectEHerkenningConfig)
+digid_machtigen_init = OIDCInit.as_view(
+    config_class=OpenIDConnectEHerkenningBewindvoeringConfig
+)
+eh_bewindvoering_init = OIDCInit.as_view(config_class=OpenIDConnectDigiDMachtigenConfig)

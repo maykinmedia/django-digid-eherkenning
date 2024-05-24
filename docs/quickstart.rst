@@ -18,6 +18,8 @@ Requirements
 Installation
 ------------
 
+See :ref:`oidc` for configuring the OIDC flavour.
+
 Install with pip:
 
 .. code-block:: bash
