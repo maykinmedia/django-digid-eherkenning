@@ -56,7 +56,7 @@ class OpenIDConnectBaseConfig(OpenIDConnectConfigBase):
         return True
 
 
-class OpenIDConnectPublicConfig(OpenIDConnectBaseConfig):
+class DigiDConfig(OpenIDConnectBaseConfig):
     """
     Configuration for DigiD authentication via OpenID connect
     """
@@ -88,7 +88,7 @@ class OpenIDConnectPublicConfig(OpenIDConnectBaseConfig):
         return [self.identifier_claim_name]
 
 
-class OpenIDConnectDigiDMachtigenConfig(OpenIDConnectBaseConfig):
+class DigiDMachtigenConfig(OpenIDConnectBaseConfig):
     # TODO: support periods in claim keys
     vertegenwoordigde_claim_name = models.CharField(
         verbose_name=_("vertegenwoordigde claim name"),
@@ -134,7 +134,7 @@ class OpenIDConnectDigiDMachtigenConfig(OpenIDConnectBaseConfig):
         return list(self.digid_eherkenning_machtigen_claims.values())
 
 
-class OpenIDConnectEHerkenningConfig(OpenIDConnectBaseConfig):
+class EHerkenningConfig(OpenIDConnectBaseConfig):
     """
     Configuration for eHerkenning authentication via OpenID connect
     """
@@ -166,7 +166,7 @@ class OpenIDConnectEHerkenningConfig(OpenIDConnectBaseConfig):
         return [self.identifier_claim_name]
 
 
-class OpenIDConnectEHerkenningBewindvoeringConfig(OpenIDConnectBaseConfig):
+class EHerkenningBewindvoeringConfig(OpenIDConnectBaseConfig):
     # TODO: support periods in claim keys
     vertegenwoordigde_company_claim_name = models.CharField(
         verbose_name=_("vertegenwoordigde company claim name"),

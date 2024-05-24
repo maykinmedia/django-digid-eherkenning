@@ -8,10 +8,10 @@ from solo.admin import SingletonModelAdmin
 
 from .forms import admin_modelform_factory
 from .models import (
-    OpenIDConnectDigiDMachtigenConfig,
-    OpenIDConnectEHerkenningBewindvoeringConfig,
-    OpenIDConnectEHerkenningConfig,
-    OpenIDConnectPublicConfig,
+    DigiDConfig,
+    DigiDMachtigenConfig,
+    EHerkenningBewindvoeringConfig,
+    EHerkenningConfig,
 )
 
 # Using a dict because these retain ordering, and it makes things a bit more readable.
@@ -69,21 +69,21 @@ def fieldsets_factory(claim_mapping_fields: Sequence[str]):
     return tuple((label, config) for label, config in _fieldsets.items())
 
 
-@admin.register(OpenIDConnectPublicConfig)
+@admin.register(DigiDConfig)
 class OpenIDConnectConfigDigiDAdmin(SingletonModelAdmin):
-    form = admin_modelform_factory(OpenIDConnectPublicConfig)
+    form = admin_modelform_factory(DigiDConfig)
     fieldsets = fieldsets_factory(claim_mapping_fields=["identifier_claim_name"])
 
 
-@admin.register(OpenIDConnectEHerkenningConfig)
+@admin.register(EHerkenningConfig)
 class OpenIDConnectConfigEHerkenningAdmin(SingletonModelAdmin):
-    form = admin_modelform_factory(OpenIDConnectEHerkenningConfig)
+    form = admin_modelform_factory(EHerkenningConfig)
     fieldsets = fieldsets_factory(claim_mapping_fields=["identifier_claim_name"])
 
 
-@admin.register(OpenIDConnectDigiDMachtigenConfig)
+@admin.register(DigiDMachtigenConfig)
 class OpenIDConnectConfigDigiDMachtigenAdmin(SingletonModelAdmin):
-    form = admin_modelform_factory(OpenIDConnectDigiDMachtigenConfig)
+    form = admin_modelform_factory(DigiDMachtigenConfig)
     fieldsets = fieldsets_factory(
         claim_mapping_fields=[
             "vertegenwoordigde_claim_name",
@@ -92,9 +92,9 @@ class OpenIDConnectConfigDigiDMachtigenAdmin(SingletonModelAdmin):
     )
 
 
-@admin.register(OpenIDConnectEHerkenningBewindvoeringConfig)
+@admin.register(EHerkenningBewindvoeringConfig)
 class OpenIDConnectConfigEHerkenningBewindvoeringAdmin(SingletonModelAdmin):
-    form = admin_modelform_factory(OpenIDConnectEHerkenningBewindvoeringConfig)
+    form = admin_modelform_factory(EHerkenningBewindvoeringConfig)
     fieldsets = fieldsets_factory(
         claim_mapping_fields=[
             "vertegenwoordigde_company_claim_name",

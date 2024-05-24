@@ -2,9 +2,10 @@
 
 from django.db import migrations, models
 
-import digid_eherkenning_oidc_generics.models
 import django_jsonform.models.fields
 import mozilla_django_oidc_db.models
+
+import digid_eherkenning.oidc.models
 
 
 class Migration(migrations.Migration):
@@ -150,7 +151,7 @@ class Migration(migrations.Migration):
                             max_length=50, verbose_name="OpenID Connect scope"
                         ),
                         blank=True,
-                        default=digid_eherkenning_oidc_generics.models.get_default_scopes_bsn,
+                        default=digid_eherkenning.oidc.models.get_default_scopes_bsn,
                         help_text="OpenID Connect scopes that are requested during login. These scopes are hardcoded and must be supported by the identity provider",
                         size=None,
                         verbose_name="OpenID Connect scopes",
@@ -388,7 +389,7 @@ class Migration(migrations.Migration):
                             max_length=50, verbose_name="OpenID Connect scope"
                         ),
                         blank=True,
-                        default=digid_eherkenning_oidc_generics.models.get_default_scopes_bsn,
+                        default=digid_eherkenning.oidc.models.get_default_scopes_bsn,
                         help_text="OpenID Connect scopes that are requested during login. These scopes are hardcoded and must be supported by the identity provider",
                         size=None,
                         verbose_name="OpenID Connect scopes",
@@ -543,7 +544,7 @@ class Migration(migrations.Migration):
                             max_length=50, verbose_name="OpenID Connect scope"
                         ),
                         blank=True,
-                        default=digid_eherkenning_oidc_generics.models.get_default_scopes_kvk,
+                        default=digid_eherkenning.oidc.models.get_default_scopes_kvk,
                         help_text="OpenID Connect scopes that are requested during login. These scopes are hardcoded and must be supported by the identity provider",
                         size=None,
                         verbose_name="OpenID Connect scopes",
@@ -735,7 +736,7 @@ class Migration(migrations.Migration):
                             max_length=50, verbose_name="OpenID Connect scope"
                         ),
                         blank=True,
-                        default=digid_eherkenning_oidc_generics.models.get_default_scopes_bsn,
+                        default=digid_eherkenning.oidc.models.get_default_scopes_bsn,
                         help_text="OpenID Connect scopes that are requested during login. These scopes are hardcoded and must be supported by the identity provider",
                         size=None,
                         verbose_name="OpenID Connect scopes",
