@@ -5,7 +5,7 @@ from django.forms import modelform_factory
 from mozilla_django_oidc_db.constants import OIDC_MAPPING
 from mozilla_django_oidc_db.forms import OpenIDConnectConfigForm
 
-from .models import OpenIDConnectBaseConfig
+from .models.base import OpenIDConnectBaseConfig
 
 
 def admin_modelform_factory(model: type[OpenIDConnectBaseConfig], *args, **kwargs):
