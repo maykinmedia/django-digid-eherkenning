@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     "digid_eherkenning",
     "tests.project",
 ]
-if os.environ.get("OIDC_ENABLED", False):
+OIDC_ENABLED = os.environ.get("OIDC_ENABLED", "no") == "yes"
+if OIDC_ENABLED:
     INSTALLED_APPS += _OIDC_APPS
 
 
@@ -97,10 +98,21 @@ WSGI_APPLICATION = "tests.project.wsgi.application"
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    }
+    "default": (
+        {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("PGDATABASE", "django_digid_eherkenning"),
+            "USER": os.getenv("PGUSER", "django_digid_eherkenning"),
+            "PASSWORD": os.getenv("PGPASSWORD", "django_digid_eherkenning"),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", 5432),
+        }
+        if OIDC_ENABLED
+        else {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        }
+    )
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
