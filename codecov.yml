@@ -1,0 +1,18 @@
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: project
+        target: auto
+        threshold: 1%
+      - type: patch
+        target: 90%
+  individual_flags: # exceptions to the default rules above, stated flag by flag
+    - name: base
+      paths:
+        - digid_eherkenning
+        - '!digid_eherkenning/oidc/'
+    - name: oidc
+      paths:
+        - digid_eherkenning/oidc/
+      carryforward: true

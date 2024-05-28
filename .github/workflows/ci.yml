@@ -63,6 +63,7 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.oidc_enabled == 'yes' && 'oidc' || 'base' }}
 
   publish:
     name: Publish package to PyPI
