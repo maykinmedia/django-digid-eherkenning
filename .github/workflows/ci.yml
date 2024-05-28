@@ -45,13 +45,7 @@ jobs:
         run: pip install tox tox-gh-actions
 
       - name: Run tests
-        run: |
-          extra_opts=''
-          if [ "$OIDC_ENABLED" != "yes" ]; then
-            extra_opts=' --ignore=tests/oidc '
-          fi
-
-          tox -- $extra_opts
+        run: tox
         env:
           PYTHON_VERSION: ${{ matrix.python }}
           DJANGO: ${{ matrix.django }}
