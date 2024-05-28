@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.utils.functional import classproperty
+from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 
 from mozilla_django_oidc_db.models import OpenIDConnectConfigBase
@@ -31,6 +33,9 @@ class OpenIDConnectBaseConfig(OpenIDConnectConfigBase):
         return True
 
     def get_callback_view(self):
-        from ..views import OIDCAuthenticationCallbackView
-
-        return OIDCAuthenticationCallbackView.as_view()
+        configured_setting = getattr(
+            settings,
+            "DIGID_EHERKENNING_OIDC_CALLBACK_VIEW",
+            "digid_eherkenning.oidc.views.default_callback_view",
+        )
+        return import_string(configured_setting)

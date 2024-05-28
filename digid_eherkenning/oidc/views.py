@@ -74,3 +74,5 @@ digid_init = OIDCInit.as_view(config_class=DigiDConfig)
 eh_init = OIDCInit.as_view(config_class=EHerkenningConfig)
 digid_machtigen_init = OIDCInit.as_view(config_class=DigiDMachtigenConfig)
 eh_bewindvoering_init = OIDCInit.as_view(config_class=EHerkenningBewindvoeringConfig)
+
+default_callback_view = OIDCAuthenticationCallbackView.as_view()

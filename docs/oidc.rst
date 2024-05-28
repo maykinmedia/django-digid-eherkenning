@@ -38,6 +38,9 @@ and add the necessary packages to ``INSTALLED_APPS``:
 
 Make sure to follow mozilla-django-oidc-db's installation instructions too.
 
+Optionally you can point to an alternative callback view to use via the
+``DIGID_EHERKENNING_OIDC_CALLBACK_VIEW`` setting, which defaults to
+``"digid_eherkenning.oidc.views.default_callback_view"``.
 
 Authentication backend
 ======================
