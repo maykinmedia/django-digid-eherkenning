@@ -45,7 +45,8 @@ jobs:
         run: pip install tox tox-gh-actions
 
       - name: Run tests
-        run: tox
+        run: |
+          tox -- ${{ matrix.oidc_enabled != 'yes' && '--ignore tests/oidc' || '' }}
         env:
           PYTHON_VERSION: ${{ matrix.python }}
           DJANGO: ${{ matrix.django }}

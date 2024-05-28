@@ -7,6 +7,7 @@ from django.test import Client, RequestFactory
 from django.urls import reverse
 
 import pytest
+from mozilla_django_oidc_db.config import store_config
 from mozilla_django_oidc_db.models import UserInformationClaimsSources
 from mozilla_django_oidc_db.typing import JSONObject
 from responses import RequestsMock
@@ -64,8 +65,6 @@ def callback(
     """
     A django request primed by an OIDC auth request flow, ready for the callback flow.
     """
-    from mozilla_django_oidc_db.config import store_config
-
     mocker.patch(
         "digid_eherkenning.oidc.views.OIDCInit.check_idp_availability",
         return_value=None,
