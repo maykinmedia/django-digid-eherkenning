@@ -29,3 +29,8 @@ class OpenIDConnectBaseConfig(OpenIDConnectConfigBase):
     @classproperty
     def oidcdb_check_idp_availability(cls) -> bool:
         return True
+
+    def get_callback_view(self):
+        from ..views import OIDCAuthenticationCallbackView
+
+        return OIDCAuthenticationCallbackView.as_view()
