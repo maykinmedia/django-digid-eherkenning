@@ -31,7 +31,7 @@ class BaseModelTests(TestCase):
             )
             config.save()
 
-        self.assertTrue(get_matadata.called_once())
+        get_matadata.assert_called_once()
         self.assertEqual(
             config.idp_metadata_file.read().decode("utf-8"), metadata_content
         )
@@ -54,7 +54,7 @@ class BaseModelTests(TestCase):
             )
             config.save()
 
-        self.assertTrue(get_matadata.called_once())
+        get_matadata.assert_called_once()
         self.assertEqual(
             config.idp_metadata_file.read().decode("utf-8"), metadata_content
         )
@@ -81,7 +81,7 @@ class BaseModelTests(TestCase):
         config.save()
 
         # Make sure we don't try to fetch and parse again the xml file, since there is no update
-        self.assertTrue(get_matadata.called_once())
+        get_matadata.assert_called_once()
 
     @patch(
         "onelogin.saml2.idp_metadata_parser.OneLogin_Saml2_IdPMetadataParser.get_metadata"

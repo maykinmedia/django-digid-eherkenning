@@ -1,6 +1,7 @@
 include *.rst
 include *.md
 include LICENSE
+include digid_eherkenning/py.typed
 recursive-include digid_eherkenning *.html
 recursive-include digid_eherkenning *.txt
 recursive-include digid_eherkenning *.po

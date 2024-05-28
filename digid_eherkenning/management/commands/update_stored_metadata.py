@@ -22,7 +22,7 @@ class Command(BaseCommand):
             config = EherkenningConfiguration.get_solo()
 
         if config.metadata_file_source:
-            config.save()
+            config.save(force_metadata_update=True)
             self.stdout.write(self.style.SUCCESS("Update was successful"))
         else:
             self.stdout.write(

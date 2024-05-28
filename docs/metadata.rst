@@ -27,7 +27,7 @@ Configuring RequestedAttribute
 In the field ``RequestedAttribute`` one can specify all the attributes that may be requested by the service
 when a company/person logs in with eHerkenning or eIDAS.
 
-The values specified need to come from the "`Attribuutcatalogus <https://afsprakenstelsel.etoegang.nl/display/as/Attribuutcatalogus>`_"
+The values specified need to come from the "`Attribuutcatalogus <https://afsprakenstelsel.etoegang.nl/Startpagina/v1/attribuutcatalogus>`_"
 (there are multiple catalogues: 'generiek', 'natuurlijke personen' and 'non-natuurlijke personen').
 
 In the admin, these can be specified as a list of dictionaries. For example, for eIDAS one could use the following JSON

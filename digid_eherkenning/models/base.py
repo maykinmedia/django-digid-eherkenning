@@ -178,6 +178,10 @@ class BaseConfiguration(SingletonModel):
     class Meta:
         abstract = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._active_metadata_file_source = self.metadata_file_source
+
     def __str__(self):
         return force_str(self._meta.verbose_name)
 
@@ -229,9 +233,13 @@ class BaseConfiguration(SingletonModel):
         return (urls, xml)
 
     def save(self, *args, **kwargs):
-        if self.metadata_file_source:
-            urls, xml = self.process_metadata_from_xml_source()
-            self.populate_xml_fields(urls, xml)
+        force_update = kwargs.pop("force_metadata_update", False)
+        if value := self.metadata_file_source:
+            has_changed = value != self._active_metadata_file_source
+            if force_update or has_changed:
+                urls, xml = self.process_metadata_from_xml_source()
+                self.populate_xml_fields(urls, xml)
+                self._active_metadata_file_source = value
 
         if self.base_url.endswith("/"):
             self.base_url = self.base_url[:-1]
