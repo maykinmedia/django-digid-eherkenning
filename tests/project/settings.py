@@ -31,6 +31,12 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+_OIDC_APPS = [
+    "django_jsonform",
+    "mozilla_django_oidc",
+    "mozilla_django_oidc_db",
+    "digid_eherkenning.oidc",
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -42,15 +48,14 @@ INSTALLED_APPS = [
     "sessionprofile",
     "privates",
     "simple_certmanager",
-    "django_jsonform",
     "solo",
-    "mozilla_django_oidc",
-    "mozilla_django_oidc_db",
     # own apps
     "digid_eherkenning",
-    "digid_eherkenning.oidc",
     "tests.project",
 ]
+if os.environ.get("OIDC_ENABLED", False):
+    INSTALLED_APPS += _OIDC_APPS
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
