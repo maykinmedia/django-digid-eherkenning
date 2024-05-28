@@ -3,6 +3,7 @@ from pathlib import Path
 from django.core.files import File
 
 import pytest
+import responses
 from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.models import Certificate
 
@@ -135,3 +136,9 @@ def eherkenning_config(eherkenning_config_defaults):
             setattr(eherkenning_config_defaults, field, value)
     eherkenning_config_defaults.save()
     return eherkenning_config_defaults
+
+
+@pytest.fixture
+def mocked_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps

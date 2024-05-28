@@ -70,7 +70,7 @@ class OIDCAuthenticationCallbackView(BaseCallbackView):
         return HttpResponseRedirect(self.success_url)
 
 
-didid_init = OIDCInit.as_view(config_class=DigiDConfig)
+digid_init = OIDCInit.as_view(config_class=DigiDConfig)
 eh_init = OIDCInit.as_view(config_class=EHerkenningConfig)
-digid_machtigen_init = OIDCInit.as_view(config_class=EHerkenningBewindvoeringConfig)
-eh_bewindvoering_init = OIDCInit.as_view(config_class=DigiDMachtigenConfig)
+digid_machtigen_init = OIDCInit.as_view(config_class=DigiDMachtigenConfig)
+eh_bewindvoering_init = OIDCInit.as_view(config_class=EHerkenningBewindvoeringConfig)
