@@ -8,9 +8,7 @@ Installation
 Requirements
 ------------
 
-* Python 3.7 or newer
-* setuptools 30.3.0 or above
-* Django 3.2
+* See the badges for the supported Python and Django versions
 * XML system packages, e.g. for Debian/Ubuntu:
 
     - ``libxml2-dev``

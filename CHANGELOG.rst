@@ -2,6 +2,13 @@
 Changelog
 =========
 
+0.14.0 (2024-??-??)
+===================
+
+* Dropped support for Django versions older than 4.2 (LTS).
+* Dropped support for Python versions older than 3.10.
+* ...
+
 0.13.1 (2024-04-08)
 ===================
 
