@@ -58,7 +58,7 @@ needs to be used from the state. With this information, the authentication backe
 from ``settings.AUTHENTICATION_BACKENDS`` are tried in order. Typically this will
 use the backend shipped in mozilla-django-oidc-db, or a subclass of it.
 
-The OpenID connect flow exchanges the code for the an access token (and ID token), and
+The OpenID connect flow exchanges the code for an access token (and ID token), and
 the user details are retrieved. You should provide a customized backend to determine
 what needs to be done with this user information, e.g. create a django user or store
 the information in the django session.

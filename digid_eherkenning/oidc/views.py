@@ -24,7 +24,7 @@ class OIDCAuthenticationCallbackView(BaseCallbackView):
 
     If we only want to perform the claim processing, then no real user is expected to
     be returend from the authentication backend, and hence we also don't want to try
-    to log in in this dummy user (as in, set ``request.user`` to a django user
+    to log in this dummy user (as in, set ``request.user`` to a django user
     instance).
 
     Note that we deliberately don't perform these changes in :meth:`get` (anymore),

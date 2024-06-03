@@ -35,7 +35,7 @@ class DigiDConfig(OpenIDConnectBaseConfig):
         verbose_name = _("OpenID Connect configuration for DigiD")
 
     @property
-    def oidcdb_username_claim(self) -> list[str]:
+    def oidcdb_username_claim(self) -> ClaimPath:
         return [self.identifier_claim_name]
 
 

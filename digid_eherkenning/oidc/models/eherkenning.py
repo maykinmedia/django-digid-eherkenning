@@ -39,7 +39,7 @@ class EHerkenningConfig(OpenIDConnectBaseConfig):
         verbose_name = _("OpenID Connect configuration for eHerkenning")
 
     @property
-    def oidcdb_username_claim(self) -> list[str]:
+    def oidcdb_username_claim(self) -> ClaimPath:
         return [self.identifier_claim_name]
 
 
