@@ -95,3 +95,47 @@ def test_backend_unexpectedly_returns_anonymous_user(
         ),
     ):
         callback_client.get(callback_url, {**callback_request.GET})
+
+
+@pytest.mark.mock_backend(claims={"bsn": "000000000"}, cls=RealDjangoUserBackend)
+@pytest.mark.callback(init_view=OIDCInit.as_view(config_class=Config2))
+@pytest.mark.django_db
+def test_backend_returns_django_user(
+    callback: tuple[HttpRequest, Client],
+    mock_auth_backend,
+):
+    config = DigiDConfig(
+        enabled=True,
+        oidc_op_authorization_endpoint="https://example.com",
+        userinfo_claims_source=UserInformationClaimsSources.id_token,
+    )
+    config.save()
+    callback_url = reverse("oidc_authentication_callback")
+    callback_request, callback_client = callback
+
+    response = callback_client.get(callback_url, {**callback_request.GET})
+
+    assert response.status_code == 302
+    assert response["Location"] == "/"
+
+
+@pytest.mark.mock_backend(claims={"bsn": "000000000"}, cls=AnonymousDjangoUserBackend)
+@pytest.mark.callback(init_view=OIDCInit.as_view(config_class=Config1))
+@pytest.mark.django_db
+def test_backend_returns_anonymous_user(
+    callback: tuple[HttpRequest, Client],
+    mock_auth_backend,
+):
+    config = DigiDConfig(
+        enabled=True,
+        oidc_op_authorization_endpoint="https://example.com",
+        userinfo_claims_source=UserInformationClaimsSources.id_token,
+    )
+    config.save()
+    callback_url = reverse("oidc_authentication_callback")
+    callback_request, callback_client = callback
+
+    response = callback_client.get(callback_url, {**callback_request.GET})
+
+    assert response.status_code == 302
+    assert response["Location"] == "/"
