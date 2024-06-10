@@ -27,9 +27,15 @@ def auth_request(rf: RequestFactory):
 
 @pytest.fixture
 def mock_auth_backend(request, mocker):
-    marker = request.node.get_closest_marker("mock_backend_claims")
-    claims: JSONObject = marker.args[0] if marker else {"sub": "some_username"}
-    mock_backend = MockBackend(claims=claims)
+    marker = request.node.get_closest_marker("mock_backend")
+    marker_kwargs = marker.kwargs if marker else {}
+    claims: JSONObject = (
+        marker_kwargs["claims"]
+        if "claims" in marker_kwargs
+        else {"sub": "some_username"}
+    )
+    BackendCls = marker_kwargs["cls"] if "cls" in marker_kwargs else MockBackend
+    mock_backend = BackendCls(claims=claims)
     backend_path = f"{MockBackend.__module__}.{MockBackend.__qualname__}"
     mocker.patch(
         "django.contrib.auth._get_backends", return_value=[(mock_backend, backend_path)]

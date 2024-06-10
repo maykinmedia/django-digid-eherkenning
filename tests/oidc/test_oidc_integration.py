@@ -64,11 +64,10 @@ def test_init_flow(
     )
 
 
-@pytest.mark.mock_backend_claims({"bsn": "000000000"})
+@pytest.mark.mock_backend(claims={"bsn": "000000000"})
 @pytest.mark.callback(init_view=digid_init)
 @pytest.mark.django_db
 def test_digid_backend_and_callback_view(
-    settings,
     callback: tuple[HttpRequest, Client],
     mock_auth_backend,
 ):
@@ -87,11 +86,10 @@ def test_digid_backend_and_callback_view(
     assert callback_response["Location"] == "/"
 
 
-@pytest.mark.mock_backend_claims({"kvk": "12345678"})
+@pytest.mark.mock_backend(claims={"kvk": "12345678"})
 @pytest.mark.callback(init_view=eh_init)
 @pytest.mark.django_db
 def test_eh_backend_and_callback_view(
-    settings,
     callback: tuple[HttpRequest, Client],
     mock_auth_backend,
 ):
