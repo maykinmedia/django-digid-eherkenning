@@ -23,7 +23,7 @@ class OIDCAuthenticationCallbackView(BaseCallbackView):
     Check if the 'created user' from the authentication backend needs to be logged in.
 
     If we only want to perform the claim processing, then no real user is expected to
-    be returend from the authentication backend, and hence we also don't want to try
+    be returned from the authentication backend, and hence we also don't want to try
     to log in this dummy user (as in, set ``request.user`` to a django user
     instance).
 

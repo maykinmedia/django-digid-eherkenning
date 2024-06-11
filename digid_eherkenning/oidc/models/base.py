@@ -8,14 +8,14 @@ from mozilla_django_oidc_db.models import OpenIDConnectConfigBase
 
 def get_default_scopes_bsn():
     """
-    Returns the default scopes to request for OpenID Connect logins
+    Returns the default scopes to request for OpenID Connect logins for DigiD.
     """
     return ["openid", "bsn"]
 
 
 def get_default_scopes_kvk():
     """
-    Returns the default scopes to request for OpenID Connect logins
+    Returns the default scopes to request for OpenID Connect logins for eHerkenning.
     """
     return ["openid", "kvk"]
 
