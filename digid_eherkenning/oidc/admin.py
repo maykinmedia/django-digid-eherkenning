@@ -5,7 +5,6 @@ from django.contrib import admin
 from django.forms import modelform_factory
 from django.utils.translation import gettext_lazy as _
 
-from mozilla_django_oidc_db.constants import OIDC_MAPPING
 from mozilla_django_oidc_db.forms import OpenIDConnectConfigForm
 from solo.admin import SingletonModelAdmin
 
@@ -75,21 +74,9 @@ def admin_modelform_factory(model: type[OpenIDConnectBaseConfig], *args, **kwarg
     """
     kwargs.setdefault("form", OpenIDConnectConfigForm)
     Form = modelform_factory(model, *args, **kwargs)
-
     assert issubclass(
         Form, OpenIDConnectConfigForm
     ), "The base form class must be a subclass of OpenIDConnectConfigForm."
-
-    # update the mapping of discovery endpoint keys to model fields, since our base
-    # model adds the ``oidc_op_logout_endpoint`` field.
-    Form.oidc_mapping = {
-        **deepcopy(OIDC_MAPPING),
-        "oidc_op_logout_endpoint": "end_session_endpoint",
-    }
-    Form.required_endpoints = [
-        *Form.required_endpoints,
-        "oidc_op_logout_endpoint",
-    ]
     return Form
 
 
