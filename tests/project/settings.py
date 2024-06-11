@@ -31,6 +31,12 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+_OIDC_APPS = [
+    "django_jsonform",
+    "mozilla_django_oidc",
+    "mozilla_django_oidc_db",
+    "digid_eherkenning.oidc",
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -47,6 +53,10 @@ INSTALLED_APPS = [
     "digid_eherkenning",
     "tests.project",
 ]
+OIDC_ENABLED = os.environ.get("OIDC_ENABLED", "no") == "yes"
+if OIDC_ENABLED:
+    INSTALLED_APPS += _OIDC_APPS
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -88,11 +98,24 @@ WSGI_APPLICATION = "tests.project.wsgi.application"
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    }
+    "default": (
+        {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("PGDATABASE", "django_digid_eherkenning"),
+            "USER": os.getenv("PGUSER", "django_digid_eherkenning"),
+            "PASSWORD": os.getenv("PGPASSWORD", "django_digid_eherkenning"),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", 5432),
+        }
+        if OIDC_ENABLED
+        else {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        }
+    )
 }
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 
 # Password validation
@@ -155,3 +178,10 @@ DIGID_MOCK_APP_TITLE = "DigiD Mock Test App"
 # DIGID_MOCK_IDP_LOGIN_URL = 'http://localhost:8008/digid/idp/inloggen/'
 # DIGID_MOCK_RETURN_URL = '/'
 # DIGID_MOCK_CANCEL_URL = '/'
+
+# These settings are evaluated at import-time of the urlconf in mozilla_django_oidc.urls.
+# Changing them via @override_settings (or the pytest-django settings fixture) has no
+# effect.
+OIDC_AUTHENTICATE_CLASS = "mozilla_django_oidc_db.views.OIDCAuthenticationRequestView"
+OIDC_CALLBACK_CLASS = "mozilla_django_oidc_db.views.OIDCCallbackView"
+LOGIN_REDIRECT_URL = reverse_lazy("admin:index")

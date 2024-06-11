@@ -12,12 +12,23 @@ on:
 
 jobs:
   tests:
-    name: Run the test suite (Python ${{ matrix.python }}, Django ${{ matrix.django }})
+    name: "Run the test suite (Python ${{ matrix.python }}, Django ${{ matrix.django }}, OIDC: ${{ matrix.oidc_enabled }})"
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python: ['3.10', '3.11', '3.12']
         django: ['4.2']
+        oidc_enabled: ['no', 'yes']
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
@@ -34,13 +45,20 @@ jobs:
         run: pip install tox tox-gh-actions
 
       - name: Run tests
-        run: tox
+        run: |
+          tox -- ${{ matrix.oidc_enabled != 'yes' && '--ignore tests/oidc' || '' }}
         env:
           PYTHON_VERSION: ${{ matrix.python }}
           DJANGO: ${{ matrix.django }}
+          OIDC_ENABLED: ${{ matrix.oidc_enabled }}
+          PGUSER: postgres
+          PGHOST: localhost
 
       - name: Publish coverage report
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.oidc_enabled == 'yes' && 'oidc' || 'base' }}
 
   publish:
     name: Publish package to PyPI
