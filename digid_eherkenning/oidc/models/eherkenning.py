@@ -1,5 +1,3 @@
-from collections.abc import Collection
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -121,19 +119,3 @@ class EHerkenningBewindvoeringConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
 
     class Meta:
         verbose_name = _("OpenID Connect configuration for eHerkenning Bewindvoering")
-
-    @property
-    def mandate_claims(self) -> dict[str, ClaimPath]:
-        return {
-            "representee": self.representee_claim,
-            # "authorizee_legal_subject_type": self.identifier_type_claim,
-            "authorizee_legal_subject": self.legal_subject_claim,
-            "authorizee_acting_subject": self.acting_subject_claim,
-            # "authorizee_branch_number": self.branch_number_claim,
-            # "service_id": self.mandate_service_id_claim,
-            # "service_uuid": self.mandate_service_uuid_claim,
-        }
-
-    @property
-    def oidcdb_sensitive_claims(self) -> Collection[ClaimPath]:
-        return list(self.mandate_claims.values())

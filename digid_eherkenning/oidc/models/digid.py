@@ -1,5 +1,3 @@
-from collections.abc import Collection
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -73,15 +71,3 @@ class DigiDMachtigenConfig(OpenIDConnectBaseConfig):
 
     class Meta:
         verbose_name = _("OpenID Connect configuration for DigiD Machtigen")
-
-    @property
-    def mandate_claims(self) -> dict[str, ClaimPath]:
-        return {
-            "representee": self.representee_bsn_claim,
-            "authorizee": self.authorizee_bsn_claim,
-            "service_id": self.mandate_service_id_claim,
-        }
-
-    @property
-    def oidcdb_sensitive_claims(self) -> Collection[ClaimPath]:
-        return list(self.mandate_claims.values())
