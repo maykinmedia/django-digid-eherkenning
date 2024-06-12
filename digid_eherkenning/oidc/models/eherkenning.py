@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from django_jsonform.models.fields import ArrayField
+from mozilla_django_oidc_db.fields import ClaimField, ClaimFieldDefault
 from mozilla_django_oidc_db.typing import ClaimPath
 
 from .base import (
@@ -13,17 +14,52 @@ from .base import (
 )
 
 
-class EHerkenningConfig(OpenIDConnectBaseConfig):
+class AuthorizeeMixin(models.Model):
+    identifier_type_claim = ClaimField(
+        verbose_name=_("identifier type claim"),
+        # XXX: Anoigo specific default
+        default=ClaimFieldDefault("namequalifier"),
+        help_text=_(
+            "Claim that specifies how the legal subject claim must be interpreted. "
+            "The expected claim value is one of: "
+            "'urn:etoegang:1.9:EntityConcernedID:KvKnr' or "
+            "'urn:etoegang:1.9:EntityConcernedID:RSIN'."
+        ),
+    )
+    # TODO: what if the claims for kvk/RSIN are different claims names?
+    legal_subject_claim = ClaimField(
+        verbose_name=_("company identifier claim"),
+        default=ClaimFieldDefault("urn:etoegang:core:LegalSubjectID"),
+        help_text=_(
+            "Name of the claim holding the identifier of the authenticated company."
+        ),
+    )
+    acting_subject_claim = ClaimField(
+        verbose_name=_("acting subject identifier claim"),
+        default=ClaimFieldDefault("urn:etoegang:core:ActingSubjectID"),
+        help_text=_(
+            "Name of the claim holding the (opaque) identifier of the user "
+            "representing the authenticated company.."
+        ),
+    )
+    # branch_number_claim = ClaimField(
+    #     verbose_name=_("branch number claim"),
+    #     default=ClaimFieldDefault("urn:etoegang:1.9:ServiceRestriction:Vestigingsnr"),
+    #     help_text=_(
+    #         "Name of the claim holding the value of the branch number for the "
+    #         "authenticated company, if such a restriction applies."
+    #     ),
+    # )
+
+    class Meta:
+        abstract = True
+
+
+class EHerkenningConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
     """
-    Configuration for eHerkenning authentication via OpenID connect
+    Configuration for eHerkenning authentication via OpenID connect.
     """
 
-    identifier_claim_name = models.CharField(
-        _("KVK claim name"),
-        max_length=100,
-        help_text=_("The name of the claim in which the KVK of the user is stored"),
-        default="kvk",
-    )
     oidc_rp_scopes_list = ArrayField(
         verbose_name=_("OpenID Connect scopes"),
         base_field=models.CharField(_("OpenID Connect scope"), max_length=50),
@@ -31,7 +67,7 @@ class EHerkenningConfig(OpenIDConnectBaseConfig):
         blank=True,
         help_text=_(
             "OpenID Connect scopes that are requested during login. "
-            "These scopes are hardcoded and must be supported by the identity provider"
+            "These scopes are hardcoded and must be supported by the identity provider."
         ),
     )
 
@@ -40,27 +76,38 @@ class EHerkenningConfig(OpenIDConnectBaseConfig):
 
     @property
     def oidcdb_username_claim(self) -> ClaimPath:
-        return [self.identifier_claim_name]
+        return self.legal_subject_claim
 
 
-class EHerkenningBewindvoeringConfig(OpenIDConnectBaseConfig):
-    # TODO: support periods in claim keys
-    vertegenwoordigde_company_claim_name = models.CharField(
-        verbose_name=_("vertegenwoordigde company claim name"),
-        default="aanvrager.kvk",
-        max_length=50,
+class EHerkenningBewindvoeringConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
+    # XXX: how do we determine the identifier type?
+    representee_claim = ClaimField(
+        verbose_name=_("representee identifier claim"),
+        # TODO: this is Anoigo, but could really be anything...
+        default=ClaimFieldDefault("sel_uid"),
         help_text=_(
-            "Name of the claim in which the KVK of the company being represented is stored"
+            "Name of the claim holding the identifier (like a BSN, RSIN or CoC number) "
+            "of the represented person/company."
         ),
     )
-    gemachtigde_person_claim_name = models.CharField(
-        verbose_name=_("gemachtigde person claim name"),
-        default="gemachtigde.pseudoID",
-        max_length=50,
-        help_text=_(
-            "Name of the claim in which the ID of the person representing a company is stored"
-        ),
-    )
+
+    # mandate_service_id_claim = ClaimField(
+    #     verbose_name=_("service ID claim"),
+    #     default=ClaimFieldDefault("urn:etoegang:core:ServiceID"),
+    #     help_text=_(
+    #         "Name of the claim holding the service ID for which the company "
+    #         "is authorized."
+    #     ),
+    # )
+    # mandate_service_uuid_claim = ClaimField(
+    #     verbose_name=_("service UUID claim"),
+    #     default=ClaimFieldDefault("urn:etoegang:core:ServiceUUID"),
+    #     help_text=_(
+    #         "Name of the claim holding the service UUID for which the company "
+    #         "is authorized."
+    #     ),
+    # )
+
     oidc_rp_scopes_list = ArrayField(
         verbose_name=_("OpenID Connect scopes"),
         base_field=models.CharField(_("OpenID Connect scope"), max_length=50),
@@ -68,7 +115,7 @@ class EHerkenningBewindvoeringConfig(OpenIDConnectBaseConfig):
         blank=True,
         help_text=_(
             "OpenID Connect scopes that are requested during login. "
-            "These scopes are hardcoded and must be supported by the identity provider"
+            "These scopes are hardcoded and must be supported by the identity provider."
         ),
     )
 
@@ -76,13 +123,17 @@ class EHerkenningBewindvoeringConfig(OpenIDConnectBaseConfig):
         verbose_name = _("OpenID Connect configuration for eHerkenning Bewindvoering")
 
     @property
-    def digid_eherkenning_machtigen_claims(self) -> dict[str, ClaimPath]:
-        # TODO: this nomenclature isn't entirely correct
+    def mandate_claims(self) -> dict[str, ClaimPath]:
         return {
-            "vertegenwoordigde": [self.vertegenwoordigde_company_claim_name],
-            "gemachtigde": [self.gemachtigde_person_claim_name],
+            "representee": self.representee_claim,
+            # "authorizee_legal_subject_type": self.identifier_type_claim,
+            "authorizee_legal_subject": self.legal_subject_claim,
+            "authorizee_acting_subject": self.acting_subject_claim,
+            # "authorizee_branch_number": self.branch_number_claim,
+            # "service_id": self.mandate_service_id_claim,
+            # "service_uuid": self.mandate_service_uuid_claim,
         }
 
     @property
     def oidcdb_sensitive_claims(self) -> Collection[ClaimPath]:
-        return list(self.digid_eherkenning_machtigen_claims.values())
+        return list(self.mandate_claims.values())
