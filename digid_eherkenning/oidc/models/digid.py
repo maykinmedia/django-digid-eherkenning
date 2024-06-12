@@ -51,14 +51,14 @@ class DigiDMachtigenConfig(OpenIDConnectBaseConfig):
         default=ClaimFieldDefault("urn:nl-eid-gdi:1.0:ActingSubjectID"),
         help_text=_("Name of the claim holding the BSN of the authorized user."),
     )
-    # mandate_service_id_claim = ClaimField(
-    #     verbose_name=_("service ID claim"),
-    #     default=ClaimFieldDefault("urn:nl-eid-gdi:1.0:ServiceUUID"),
-    #     help_text=_(
-    #         "Name of the claim holding the service UUID for which the acting subject "
-    #         "is authorized."
-    #     ),
-    # )
+    mandate_service_id_claim = ClaimField(
+        verbose_name=_("service ID claim"),
+        default=ClaimFieldDefault("urn:nl-eid-gdi:1.0:ServiceUUID"),
+        help_text=_(
+            "Name of the claim holding the service UUID for which the acting subject "
+            "is authorized."
+        ),
+    )
 
     oidc_rp_scopes_list = ArrayField(
         verbose_name=_("OpenID Connect scopes"),

@@ -42,14 +42,14 @@ class AuthorizeeMixin(models.Model):
             "representing the authenticated company.."
         ),
     )
-    # branch_number_claim = ClaimField(
-    #     verbose_name=_("branch number claim"),
-    #     default=ClaimFieldDefault("urn:etoegang:1.9:ServiceRestriction:Vestigingsnr"),
-    #     help_text=_(
-    #         "Name of the claim holding the value of the branch number for the "
-    #         "authenticated company, if such a restriction applies."
-    #     ),
-    # )
+    branch_number_claim = ClaimField(
+        verbose_name=_("branch number claim"),
+        default=ClaimFieldDefault("urn:etoegang:1.9:ServiceRestriction:Vestigingsnr"),
+        help_text=_(
+            "Name of the claim holding the value of the branch number for the "
+            "authenticated company, if such a restriction applies."
+        ),
+    )
 
     class Meta:
         abstract = True
@@ -91,22 +91,22 @@ class EHerkenningBewindvoeringConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
         ),
     )
 
-    # mandate_service_id_claim = ClaimField(
-    #     verbose_name=_("service ID claim"),
-    #     default=ClaimFieldDefault("urn:etoegang:core:ServiceID"),
-    #     help_text=_(
-    #         "Name of the claim holding the service ID for which the company "
-    #         "is authorized."
-    #     ),
-    # )
-    # mandate_service_uuid_claim = ClaimField(
-    #     verbose_name=_("service UUID claim"),
-    #     default=ClaimFieldDefault("urn:etoegang:core:ServiceUUID"),
-    #     help_text=_(
-    #         "Name of the claim holding the service UUID for which the company "
-    #         "is authorized."
-    #     ),
-    # )
+    mandate_service_id_claim = ClaimField(
+        verbose_name=_("service ID claim"),
+        default=ClaimFieldDefault("urn:etoegang:core:ServiceID"),
+        help_text=_(
+            "Name of the claim holding the service ID for which the company "
+            "is authorized."
+        ),
+    )
+    mandate_service_uuid_claim = ClaimField(
+        verbose_name=_("service UUID claim"),
+        default=ClaimFieldDefault("urn:etoegang:core:ServiceUUID"),
+        help_text=_(
+            "Name of the claim holding the service UUID for which the company "
+            "is authorized."
+        ),
+    )
 
     oidc_rp_scopes_list = ArrayField(
         verbose_name=_("OpenID Connect scopes"),
