@@ -90,34 +90,47 @@ def fieldsets_factory(claim_mapping_fields: Sequence[str]):
 
 
 @admin.register(DigiDConfig)
-class OpenIDConnectConfigDigiDAdmin(SingletonModelAdmin):
+class DigiDConfigAdmin(SingletonModelAdmin):
     form = admin_modelform_factory(DigiDConfig)
-    fieldsets = fieldsets_factory(claim_mapping_fields=["identifier_claim_name"])
+    fieldsets = fieldsets_factory(claim_mapping_fields=["bsn_claim"])
 
 
 @admin.register(EHerkenningConfig)
-class OpenIDConnectConfigEHerkenningAdmin(SingletonModelAdmin):
+class EHerkenningConfigAdmin(SingletonModelAdmin):
     form = admin_modelform_factory(EHerkenningConfig)
-    fieldsets = fieldsets_factory(claim_mapping_fields=["identifier_claim_name"])
+    fieldsets = fieldsets_factory(
+        claim_mapping_fields=[
+            "identifier_type_claim",
+            "legal_subject_claim",
+            "branch_number_claim",
+            "acting_subject_claim",
+        ]
+    )
 
 
 @admin.register(DigiDMachtigenConfig)
-class OpenIDConnectConfigDigiDMachtigenAdmin(SingletonModelAdmin):
+class DigiDMachtigenConfigAdmin(SingletonModelAdmin):
     form = admin_modelform_factory(DigiDMachtigenConfig)
     fieldsets = fieldsets_factory(
         claim_mapping_fields=[
-            "vertegenwoordigde_claim_name",
-            "gemachtigde_claim_name",
+            "representee_bsn_claim",
+            "authorizee_bsn_claim",
+            "mandate_service_id_claim",
         ]
     )
 
 
 @admin.register(EHerkenningBewindvoeringConfig)
-class OpenIDConnectConfigEHerkenningBewindvoeringAdmin(SingletonModelAdmin):
+class EHerkenningBewindvoeringConfigAdmin(SingletonModelAdmin):
     form = admin_modelform_factory(EHerkenningBewindvoeringConfig)
     fieldsets = fieldsets_factory(
         claim_mapping_fields=[
-            "vertegenwoordigde_company_claim_name",
-            "gemachtigde_person_claim_name",
+            "representee_claim",
+            "identifier_type_claim",
+            "legal_subject_claim",
+            "branch_number_claim",
+            "acting_subject_claim",
+            "mandate_service_id_claim",
+            "mandate_service_uuid_claim",
         ]
     )
