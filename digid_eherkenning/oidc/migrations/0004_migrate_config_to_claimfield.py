@@ -140,7 +140,7 @@ class Migration(migrations.Migration):
                     max_length=50, verbose_name="claim path segment"
                 ),
                 default=mozilla_django_oidc_db.fields.ClaimFieldDefault("sel_uid"),
-                help_text="Name of the claim holding the identifier (like a BSN, RSIN or CoC number) of the represented person/company.",
+                help_text="Name of the claim holding the BSN of the represented person.",
                 size=None,
                 verbose_name="representee identifier claim",
             ),

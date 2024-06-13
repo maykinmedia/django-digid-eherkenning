@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -52,6 +54,13 @@ class AuthorizeeMixin(models.Model):
     class Meta:
         abstract = True
 
+    @property
+    def oidcdb_sensitive_claims(self) -> Sequence[ClaimPath]:
+        return [
+            self.legal_subject_claim,  # type: ignore
+            self.branch_number_claim,  # type: ignore
+        ]
+
 
 class EHerkenningConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
     """
@@ -78,15 +87,13 @@ class EHerkenningConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
 
 
 class EHerkenningBewindvoeringConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
-    # XXX: how do we determine the identifier type?
+    # NOTE: Discussion with an employee from Anoigo states this will always be a BSN,
+    # not an RSIN or CoC number.
     representee_claim = ClaimField(
         verbose_name=_("representee identifier claim"),
         # TODO: this is Anoigo, but could really be anything...
         default=ClaimFieldDefault("sel_uid"),
-        help_text=_(
-            "Name of the claim holding the identifier (like a BSN, RSIN or CoC number) "
-            "of the represented person/company."
-        ),
+        help_text=_("Name of the claim holding the BSN of the represented person."),
     )
 
     mandate_service_id_claim = ClaimField(
@@ -119,3 +126,10 @@ class EHerkenningBewindvoeringConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
 
     class Meta:
         verbose_name = _("OpenID Connect configuration for eHerkenning Bewindvoering")
+
+    @property
+    def oidcdb_sensitive_claims(self) -> Sequence[ClaimPath]:
+        base = super().oidcdb_sensitive_claims
+        return base + [
+            self.representee_claim,  # type: ignore
+        ]

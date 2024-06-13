@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -71,3 +73,10 @@ class DigiDMachtigenConfig(OpenIDConnectBaseConfig):
 
     class Meta:
         verbose_name = _("OpenID Connect configuration for DigiD Machtigen")
+
+    @property
+    def oidcdb_sensitive_claims(self) -> Sequence[ClaimPath]:
+        return [
+            self.representee_bsn_claim,  # type: ignore
+            self.authorizee_bsn_claim,  # type: ignore
+        ]
