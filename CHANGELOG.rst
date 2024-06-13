@@ -2,12 +2,27 @@
 Changelog
 =========
 
-0.14.0 (2024-??-??)
+0.14.0 (2024-06-13)
 ===================
+
+Feature and Maintenance release
+
+**💥⚠️ Breaking changes**
 
 * Dropped support for Django versions older than 4.2 (LTS).
 * Dropped support for Python versions older than 3.10.
-* ...
+
+**Features**
+
+* Added optional dependency group for OIDC support. Install with
+  ``django-digid-eherkenning[oidc]``.
+* Ported Open Forms' ``digid_eherkenning_oidc_generics`` into the
+  ``digid_eherkenning.oidc`` sub-package, which is opt-in.
+* Extended OpenID Connect configuration models to be able to capture all relevant
+  authentication context data.
+
+The OpenID Connect features are currently considered to be in "preview" mode until we've
+battle-tested them in Open Forms and Open Inwoner.
 
 0.13.1 (2024-04-08)
 ===================
