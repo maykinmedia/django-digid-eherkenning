@@ -80,7 +80,7 @@ def admin_modelform_factory(model: type[BaseConfig], *args, **kwargs):
     return Form
 
 
-def fieldsets_factory(claim_mapping_fields: Sequence[str]):
+def fieldsets_factory(claim_mapping_fields: Sequence[str | Sequence[str]]):
     """
     Apply the shared fieldsets configuration with the model-specific overrides.
     """
@@ -97,6 +97,7 @@ class DigiDConfigAdmin(SingletonModelAdmin):
             "bsn_claim",
             "loa_claim",
             "default_loa",
+            "loa_value_mapping",
         ]
     )
 
@@ -112,6 +113,7 @@ class EHerkenningConfigAdmin(SingletonModelAdmin):
             "acting_subject_claim",
             "loa_claim",
             "default_loa",
+            "loa_value_mapping",
         ]
     )
 
@@ -125,6 +127,7 @@ class DigiDMachtigenConfigAdmin(SingletonModelAdmin):
             "authorizee_bsn_claim",
             "loa_claim",
             "default_loa",
+            "loa_value_mapping",
             "mandate_service_id_claim",
         ]
     )
@@ -142,6 +145,7 @@ class EHerkenningBewindvoeringConfigAdmin(SingletonModelAdmin):
             "acting_subject_claim",
             "loa_claim",
             "default_loa",
+            "loa_value_mapping",
             "mandate_service_id_claim",
             "mandate_service_uuid_claim",
         ]

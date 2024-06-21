@@ -1,9 +1,12 @@
+from copy import deepcopy
+
 from django.conf import settings
 from django.db import models
 from django.utils.functional import classproperty
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 
+from django_jsonform.models.fields import JSONField
 from mozilla_django_oidc_db.fields import ClaimField
 from mozilla_django_oidc_db.models import OpenIDConnectConfigBase
 
@@ -23,12 +26,51 @@ def get_default_scopes_kvk():
 
 
 def default_loa_choices(choicesCls: type[models.TextChoices]):
-    def decorator(cls: type[models.Model]):
-        field = cls._meta.get_field("default_loa")
-        field.choices = choicesCls.choices
+    def decorator(cls: type[BaseConfig]):
+        # set the choices for the default_loa
+        default_loa_field = cls._meta.get_field("default_loa")
+        assert isinstance(default_loa_field, models.CharField)
+        default_loa_field.choices = choicesCls.choices
+
+        # specify the choices for the JSONField schema
+        loa_mapping_field = cls._meta.get_field("loa_value_mapping")
+        assert isinstance(loa_mapping_field, JSONField)
+        new_schema = deepcopy(loa_mapping_field.schema)
+        new_schema["items"]["properties"]["to"]["choices"] = [
+            {"value": val, "title": label} for val, label in choicesCls.choices
+        ]
+        loa_mapping_field.schema = new_schema
+
         return cls
 
     return decorator
+
+
+LOA_MAPPING_SCHEMA = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+            "from": {
+                "anyOf": [
+                    {
+                        "type": "string",
+                        "title": _("String value"),
+                    },
+                    {
+                        "type": "number",
+                        "title": _("Number value"),
+                    },
+                ],
+            },
+            "to": {
+                "type": "string",
+            },
+        },
+        "additionalProperties": False,
+    },
+}
 
 
 class BaseConfig(OpenIDConnectConfigBase):
@@ -54,6 +96,18 @@ class BaseConfig(OpenIDConnectConfigBase):
         choices=tuple(),  # set dynamically via the default_loa_choices decorator
         help_text=_(
             "Fallback level of assurance, in case no claim value could be extracted."
+        ),
+    )
+
+    loa_value_mapping = JSONField(
+        _("loa mapping"),
+        schema=LOA_MAPPING_SCHEMA,
+        default=list,
+        blank=True,
+        help_text=_(
+            "Level of assurance claim value mappings. Useful if the values in the LOA "
+            "claim are proprietary, so you can translate them into their standardized "
+            "identifiers."
         ),
     )
 
