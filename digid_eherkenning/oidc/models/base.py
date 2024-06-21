@@ -20,7 +20,7 @@ def get_default_scopes_kvk():
     return ["openid", "kvk"]
 
 
-class OpenIDConnectBaseConfig(OpenIDConnectConfigBase):
+class BaseConfig(OpenIDConnectConfigBase):
     """
     Base configuration for DigiD/eHerkenning authentication via OpenID Connect.
     """

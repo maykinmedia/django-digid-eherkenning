@@ -2,6 +2,13 @@
 Changelog
 =========
 
+0.15.0 (2024-06-??)
+===================
+
+Further iteration on the OIDC integration.
+
+* 💥⚠️ Renamed the ``OpenIDConnectBaseConfig`` base model to ``BaseConfig``
+
 0.14.0 (2024-06-13)
 ===================
 

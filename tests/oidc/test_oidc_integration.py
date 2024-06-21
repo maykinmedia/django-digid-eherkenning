@@ -13,7 +13,7 @@ from digid_eherkenning.oidc.models import (
     EHerkenningBewindvoeringConfig,
     EHerkenningConfig,
 )
-from digid_eherkenning.oidc.models.base import OpenIDConnectBaseConfig
+from digid_eherkenning.oidc.models.base import BaseConfig
 from digid_eherkenning.oidc.views import (
     digid_init,
     digid_machtigen_init,
@@ -44,7 +44,7 @@ def test_init_flow(
     auth_request: HttpRequest,
     mocked_responses: RequestsMock,
     init_view,
-    config_class: type[OpenIDConnectBaseConfig],
+    config_class: type[BaseConfig],
 ):
     _name = config_class._meta.model_name
     config = config_class(

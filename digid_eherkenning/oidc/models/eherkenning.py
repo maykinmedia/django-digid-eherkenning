@@ -7,11 +7,7 @@ from django_jsonform.models.fields import ArrayField
 from mozilla_django_oidc_db.fields import ClaimField, ClaimFieldDefault
 from mozilla_django_oidc_db.typing import ClaimPath
 
-from .base import (
-    OpenIDConnectBaseConfig,
-    get_default_scopes_bsn,
-    get_default_scopes_kvk,
-)
+from .base import BaseConfig, get_default_scopes_bsn, get_default_scopes_kvk
 
 
 class AuthorizeeMixin(models.Model):
@@ -62,7 +58,7 @@ class AuthorizeeMixin(models.Model):
         ]
 
 
-class EHerkenningConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
+class EHerkenningConfig(AuthorizeeMixin, BaseConfig):
     """
     Configuration for eHerkenning authentication via OpenID connect.
     """
@@ -86,7 +82,7 @@ class EHerkenningConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
         return self.legal_subject_claim
 
 
-class EHerkenningBewindvoeringConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
+class EHerkenningBewindvoeringConfig(AuthorizeeMixin, BaseConfig):
     # NOTE: Discussion with an employee from Anoigo states this will always be a BSN,
     # not an RSIN or CoC number.
     representee_claim = ClaimField(

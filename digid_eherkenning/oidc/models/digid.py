@@ -7,10 +7,10 @@ from django_jsonform.models.fields import ArrayField
 from mozilla_django_oidc_db.fields import ClaimField, ClaimFieldDefault
 from mozilla_django_oidc_db.typing import ClaimPath
 
-from .base import OpenIDConnectBaseConfig, get_default_scopes_bsn
+from .base import BaseConfig, get_default_scopes_bsn
 
 
-class DigiDConfig(OpenIDConnectBaseConfig):
+class DigiDConfig(BaseConfig):
     """
     Configuration for DigiD authentication via OpenID connect
     """
@@ -39,7 +39,7 @@ class DigiDConfig(OpenIDConnectBaseConfig):
         return self.bsn_claim
 
 
-class DigiDMachtigenConfig(OpenIDConnectBaseConfig):
+class DigiDMachtigenConfig(BaseConfig):
     # TODO: these default claim names don't appear to be part of any standard...
     representee_bsn_claim = ClaimField(
         verbose_name=_("representee bsn claim"),

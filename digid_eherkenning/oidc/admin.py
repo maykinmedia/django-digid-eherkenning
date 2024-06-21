@@ -9,11 +9,11 @@ from mozilla_django_oidc_db.forms import OpenIDConnectConfigForm
 from solo.admin import SingletonModelAdmin
 
 from .models import (
+    BaseConfig,
     DigiDConfig,
     DigiDMachtigenConfig,
     EHerkenningBewindvoeringConfig,
     EHerkenningConfig,
-    OpenIDConnectBaseConfig,
 )
 
 # Using a dict because these retain ordering, and it makes things a bit more readable.
@@ -62,7 +62,7 @@ COMMON_FIELDSETS = {
 }
 
 
-def admin_modelform_factory(model: type[OpenIDConnectBaseConfig], *args, **kwargs):
+def admin_modelform_factory(model: type[BaseConfig], *args, **kwargs):
     """
     Factory function to generate a model form class for a given configuration model.
 
