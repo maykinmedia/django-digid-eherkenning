@@ -64,9 +64,27 @@ def test_digid_raises_on_missing_claims():
         process_claims({"bsn": "XXXXXXX54"}, config)
 
 
-def test_loa_claim_absent_without_default_loa():
+def test_digid_loa_claim_absent_without_default_loa():
     config = DigiDConfig(bsn_claim=["sub"], loa_claim=["loa"], default_loa="")
     claims: JSONObject = {"sub": "XXXXXXX54"}
+
+    result = process_claims(claims, config)
+
+    assert result == {"bsn_claim": "XXXXXXX54"}
+
+
+def test_digid_loa_claim_not_configured_but_default_set():
+    config = DigiDConfig(default_loa="middle")
+    claims: JSONObject = {"bsn": "XXXXXXX54", "loa": "ignored"}
+
+    result = process_claims(claims, config)
+
+    assert result == {"bsn_claim": "XXXXXXX54", "loa_claim": "middle"}
+
+
+def test_digid_claim_processing_with_defaults():
+    config = DigiDConfig()
+    claims: JSONObject = {"bsn": "XXXXXXX54"}
 
     result = process_claims(claims, config)
 

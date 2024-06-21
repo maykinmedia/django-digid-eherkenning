@@ -1,7 +1,15 @@
+import logging
+
 from glom import Path, PathAccessError, glom
 from mozilla_django_oidc_db.typing import ClaimPath, JSONObject
 
 from .models import BaseConfig
+
+logger = logging.getLogger(__name__)
+
+
+class NoLOAClaim(Exception):
+    pass
 
 
 def process_claims(claims: JSONObject, config: BaseConfig) -> JSONObject:
@@ -38,18 +46,40 @@ def process_claims(claims: JSONObject, config: BaseConfig) -> JSONObject:
 
     # then, loa is hardcoded in the base model, process those...
     try:
+        loa = _process_loa(claims, config)
+    except NoLOAClaim as exc:
+        logger.info(
+            "Missing LoA claim, excluding it from processed claims", exc_info=exc
+        )
+    else:
+        processed_claims["loa_claim"] = loa
+
+    return processed_claims
+
+
+def _process_loa(claims: JSONObject, config: BaseConfig) -> str:
+    default = config.default_loa
+    if not (loa_claim := config.loa_claim) and not default:
+        raise NoLOAClaim("No LoA claim or default LoA configured")
+
+    if not loa_claim:
+        return default
+
+    try:
         loa = glom(claims, Path(*config.loa_claim))
         loa_claim_missing = False
     except PathAccessError:
         # default could be empty (string)!
-        loa = config.default_loa
-        loa_claim_missing = not loa
+        loa = default
+        loa_claim_missing = not default
+
+    if loa_claim_missing:
+        raise NoLOAClaim("LoA claim is absent and no default LoA configured")
 
     # 'from' is string or number, which are valid keys
-    loa_map = {mapping["from"]: mapping["to"] for mapping in config.loa_value_mapping}
+    loa_map: dict[str | float | int, str] = {
+        mapping["from"]: mapping["to"] for mapping in config.loa_value_mapping
+    }
 
-    if not loa_claim_missing:
-        # apply mapping, if not found -> use the literal original value instead
-        processed_claims["loa_claim"] = loa_map.get(loa, loa)
-
-    return processed_claims
+    # apply mapping, if not found -> use the literal original value instead
+    return loa_map.get(loa, loa)
