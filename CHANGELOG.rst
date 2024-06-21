@@ -8,6 +8,12 @@ Changelog
 Further iteration on the OIDC integration.
 
 * 💥⚠️ Renamed the ``OpenIDConnectBaseConfig`` base model to ``BaseConfig``
+* Added "level of assurance" claim configuration
+* Added ability to specify a fallback LOA value
+* Added ability to map claim values to their standard values
+* Added ``digid_eherkenning.oidc.claims.process_claims`` helper to normalize received
+  claims from the OIDC provider for further processing. See the tests for the intended
+  behaviour.
 
 0.14.0 (2024-06-13)
 ===================
