@@ -33,6 +33,8 @@ class DigiDConfig(BaseConfig):
         ),
     )
 
+    CLAIMS_CONFIGURATION = ({"field": "bsn_claim", "required": True},)
+
     class Meta:
         verbose_name = _("OpenID Connect configuration for DigiD")
 
@@ -72,6 +74,12 @@ class DigiDMachtigenConfig(BaseConfig):
             "OpenID Connect scopes that are requested during login. "
             "These scopes are hardcoded and must be supported by the identity provider."
         ),
+    )
+
+    CLAIMS_CONFIGURATION = (
+        {"field": "representee_bsn_claim", "required": True},
+        {"field": "authorizee_bsn_claim", "required": True},
+        {"field": "mandate_service_id_claim", "required": True},
     )
 
     class Meta:

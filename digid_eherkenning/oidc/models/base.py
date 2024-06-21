@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import TypedDict
 
 from django.conf import settings
 from django.db import models
@@ -73,6 +74,11 @@ LOA_MAPPING_SCHEMA = {
 }
 
 
+class ClaimConfiguration(TypedDict):
+    field: str  # model field name
+    required: bool
+
+
 class BaseConfig(OpenIDConnectConfigBase):
     """
     Base configuration for DigiD/eHerkenning authentication via OpenID Connect.
@@ -110,6 +116,8 @@ class BaseConfig(OpenIDConnectConfigBase):
             "identifiers."
         ),
     )
+
+    CLAIMS_CONFIGURATION: tuple[ClaimConfiguration, ...]
 
     class Meta:
         abstract = True
