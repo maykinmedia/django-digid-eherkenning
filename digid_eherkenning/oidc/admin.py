@@ -92,7 +92,13 @@ def fieldsets_factory(claim_mapping_fields: Sequence[str]):
 @admin.register(DigiDConfig)
 class DigiDConfigAdmin(SingletonModelAdmin):
     form = admin_modelform_factory(DigiDConfig)
-    fieldsets = fieldsets_factory(claim_mapping_fields=["bsn_claim"])
+    fieldsets = fieldsets_factory(
+        claim_mapping_fields=[
+            "bsn_claim",
+            "loa_claim",
+            "default_loa",
+        ]
+    )
 
 
 @admin.register(EHerkenningConfig)
@@ -104,6 +110,8 @@ class EHerkenningConfigAdmin(SingletonModelAdmin):
             "legal_subject_claim",
             "branch_number_claim",
             "acting_subject_claim",
+            "loa_claim",
+            "default_loa",
         ]
     )
 
@@ -115,6 +123,8 @@ class DigiDMachtigenConfigAdmin(SingletonModelAdmin):
         claim_mapping_fields=[
             "representee_bsn_claim",
             "authorizee_bsn_claim",
+            "loa_claim",
+            "default_loa",
             "mandate_service_id_claim",
         ]
     )
@@ -130,6 +140,8 @@ class EHerkenningBewindvoeringConfigAdmin(SingletonModelAdmin):
             "legal_subject_claim",
             "branch_number_claim",
             "acting_subject_claim",
+            "loa_claim",
+            "default_loa",
             "mandate_service_id_claim",
             "mandate_service_uuid_claim",
         ]

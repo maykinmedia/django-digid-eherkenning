@@ -7,7 +7,13 @@ from django_jsonform.models.fields import ArrayField
 from mozilla_django_oidc_db.fields import ClaimField, ClaimFieldDefault
 from mozilla_django_oidc_db.typing import ClaimPath
 
-from .base import BaseConfig, get_default_scopes_bsn, get_default_scopes_kvk
+from ...choices import AssuranceLevels
+from .base import (
+    BaseConfig,
+    default_loa_choices,
+    get_default_scopes_bsn,
+    get_default_scopes_kvk,
+)
 
 
 class AuthorizeeMixin(models.Model):
@@ -58,6 +64,7 @@ class AuthorizeeMixin(models.Model):
         ]
 
 
+@default_loa_choices(AssuranceLevels)
 class EHerkenningConfig(AuthorizeeMixin, BaseConfig):
     """
     Configuration for eHerkenning authentication via OpenID connect.
@@ -82,6 +89,7 @@ class EHerkenningConfig(AuthorizeeMixin, BaseConfig):
         return self.legal_subject_claim
 
 
+@default_loa_choices(AssuranceLevels)
 class EHerkenningBewindvoeringConfig(AuthorizeeMixin, BaseConfig):
     # NOTE: Discussion with an employee from Anoigo states this will always be a BSN,
     # not an RSIN or CoC number.
