@@ -276,3 +276,164 @@ def test_eherkenning_raises_on_missing_claims(claims: JSONObject):
 
     with pytest.raises(ValueError):
         process_claims(claims, config)
+
+
+# EHERKENNING BEWINDVOERING
+
+
+@pytest.mark.parametrize(
+    "claims,expected",
+    [
+        # all claims provided, happy flow
+        (
+            {
+                "namequalifier": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
+                "kvk": "12345678",
+                "sub": "-opaquestring-",
+                "vestiging": "123456789012",
+                "loa": "urn:etoegang:core:assurance-class:loa2plus",
+                "bsn": "XXXXXXX54",
+                "service_id": "urn:etoegang:DV:00000001002308836000:services:9113",
+                "service_uuid": "34085d78-21aa-4481-a219-b28d7f3282fc",
+                "extra": "ignored",
+            },
+            {
+                "identifier_type_claim": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
+                "legal_subject_claim": "12345678",
+                "acting_subject_claim": "-opaquestring-",
+                "branch_number_claim": "123456789012",
+                "loa_claim": "urn:etoegang:core:assurance-class:loa2plus",
+                "representee_claim": "XXXXXXX54",
+                "mandate_service_id_claim": "urn:etoegang:DV:00000001002308836000:services:9113",
+                "mandate_service_uuid_claim": "34085d78-21aa-4481-a219-b28d7f3282fc",
+            },
+        ),
+        # all required claims provided, happy flow
+        (
+            {
+                "kvk": "12345678",
+                "sub": "-opaquestring-",
+                "loa": "urn:etoegang:core:assurance-class:loa2plus",
+                "bsn": "XXXXXXX54",
+                "service_id": "urn:etoegang:DV:00000001002308836000:services:9113",
+                "service_uuid": "34085d78-21aa-4481-a219-b28d7f3282fc",
+            },
+            {
+                "legal_subject_claim": "12345678",
+                "acting_subject_claim": "-opaquestring-",
+                "loa_claim": "urn:etoegang:core:assurance-class:loa2plus",
+                "representee_claim": "XXXXXXX54",
+                "mandate_service_id_claim": "urn:etoegang:DV:00000001002308836000:services:9113",
+                "mandate_service_uuid_claim": "34085d78-21aa-4481-a219-b28d7f3282fc",
+            },
+        ),
+        # mapping loa value
+        (
+            {
+                "kvk": "12345678",
+                "sub": "-opaquestring-",
+                "loa": 3,
+                "bsn": "XXXXXXX54",
+                "service_id": "urn:etoegang:DV:00000001002308836000:services:9113",
+                "service_uuid": "34085d78-21aa-4481-a219-b28d7f3282fc",
+            },
+            {
+                "legal_subject_claim": "12345678",
+                "acting_subject_claim": "-opaquestring-",
+                "loa_claim": "urn:etoegang:core:assurance-class:loa3",
+                "representee_claim": "XXXXXXX54",
+                "mandate_service_id_claim": "urn:etoegang:DV:00000001002308836000:services:9113",
+                "mandate_service_uuid_claim": "34085d78-21aa-4481-a219-b28d7f3282fc",
+            },
+        ),
+        # default/fallback loa
+        (
+            {
+                "kvk": "12345678",
+                "sub": "-opaquestring-",
+                "bsn": "XXXXXXX54",
+                "service_id": "urn:etoegang:DV:00000001002308836000:services:9113",
+                "service_uuid": "34085d78-21aa-4481-a219-b28d7f3282fc",
+            },
+            {
+                "legal_subject_claim": "12345678",
+                "acting_subject_claim": "-opaquestring-",
+                "loa_claim": "urn:etoegang:core:assurance-class:loa2plus",
+                "representee_claim": "XXXXXXX54",
+                "mandate_service_id_claim": "urn:etoegang:DV:00000001002308836000:services:9113",
+                "mandate_service_uuid_claim": "34085d78-21aa-4481-a219-b28d7f3282fc",
+            },
+        ),
+    ],
+)
+def test_eherkenning_bewindvoering_claim_processing(
+    claims: JSONObject, expected: JSONObject
+):
+    config = EHerkenningBewindvoeringConfig(
+        identifier_type_claim=["namequalifier"],
+        legal_subject_claim=["kvk"],
+        acting_subject_claim=["sub"],
+        branch_number_claim=["vestiging"],
+        representee_claim=["bsn"],
+        mandate_service_id_claim=["service_id"],
+        mandate_service_uuid_claim=["service_uuid"],
+        loa_claim=["loa"],
+        default_loa=AssuranceLevels.low_plus,
+        loa_value_mapping=[
+            {"from": 3, "to": AssuranceLevels.substantial},
+        ],
+    )
+
+    result = process_claims(claims, config)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "claims",
+    [
+        {
+            "kvk": "12345678",
+            "bsn": "XXXXXXX54",
+            "service_id": "urn:etoegang:DV:00000001002308836000:services:9113",
+            "service_uuid": "34085d78-21aa-4481-a219-b28d7f3282fc",
+        },
+        {
+            "sub": "-opaquestring-",
+            "bsn": "XXXXXXX54",
+            "service_id": "urn:etoegang:DV:00000001002308836000:services:9113",
+            "service_uuid": "34085d78-21aa-4481-a219-b28d7f3282fc",
+        },
+        {
+            "kvk": "12345678",
+            "sub": "-opaquestring-",
+            "service_id": "urn:etoegang:DV:00000001002308836000:services:9113",
+            "service_uuid": "34085d78-21aa-4481-a219-b28d7f3282fc",
+        },
+        {
+            "kvk": "12345678",
+            "sub": "-opaquestring-",
+            "bsn": "XXXXXXX54",
+            "service_uuid": "34085d78-21aa-4481-a219-b28d7f3282fc",
+        },
+        {
+            "kvk": "12345678",
+            "sub": "-opaquestring-",
+            "bsn": "XXXXXXX54",
+            "service_id": "urn:etoegang:DV:00000001002308836000:services:9113",
+        },
+    ],
+)
+def test_eherkenning_bewindvoering_raises_on_missing_claims(claims: JSONObject):
+    config = EHerkenningBewindvoeringConfig(
+        identifier_type_claim=["namequalifier"],
+        legal_subject_claim=["kvk"],
+        acting_subject_claim=["sub"],
+        branch_number_claim=["vestiging"],
+        representee_claim=["bsn"],
+        mandate_service_id_claim=["service_id"],
+        mandate_service_uuid_claim=["service_uuid"],
+    )
+
+    with pytest.raises(ValueError):
+        process_claims(claims, config)
