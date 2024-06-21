@@ -71,3 +71,8 @@ incorporate in your own initialization flow views:
 * :attr:`digid_eherkenning.oidc.views.eh_bewindvoering_init`
 
 .. _mozilla-django-oidc-db: https://mozilla-django-oidc-db.readthedocs.io/en/latest/
+
+Claim processing
+================
+
+.. autofunction:: digid_eherkenning.oidc.claims.process_claims

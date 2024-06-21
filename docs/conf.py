@@ -6,6 +6,8 @@
 
 # -- Path setup --------------------------------------------------------------
 
+import os
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -13,10 +15,15 @@
 import sys
 from pathlib import Path
 
-current_dir = Path(__file__).parent.parent
-code_directory = current_dir / "digid_eherkenning"
+import django
 
-sys.path.insert(0, str(code_directory))
+repo_root = Path(__file__).parent.parent.resolve()
+sys.path.insert(0, str(repo_root))
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.project.settings")
+os.environ.setdefault("OIDC_ENABLED", "yes")
+
+django.setup()
 
 
 # -- Project information -----------------------------------------------------

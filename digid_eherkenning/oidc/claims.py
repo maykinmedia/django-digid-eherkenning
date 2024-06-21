@@ -16,8 +16,8 @@ def process_claims(claims: JSONObject, config: BaseConfig) -> JSONObject:
     * Claim value post-processing - if values need to be translated/normalized, the
       provided configuration is used.
 
-    The return value SHOULD include the `loa_claim` key, but if no value is available (
-    not in the claims and no default specified -> then it's omitted), the key will be
+    The return value SHOULD include the ``loa_claim`` key, but if no value is available
+    (not in the claims and no default specified -> then it's omitted), the key will be
     absent.
     """
     processed_claims = {}
