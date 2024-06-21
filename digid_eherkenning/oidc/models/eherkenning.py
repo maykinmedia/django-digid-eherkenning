@@ -17,6 +17,8 @@ from .base import (
 
 
 class AuthorizeeMixin(models.Model):
+    # XXX: this may require a value mapping, depending on what brokers return
+    # XXX: this may require a fallback value, depending on what brokers return
     identifier_type_claim = ClaimField(
         verbose_name=_("identifier type claim"),
         # XXX: Anoigo specific default
@@ -51,6 +53,13 @@ class AuthorizeeMixin(models.Model):
             "Name of the claim holding the value of the branch number for the "
             "authenticated company, if such a restriction applies."
         ),
+    )
+
+    CLAIMS_CONFIGURATION = (
+        {"field": "identifier_type_claim", "required": False},
+        {"field": "legal_subject_claim", "required": True},
+        {"field": "acting_subject_claim", "required": True},
+        {"field": "branch_number_claim", "required": False},
     )
 
     class Meta:
@@ -126,6 +135,12 @@ class EHerkenningBewindvoeringConfig(AuthorizeeMixin, BaseConfig):
             "OpenID Connect scopes that are requested during login. "
             "These scopes are hardcoded and must be supported by the identity provider."
         ),
+    )
+
+    CLAIMS_CONFIGURATION = AuthorizeeMixin.CLAIMS_CONFIGURATION + (
+        {"field": "representee_claim", "required": True},
+        {"field": "mandate_service_id_claim", "required": True},
+        {"field": "mandate_service_uuid_claim", "required": True},
     )
 
     class Meta:

@@ -1,7 +1,7 @@
 import pytest
 from mozilla_django_oidc_db.typing import JSONObject
 
-from digid_eherkenning.choices import DigiDAssuranceLevels
+from digid_eherkenning.choices import AssuranceLevels, DigiDAssuranceLevels
 from digid_eherkenning.oidc.claims import process_claims
 from digid_eherkenning.oidc.models import (
     DigiDConfig,
@@ -171,6 +171,107 @@ def test_digid_machtigen_raises_on_missing_claims(claims: JSONObject):
         authorizee_bsn_claim=["authorizee"],
         mandate_service_id_claim=["service_id"],
         loa_claim=["authsp_level"],
+    )
+
+    with pytest.raises(ValueError):
+        process_claims(claims, config)
+
+
+### EHERKENNING
+
+
+@pytest.mark.parametrize(
+    "claims,expected",
+    [
+        # all claims provided, happy flow
+        (
+            {
+                "namequalifier": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
+                "kvk": "12345678",
+                "sub": "-opaquestring-",
+                "vestiging": "123456789012",
+                "loa": "urn:etoegang:core:assurance-class:loa2plus",
+                "extra": "ignored",
+            },
+            {
+                "identifier_type_claim": "urn:etoegang:1.9:EntityConcernedID:KvKnr",
+                "legal_subject_claim": "12345678",
+                "acting_subject_claim": "-opaquestring-",
+                "branch_number_claim": "123456789012",
+                "loa_claim": "urn:etoegang:core:assurance-class:loa2plus",
+            },
+        ),
+        # all required claims provided, happy flow
+        (
+            {
+                "kvk": "12345678",
+                "sub": "-opaquestring-",
+                "loa": "urn:etoegang:core:assurance-class:loa2plus",
+            },
+            {
+                "legal_subject_claim": "12345678",
+                "acting_subject_claim": "-opaquestring-",
+                "loa_claim": "urn:etoegang:core:assurance-class:loa2plus",
+            },
+        ),
+        # mapping loa value
+        (
+            {
+                "kvk": "12345678",
+                "sub": "-opaquestring-",
+                "loa": 3,
+            },
+            {
+                "legal_subject_claim": "12345678",
+                "acting_subject_claim": "-opaquestring-",
+                "loa_claim": "urn:etoegang:core:assurance-class:loa3",
+            },
+        ),
+        # default/fallback loa
+        (
+            {
+                "kvk": "12345678",
+                "sub": "-opaquestring-",
+            },
+            {
+                "legal_subject_claim": "12345678",
+                "acting_subject_claim": "-opaquestring-",
+                "loa_claim": "urn:etoegang:core:assurance-class:loa2plus",
+            },
+        ),
+    ],
+)
+def test_eherkenning_claim_processing(claims: JSONObject, expected: JSONObject):
+    config = EHerkenningConfig(
+        identifier_type_claim=["namequalifier"],
+        legal_subject_claim=["kvk"],
+        acting_subject_claim=["sub"],
+        branch_number_claim=["vestiging"],
+        loa_claim=["loa"],
+        default_loa=AssuranceLevels.low_plus,
+        loa_value_mapping=[
+            {"from": 3, "to": AssuranceLevels.substantial},
+        ],
+    )
+
+    result = process_claims(claims, config)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "claims",
+    [
+        {"kvk": "12345678"},
+        {"sub": "-opaquestring-"},
+    ],
+)
+def test_eherkenning_raises_on_missing_claims(claims: JSONObject):
+    config = EHerkenningConfig(
+        identifier_type_claim=["namequalifier"],
+        legal_subject_claim=["kvk"],
+        acting_subject_claim=["sub"],
+        branch_number_claim=["vestiging"],
     )
 
     with pytest.raises(ValueError):
