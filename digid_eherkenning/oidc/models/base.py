@@ -89,7 +89,7 @@ class BaseConfig(OpenIDConnectConfigBase):
         default=None,
         help_text=_(
             "Name of the claim holding the level of assurance. If left empty, it is "
-            "assumed there is no LOA claim and the configured callback value will be "
+            "assumed there is no LOA claim and the configured fallback value will be "
             "used."
         ),
         null=True,
