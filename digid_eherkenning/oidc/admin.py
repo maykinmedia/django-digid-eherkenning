@@ -17,7 +17,7 @@ from .models import (
 )
 
 # Using a dict because these retain ordering, and it makes things a bit more readable.
-ATTRIBUTES_MAPPING_TITLE = _("Attributes to extract from claim")
+ATTRIBUTES_MAPPING_TITLE = _("Attributes to extract from claims")
 COMMON_FIELDSETS = {
     _("Activation"): {
         "fields": ("enabled",),
