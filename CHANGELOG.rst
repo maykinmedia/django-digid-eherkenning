@@ -2,7 +2,7 @@
 Changelog
 =========
 
-0.15.0 (2024-06-??)
+0.15.0 (2024-06-24)
 ===================
 
 Further iteration on the OIDC integration.
@@ -14,6 +14,7 @@ Further iteration on the OIDC integration.
 * Added ``digid_eherkenning.oidc.claims.process_claims`` helper to normalize received
   claims from the OIDC provider for further processing. See the tests for the intended
   behaviour.
+* Added Dutch translations.
 
 0.14.0 (2024-06-13)
 ===================
