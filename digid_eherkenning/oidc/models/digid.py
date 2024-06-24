@@ -7,10 +7,12 @@ from django_jsonform.models.fields import ArrayField
 from mozilla_django_oidc_db.fields import ClaimField, ClaimFieldDefault
 from mozilla_django_oidc_db.typing import ClaimPath
 
-from .base import OpenIDConnectBaseConfig, get_default_scopes_bsn
+from ...choices import DigiDAssuranceLevels
+from .base import BaseConfig, default_loa_choices, get_default_scopes_bsn
 
 
-class DigiDConfig(OpenIDConnectBaseConfig):
+@default_loa_choices(DigiDAssuranceLevels)
+class DigiDConfig(BaseConfig):
     """
     Configuration for DigiD authentication via OpenID connect
     """
@@ -31,6 +33,8 @@ class DigiDConfig(OpenIDConnectBaseConfig):
         ),
     )
 
+    CLAIMS_CONFIGURATION = ({"field": "bsn_claim", "required": True},)
+
     class Meta:
         verbose_name = _("OpenID Connect configuration for DigiD")
 
@@ -39,7 +43,8 @@ class DigiDConfig(OpenIDConnectBaseConfig):
         return self.bsn_claim
 
 
-class DigiDMachtigenConfig(OpenIDConnectBaseConfig):
+@default_loa_choices(DigiDAssuranceLevels)
+class DigiDMachtigenConfig(BaseConfig):
     # TODO: these default claim names don't appear to be part of any standard...
     representee_bsn_claim = ClaimField(
         verbose_name=_("representee bsn claim"),
@@ -69,6 +74,12 @@ class DigiDMachtigenConfig(OpenIDConnectBaseConfig):
             "OpenID Connect scopes that are requested during login. "
             "These scopes are hardcoded and must be supported by the identity provider."
         ),
+    )
+
+    CLAIMS_CONFIGURATION = (
+        {"field": "representee_bsn_claim", "required": True},
+        {"field": "authorizee_bsn_claim", "required": True},
+        {"field": "mandate_service_id_claim", "required": True},
     )
 
     class Meta:

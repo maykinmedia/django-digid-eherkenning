@@ -9,11 +9,11 @@ from mozilla_django_oidc_db.forms import OpenIDConnectConfigForm
 from solo.admin import SingletonModelAdmin
 
 from .models import (
+    BaseConfig,
     DigiDConfig,
     DigiDMachtigenConfig,
     EHerkenningBewindvoeringConfig,
     EHerkenningConfig,
-    OpenIDConnectBaseConfig,
 )
 
 # Using a dict because these retain ordering, and it makes things a bit more readable.
@@ -62,7 +62,7 @@ COMMON_FIELDSETS = {
 }
 
 
-def admin_modelform_factory(model: type[OpenIDConnectBaseConfig], *args, **kwargs):
+def admin_modelform_factory(model: type[BaseConfig], *args, **kwargs):
     """
     Factory function to generate a model form class for a given configuration model.
 
@@ -80,7 +80,7 @@ def admin_modelform_factory(model: type[OpenIDConnectBaseConfig], *args, **kwarg
     return Form
 
 
-def fieldsets_factory(claim_mapping_fields: Sequence[str]):
+def fieldsets_factory(claim_mapping_fields: Sequence[str | Sequence[str]]):
     """
     Apply the shared fieldsets configuration with the model-specific overrides.
     """
@@ -92,7 +92,14 @@ def fieldsets_factory(claim_mapping_fields: Sequence[str]):
 @admin.register(DigiDConfig)
 class DigiDConfigAdmin(SingletonModelAdmin):
     form = admin_modelform_factory(DigiDConfig)
-    fieldsets = fieldsets_factory(claim_mapping_fields=["bsn_claim"])
+    fieldsets = fieldsets_factory(
+        claim_mapping_fields=[
+            "bsn_claim",
+            "loa_claim",
+            "default_loa",
+            "loa_value_mapping",
+        ]
+    )
 
 
 @admin.register(EHerkenningConfig)
@@ -104,6 +111,9 @@ class EHerkenningConfigAdmin(SingletonModelAdmin):
             "legal_subject_claim",
             "branch_number_claim",
             "acting_subject_claim",
+            "loa_claim",
+            "default_loa",
+            "loa_value_mapping",
         ]
     )
 
@@ -115,6 +125,9 @@ class DigiDMachtigenConfigAdmin(SingletonModelAdmin):
         claim_mapping_fields=[
             "representee_bsn_claim",
             "authorizee_bsn_claim",
+            "loa_claim",
+            "default_loa",
+            "loa_value_mapping",
             "mandate_service_id_claim",
         ]
     )
@@ -130,6 +143,9 @@ class EHerkenningBewindvoeringConfigAdmin(SingletonModelAdmin):
             "legal_subject_claim",
             "branch_number_claim",
             "acting_subject_claim",
+            "loa_claim",
+            "default_loa",
+            "loa_value_mapping",
             "mandate_service_id_claim",
             "mandate_service_uuid_claim",
         ]

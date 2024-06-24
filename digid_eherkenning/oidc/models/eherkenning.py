@@ -7,14 +7,18 @@ from django_jsonform.models.fields import ArrayField
 from mozilla_django_oidc_db.fields import ClaimField, ClaimFieldDefault
 from mozilla_django_oidc_db.typing import ClaimPath
 
+from ...choices import AssuranceLevels
 from .base import (
-    OpenIDConnectBaseConfig,
+    BaseConfig,
+    default_loa_choices,
     get_default_scopes_bsn,
     get_default_scopes_kvk,
 )
 
 
 class AuthorizeeMixin(models.Model):
+    # XXX: this may require a value mapping, depending on what brokers return
+    # XXX: this may require a fallback value, depending on what brokers return
     identifier_type_claim = ClaimField(
         verbose_name=_("identifier type claim"),
         # XXX: Anoigo specific default
@@ -51,6 +55,13 @@ class AuthorizeeMixin(models.Model):
         ),
     )
 
+    CLAIMS_CONFIGURATION = (
+        {"field": "identifier_type_claim", "required": False},
+        {"field": "legal_subject_claim", "required": True},
+        {"field": "acting_subject_claim", "required": True},
+        {"field": "branch_number_claim", "required": False},
+    )
+
     class Meta:
         abstract = True
 
@@ -62,7 +73,8 @@ class AuthorizeeMixin(models.Model):
         ]
 
 
-class EHerkenningConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
+@default_loa_choices(AssuranceLevels)
+class EHerkenningConfig(AuthorizeeMixin, BaseConfig):
     """
     Configuration for eHerkenning authentication via OpenID connect.
     """
@@ -86,7 +98,8 @@ class EHerkenningConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
         return self.legal_subject_claim
 
 
-class EHerkenningBewindvoeringConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
+@default_loa_choices(AssuranceLevels)
+class EHerkenningBewindvoeringConfig(AuthorizeeMixin, BaseConfig):
     # NOTE: Discussion with an employee from Anoigo states this will always be a BSN,
     # not an RSIN or CoC number.
     representee_claim = ClaimField(
@@ -122,6 +135,12 @@ class EHerkenningBewindvoeringConfig(AuthorizeeMixin, OpenIDConnectBaseConfig):
             "OpenID Connect scopes that are requested during login. "
             "These scopes are hardcoded and must be supported by the identity provider."
         ),
+    )
+
+    CLAIMS_CONFIGURATION = AuthorizeeMixin.CLAIMS_CONFIGURATION + (
+        {"field": "representee_claim", "required": True},
+        {"field": "mandate_service_id_claim", "required": True},
+        {"field": "mandate_service_uuid_claim", "required": True},
     )
 
     class Meta:
