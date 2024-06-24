@@ -224,9 +224,10 @@ class BaseSaml2Client:
         service_description = get_service_description(conf)
         requested_attributes = get_requested_attributes(conf)
 
-        with conf["cert_file"].open("r") as cert_file, conf["key_file"].open(
-            "r"
-        ) as key_file:
+        with (
+            conf["cert_file"].open("r") as cert_file,
+            conf["key_file"].open("r") as key_file,
+        ):
             certificate = cert_file.read()
             privkey = key_file.read()
 

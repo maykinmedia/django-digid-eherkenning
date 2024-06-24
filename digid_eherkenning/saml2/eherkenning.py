@@ -469,9 +469,10 @@ class eHerkenningClient(BaseSaml2Client):
         config_dict: EHerkenningSAMLConfig = super().create_config_dict(conf)
 
         attribute_consuming_services = create_attribute_consuming_services(conf)
-        with conf["cert_file"].open("r") as cert_file, conf["key_file"].open(
-            "r"
-        ) as key_file:
+        with (
+            conf["cert_file"].open("r") as cert_file,
+            conf["key_file"].open("r") as key_file,
+        ):
             certificate = cert_file.read()
             privkey = key_file.read()
         acs_url = furl(conf["base_url"]) / conf["acs_path"]
