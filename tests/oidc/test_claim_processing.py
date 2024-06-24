@@ -91,6 +91,14 @@ def test_digid_claim_processing_with_defaults():
     assert result == {"bsn_claim": "XXXXXXX54"}
 
 
+def test_lax_mode():
+    config = DigiDConfig(bsn_claim=["sub"], loa_claim=["authsp_level"])
+
+    result = process_claims({"bsn": "XXXXXXX54"}, config, strict=False)
+
+    assert result == {}
+
+
 ### DIGID MACHTIGEN
 
 

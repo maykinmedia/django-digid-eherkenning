@@ -12,7 +12,11 @@ class NoLOAClaim(Exception):
     pass
 
 
-def process_claims(claims: JSONObject, config: BaseConfig) -> JSONObject:
+def process_claims(
+    claims: JSONObject,
+    config: BaseConfig,
+    strict: bool = True,
+) -> JSONObject:
     """
     Given the raw claims, process them using the provided config.
 
@@ -27,6 +31,17 @@ def process_claims(claims: JSONObject, config: BaseConfig) -> JSONObject:
     The return value SHOULD include the ``loa_claim`` key, but if no value is available
     (not in the claims and no default specified -> then it's omitted), the key will be
     absent.
+
+    :arg claims: The raw claims as received from the Identity Provider.
+    :arg config: The OIDC Configuration instance that specifies which claims should be
+      extracted and processed.
+    :arg strict: In strict mode, absent claims that are required (according) to the
+      configuration raise an error. In non-strict mode, these claims are simply skipped
+      and omitted.
+    :returns: A (JSON-serializable) dictionary where the keys are the claim config
+      field names, taken from ``config.CLAIMS_CONFIGURATION``, and the values their
+      extracted values from the raw claims. Extracted values have been post-processed
+      if post-processing configuration was available.
     """
     processed_claims = {}
 
@@ -38,6 +53,10 @@ def process_claims(claims: JSONObject, config: BaseConfig) -> JSONObject:
             value = glom(claims, Path(*path_bits))
         except PathAccessError as exc:
             if not claim_config["required"]:
+                continue
+            # in non-strict mode, do not raise but instead omit the claim. Up to the
+            # caller to handle missing claims.
+            if not strict:
                 continue
             claim_repr = " > ".join(path_bits)
             raise ValueError(f"Required claim '{claim_repr}' not found") from exc
