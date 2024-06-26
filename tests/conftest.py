@@ -68,9 +68,10 @@ def temp_private_root(tmp_path, settings):
 
 @pytest.fixture
 def digid_certificate(temp_private_root) -> Certificate:
-    with DIGID_TEST_KEY_FILE.open("rb") as privkey, DIGID_TEST_CERTIFICATE_FILE.open(
-        "rb"
-    ) as cert:
+    with (
+        DIGID_TEST_KEY_FILE.open("rb") as privkey,
+        DIGID_TEST_CERTIFICATE_FILE.open("rb") as cert,
+    ):
         certificate, created = Certificate.objects.get_or_create(
             label="DigiD Tests",
             defaults={"type": CertificateTypes.key_pair},
@@ -104,9 +105,10 @@ def digid_config(digid_config_defaults):
 
 @pytest.fixture
 def eherkenning_certificate(temp_private_root) -> Certificate:
-    with EHERKENNING_TEST_KEY_FILE.open(
-        "rb"
-    ) as privkey, EHERKENNING_TEST_CERTIFICATE_FILE.open("rb") as cert:
+    with (
+        EHERKENNING_TEST_KEY_FILE.open("rb") as privkey,
+        EHERKENNING_TEST_CERTIFICATE_FILE.open("rb") as cert,
+    ):
         certificate, created = Certificate.objects.get_or_create(
             label="eHerkenning Tests",
             defaults={"type": CertificateTypes.key_pair},
