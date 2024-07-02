@@ -2,6 +2,14 @@
 Changelog
 =========
 
+0.16.0 (2024-07-02)
+===================
+
+Small iteration on OIDC integration.
+
+* Removed the ``oidc_exempt_urls`` fields from the configuration models, following the
+  change in ``mozilla-django-oidc-db``.
+
 0.15.0 (2024-06-24)
 ===================
 
