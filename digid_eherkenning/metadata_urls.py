@@ -16,6 +16,7 @@ urlpatterns = [
         MetadataView.as_view(
             config_model=DigidConfiguration,
             metadata_generator=generate_digid_metadata,
+            filename="digid-metadata.xml",
         ),
         name="digid",
     ),
@@ -24,6 +25,7 @@ urlpatterns = [
         MetadataView.as_view(
             config_model=EherkenningConfiguration,
             metadata_generator=generate_eherkenning_metadata,
+            filename="eh-metadata.xml",
         ),
         name="eherkenning",
     ),
@@ -32,6 +34,7 @@ urlpatterns = [
         MetadataView.as_view(
             config_model=EherkenningConfiguration,
             metadata_generator=generate_dienst_catalogus_metadata,
+            filename="dienstcatalogus.xml",
         ),
         name="eh-dienstcatalogus",
     ),
