@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 class MetadataView(View):
     config_model: Type[BaseConfiguration] = BaseConfiguration
     metadata_generator: Callable[[], bytes] = lambda: b""
+    filename: str = "metadata.xml"
 
     def get(self, request: HttpRequest) -> HttpResponseBase:
         config = self.config_model.get_solo()
@@ -43,7 +44,15 @@ class MetadataView(View):
                 },
             )
             return self._get_generic_error_response()
-        return HttpResponse(metadata, content_type="text/xml")
+        # RFC 6266, 4.1, and RFC 2616 Section 2.2
+        sanitized_filename = self.filename.replace('"', r"\"")
+        return HttpResponse(
+            metadata,
+            content_type="text/xml",
+            headers={
+                "Content-Disposition": f'attachment; filename="{sanitized_filename}"',
+            },
+        )
 
     @staticmethod
     def _get_generic_error_response() -> HttpResponseBadRequest:
