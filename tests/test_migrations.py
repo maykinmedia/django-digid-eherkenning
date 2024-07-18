@@ -66,8 +66,8 @@ def test_decrypt_private_keys_with_passphrase(
     DigiDConfiguration = new_state.apps.get_model(
         "digid_eherkenning", "DigiDConfiguration"
     )
-    certificate = DigiDConfiguration.objects.get().certificate
-    with certificate.private_key.open("rb") as privkey:
+    config = DigiDConfiguration.objects.get()
+    with config.certificate.private_key.open("rb") as privkey:
         try:
             load_pem_x509_private_key(privkey.read(), password=None)
         except Exception:
