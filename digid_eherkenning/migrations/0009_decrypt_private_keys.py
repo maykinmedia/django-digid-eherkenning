@@ -6,7 +6,12 @@ from pathlib import Path
 from django.core.files import File
 from django.db import migrations
 
-from simple_certmanager.utils import decrypted_key_to_pem, load_pem_x509_private_key
+from simple_certmanager.utils import (
+    BadPassword,
+    KeyIsNotEncrypted,
+    decrypted_key_to_pem,
+    load_pem_x509_private_key,
+)
 
 
 def decrypt_encrypted_keys(apps, _):
@@ -24,15 +29,21 @@ def decrypt_encrypted_keys(apps, _):
             config is None
             # key is not encrypted (or we don't have the passphrase to decrypt it)
             or not (pw := config.key_passphrase)
+            or not (cert := config.certificate)
             # no private key file is uploaded
-            or not (privkey := config.certificate.private_key)
+            or not (privkey := cert.private_key)
             # or the DB thinks there is a file but it's not actually there (anymore)
             or not privkey.storage.exists(privkey.name)
         ):
             continue
 
         with privkey.open("rb") as keyfile:
-            key = load_pem_x509_private_key(keyfile.read(), password=pw)
+            try:
+                key = load_pem_x509_private_key(keyfile.read(), password=pw)
+            # key material + passphrase set up are not in a consistent state, this would
+            # also affect runtime behaviour, but we opt to make our migration robust.
+            except (KeyIsNotEncrypted, BadPassword):
+                continue
 
         decrypted_data = decrypted_key_to_pem(key)
         # replace existing data
