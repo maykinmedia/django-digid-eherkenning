@@ -287,7 +287,6 @@ class EherkenningConfiguration(BaseConfiguration):
             # optional in runtime code
             "want_assertions_encrypted": self.want_assertions_encrypted,
             "want_assertions_signed": self.want_assertions_signed,
-            "key_passphrase": self.key_passphrase or None,
             "signature_algorithm": self.signature_algorithm,
             "digest_algorithm": self.digest_algorithm or None,
             "technical_contact_person_telephone": self.technical_contact_person_telephone

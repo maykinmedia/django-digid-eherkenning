@@ -23,10 +23,7 @@ class DigidConfigurationAdmin(CustomPrivateMediaMixin, SingletonModelAdmin):
         (
             _("X.509 Certificate"),
             {
-                "fields": (
-                    "certificate",
-                    "key_passphrase",
-                ),
+                "fields": ("certificate",),
             },
         ),
         (
@@ -88,10 +85,7 @@ class EherkenningConfigurationAdmin(CustomPrivateMediaMixin, SingletonModelAdmin
         (
             _("X.509 Certificate"),
             {
-                "fields": (
-                    "certificate",
-                    "key_passphrase",
-                ),
+                "fields": ("certificate",),
             },
         ),
         (

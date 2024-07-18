@@ -30,7 +30,6 @@ class Command(EherkenningCommand):
         dests_to_delete = [
             "want_assertions_encrypted",
             "want_assertions_signed",
-            "key_passphrase",
             "technical_contact_person_telephone",
             "technical_contact_person_email",
             "organization_url",

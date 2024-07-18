@@ -82,12 +82,6 @@ class BaseConfiguration(SingletonModel):
             "expect 'text/xml'."
         ),
     )
-    key_passphrase = models.CharField(
-        _("key passphrase"),
-        blank=True,
-        help_text=_("Passphrase for the private key used by the SOAP client."),
-        max_length=100,
-    )
     signature_algorithm = models.CharField(
         _("signature algorithm"),
         blank=True,
