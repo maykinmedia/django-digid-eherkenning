@@ -30,7 +30,7 @@ dependencies = [
     "cryptography>=40.0.0",
     "django>=4.2.0",
     "django-sessionprofile",
-    "django-simple-certmanager",
+    "django-simple-certmanager>=2.2.0",
     "django-solo",
     "lxml>=4.7.1",
     "furl",
