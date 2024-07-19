@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Optional, TypedDict, Union
 
+from django.db.models.fields.files import FieldFile
+
 
 class ServiceConfig(TypedDict):
     service_uuid: str
@@ -25,8 +27,8 @@ class EHerkenningConfig(TypedDict):
     acs_path: str
     entity_id: str
     metadata_file: str
-    cert_file: Path
-    key_file: Path
+    cert_file: Path | FieldFile
+    key_file: Path | FieldFile
     service_entity_id: str
     oin: str
     services: list[ServiceConfig]

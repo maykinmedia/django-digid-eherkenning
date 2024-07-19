@@ -280,7 +280,13 @@ class BaseSaml2Client:
                     ],
                 },
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+                # Used for:
+                # * signing the metadata
+                # * signing authentication requests
                 "x509cert": certificate,
+                # Used for:
+                # * signing the metadata
+                # * signing authentication requests
                 "privateKey": privkey,
             },
         }

@@ -31,6 +31,38 @@ class ConfigCertificateQuerySet(models.QuerySet):
         config_type = config._as_config_type()
         return self.filter(config_type=config_type)
 
+    def select_certificates(self) -> tuple[Certificate, Certificate | None]:
+        """
+        Select the best candidates for the current and next certificate.
+
+        The certificates are used for signing authentication requests (and metadata)
+        itself, and the possible certificates that perform signing are included in the
+        metadata. For zero-downtime/gradual replacement, a current and next certificate
+        can be provided (this is a limitation in python3-saml).
+
+        We look for the current certificate and the next with the following algorithm:
+
+        * order candidates by valid_from, so we favour existing/the oldest keypairs
+        * order candidates by expiry date, so if they have an identical valid_from, we
+          favour the one that will expiry first (the other one(s) automatically become
+          the next certificate
+        * discard any candidates that do not meet our key pair requirements, ignoring
+          valid_from/until
+
+        To determine the current certificate:
+
+        * discard candidates that are not valid yet
+        * discard candiates that are not valid anymore
+
+        If no candidate matches, we raise a DoesNotExist exception.
+
+        If a candidate is found, we select the next certificate according to:
+
+        * must be valid_from >= current_certificate.valid_from
+        * must not be expired
+        """
+        breakpoint()
+
 
 class ConfigCertificateManager(models.Manager.from_queryset(ConfigCertificateQuerySet)):
     def get_queryset(self):

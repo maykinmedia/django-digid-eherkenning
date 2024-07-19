@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 from privates.fields import PrivateMediaFileField
+from simple_certmanager.models import Certificate
 from solo.models import SingletonModel
 
 from ..choices import (
@@ -15,6 +16,7 @@ from ..choices import (
     SignatureAlgorithms,
     XMLContentTypes,
 )
+from ..exceptions import CertificateProblem
 from .certificates import ConfigCertificate
 
 
@@ -241,3 +243,20 @@ class BaseConfiguration(SingletonModel):
     def _as_config_type(cls) -> ConfigTypes:
         opts = cls._meta
         return ConfigTypes(f"{opts.app_label}.{opts.object_name}")
+
+    def _select_certificates(self) -> tuple[Certificate, Certificate | None]:
+        try:
+            current_cert, next_cert = ConfigCertificate.objects.for_config(
+                self
+            ).select_certificates()
+        except ConfigCertificate.DoesNotExist as exc:
+            raise CertificateProblem(
+                "No (valid) certificate configured. The configuration needs a "
+                "certificate with private key and public certificate."
+            ) from exc
+        else:
+            # type checker shanigans, mostly
+            assert isinstance(current_cert, Certificate)
+            assert next_cert is None or isinstance(next_cert, Certificate)
+
+        return current_cert, next_cert

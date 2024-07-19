@@ -1,6 +1,5 @@
 import uuid
 
-from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -198,15 +197,7 @@ class EherkenningConfiguration(BaseConfiguration):
         """
         organization = None
 
-        if (
-            not self.certificate
-            or not self.certificate.private_key
-            or not self.certificate.public_certificate
-        ):
-            raise ImproperlyConfigured(
-                "No (valid) certificate configured. The configuration needs a "
-                "certificate with private key and public certificate."
-            )
+        current_cert, next_cert = self._select_certificates()
 
         if self.organization_url and self.organization_name:
             organization = {
@@ -279,8 +270,8 @@ class EherkenningConfiguration(BaseConfiguration):
             "base_url": self.base_url,
             "entity_id": self.entity_id,
             "metadata_file": self.idp_metadata_file,
-            "key_file": self.certificate.private_key,
-            "cert_file": self.certificate.public_certificate,
+            "key_file": current_cert.private_key,
+            "cert_file": current_cert.public_certificate,
             "service_entity_id": self.idp_service_entity_id,
             "oin": self.oin,
             "services": services,
