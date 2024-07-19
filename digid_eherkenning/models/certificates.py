@@ -26,7 +26,7 @@ _AnyDigiD: TypeAlias = "type[DigidConfiguration] | DigidConfiguration"
 _AnyEH: TypeAlias = "type[EherkenningConfiguration] | EherkenningConfiguration"
 
 
-class ConfigCertificateQuerySet(models.QuerySet):
+class ConfigCertificateQuerySet(models.QuerySet["ConfigCertificate"]):
     def for_config(self, config: _AnyDigiD | _AnyEH):
         config_type = config._as_config_type()
         return self.filter(config_type=config_type)
@@ -61,7 +61,48 @@ class ConfigCertificateQuerySet(models.QuerySet):
         * must be valid_from >= current_certificate.valid_from
         * must not be expired
         """
-        breakpoint()
+        # XXX: check if this has a big performance impact because we extract the
+        # valid_from/until by loading the certificate files!
+
+        qs = self.filter(certificate__type=CertificateTypes.key_pair).iterator()
+        # first pass - filter out anything that is not usable for SAML flows (
+        # discarding broken/invalid configurations)
+        candidates = [
+            candidate
+            for candidate in qs
+            if candidate._meets_requirements_to_be_used_for_saml()
+        ]
+        # sort them - we now know that we can safely access the valid_from and
+        # expiry_date attributes
+        candidates = sorted(
+            candidates,
+            key=lambda c: (c.certificate.valid_from, c.certificate.expiry_date),
+        )
+
+        # figure out which certificate is our current certificate
+        current_cert: Certificate | None = None
+        next_cert: Certificate | None = None
+
+        # loop only once, so that we are certain next_cert's validity is *after* current
+        # cert.
+        for candidate in candidates:
+            certificate: Certificate = candidate.certificate
+            match (current_cert, next_cert):
+                case (None, None) if candidate.is_ready_for_authn_requests:
+                    current_cert = certificate
+                    continue  # the same candidate cannot both be current and next
+                case (Certificate(), None) if certificate.expiry_date > timezone.now():
+                    next_cert = certificate
+                    break  # we found both current and next
+        else:
+            logger.debug("Could not determine a next certificate")
+
+        if current_cert is None:
+            raise self.model.DoesNotExist(
+                "Could not find a suitable current certificate"
+            )
+
+        return current_cert, next_cert
 
 
 class ConfigCertificateManager(models.Manager.from_queryset(ConfigCertificateQuerySet)):
@@ -116,11 +157,7 @@ class ConfigCertificate(models.Model):
         )
         return f"{config_type}: {certificate}"
 
-    @property
-    def is_ready_for_authn_requests(self) -> bool:
-        """
-        Introspect the certificate to determine if it's a candidate for authn requests.
-        """
+    def _meets_requirements_to_be_used_for_saml(self) -> bool:
         try:
             _certificate: Certificate = self.certificate
         except Certificate.DoesNotExist:
@@ -134,8 +171,9 @@ class ConfigCertificate(models.Model):
         ):
             return False
 
+        # Try loading it with cryptography
         try:
-            valid_from, expiry_date = _certificate.valid_from, _certificate.expiry_date
+            _certificate.certificate
         except (FileNotFoundError, ValueError) as exc:
             logger.info(
                 "Could not introspect certificate validity",
@@ -143,6 +181,19 @@ class ConfigCertificate(models.Model):
                 extra={"certificate_pk": _certificate.pk},
             )
             return False
+
+        return True
+
+    @property
+    def is_ready_for_authn_requests(self) -> bool:
+        """
+        Introspect the certificate to determine if it's a candidate for authn requests.
+        """
+        if not self._meets_requirements_to_be_used_for_saml():
+            return False
+
+        _certificate: Certificate = self.certificate
+        valid_from, expiry_date = _certificate.valid_from, _certificate.expiry_date
 
         now = timezone.now()
         if not (valid_from <= now <= expiry_date):
