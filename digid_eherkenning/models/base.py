@@ -7,10 +7,10 @@ from django.utils.translation import gettext_lazy as _
 from onelogin.saml2.constants import OneLogin_Saml2_Constants
 from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 from privates.fields import PrivateMediaFileField
-from simple_certmanager.models import Certificate
 from solo.models import SingletonModel
 
 from ..choices import DigestAlgorithms, SignatureAlgorithms, XMLContentTypes
+from .certificates import ConfigCertificate
 
 
 class ConfigurationManager(models.Manager):
@@ -20,16 +20,6 @@ class ConfigurationManager(models.Manager):
 
 
 class BaseConfiguration(SingletonModel):
-    certificate = models.ForeignKey(
-        Certificate,
-        null=True,
-        on_delete=models.PROTECT,
-        verbose_name=_("key pair"),
-        help_text=_(
-            "The private key and public certificate pair to use during the "
-            "authentication flow."
-        ),
-    )
     idp_metadata_file = PrivateMediaFileField(
         _("identity provider metadata"),
         blank=True,
@@ -240,6 +230,8 @@ class BaseConfiguration(SingletonModel):
         super().save(*args, **kwargs)
 
     def clean(self):
-        if not self.certificate:
-            raise ValidationError(_("You must select a certificate"))
         super().clean()
+
+        # require that a certificate is configured
+        if not ConfigCertificate.objects.for_config(self).exists():
+            raise ValidationError(_("You must select a certificate"))

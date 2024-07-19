@@ -36,4 +36,12 @@ class Migration(migrations.Migration):
     operations = [
         # reverse migration is ambiguous, if needed, you can easily use the UI
         migrations.RunPython(move_certificates, migrations.RunPython.noop),
+        migrations.RemoveField(
+            model_name="digidconfiguration",
+            name="certificate",
+        ),
+        migrations.RemoveField(
+            model_name="eherkenningconfiguration",
+            name="certificate",
+        ),
     ]

@@ -5,6 +5,7 @@ Functionality to relate one or more certificates to a SAMLv2 configuration.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING, TypeAlias
 
 from django.db import models
 from django.utils import timezone
@@ -15,10 +16,24 @@ from simple_certmanager.models import Certificate
 
 from ..choices import ConfigTypes
 
+if TYPE_CHECKING:
+    from .digid import DigidConfiguration
+    from .eherkenning import EherkenningConfiguration
+
 logger = logging.getLogger(__name__)
 
+_AnyDigiD: TypeAlias = "type[DigidConfiguration] | DigidConfiguration"
+_AnyEH: TypeAlias = "type[EherkenningConfiguration] | EherkenningConfiguration"
 
-class ConfigCertificateManager(models.Manager):
+
+class ConfigCertificateQuerySet(models.QuerySet):
+    def for_config(self, config: _AnyDigiD | _AnyEH):
+        opts = config._meta
+        config_type = ConfigTypes(f"{opts.app_label}.{opts.object_name}")
+        return self.filter(config_type=config_type)
+
+
+class ConfigCertificateManager(models.Manager.from_queryset(ConfigCertificateQuerySet)):
     def get_queryset(self):
         qs = super().get_queryset()
         return qs.select_related("certificate")
