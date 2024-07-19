@@ -9,14 +9,13 @@ from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
 from privates.fields import PrivateMediaFileField
 from solo.models import SingletonModel
 
-from ..choices import DigestAlgorithms, SignatureAlgorithms, XMLContentTypes
+from ..choices import (
+    ConfigTypes,
+    DigestAlgorithms,
+    SignatureAlgorithms,
+    XMLContentTypes,
+)
 from .certificates import ConfigCertificate
-
-
-class ConfigurationManager(models.Manager):
-    def get_queryset(self):
-        qs = super().get_queryset()
-        return qs.select_related("certificate")
 
 
 class BaseConfiguration(SingletonModel):
@@ -157,8 +156,6 @@ class BaseConfiguration(SingletonModel):
         max_length=100,
     )
 
-    objects = ConfigurationManager()
-
     class Meta:
         abstract = True
 
@@ -234,4 +231,13 @@ class BaseConfiguration(SingletonModel):
 
         # require that a certificate is configured
         if not ConfigCertificate.objects.for_config(self).exists():
-            raise ValidationError(_("You must select a certificate"))
+            raise ValidationError(
+                _(
+                    "You must prepare at least one certificate for the {verbose_name}."
+                ).format(verbose_name=self._meta.verbose_name)
+            )
+
+    @classmethod
+    def _as_config_type(cls) -> ConfigTypes:
+        opts = cls._meta
+        return ConfigTypes(f"{opts.app_label}.{opts.object_name}")

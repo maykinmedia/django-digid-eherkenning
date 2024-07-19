@@ -28,8 +28,7 @@ _AnyEH: TypeAlias = "type[EherkenningConfiguration] | EherkenningConfiguration"
 
 class ConfigCertificateQuerySet(models.QuerySet):
     def for_config(self, config: _AnyDigiD | _AnyEH):
-        opts = config._meta
-        config_type = ConfigTypes(f"{opts.app_label}.{opts.object_name}")
+        config_type = config._as_config_type()
         return self.filter(config_type=config_type)
 
 
