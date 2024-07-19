@@ -491,7 +491,6 @@ class eHerkenningClient(BaseSaml2Client):
                     "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
                     "x509cert": certificate,
                     "privateKey": privkey,
-                    "privateKeyPassphrase": conf.get("key_passphrase", None),
                 },
             }
         )

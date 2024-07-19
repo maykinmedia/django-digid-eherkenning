@@ -246,7 +246,6 @@ class BaseSaml2Client:
                 "wantAssertionsSigned": conf.get("want_assertions_signed", False),
                 "soapClientKey": conf["key_file"].path,
                 "soapClientCert": conf["cert_file"].path,
-                "soapClientPassphrase": conf.get("key_passphrase", None),
                 # algorithm for requests with HTTP-redirect binding.
                 # AuthnRequest with HTTP-POST uses RSA_SHA256, which is hardcoded in OneLogin_Saml2_Auth.login_post
                 "signatureAlgorithm": conf.get(
@@ -283,7 +282,6 @@ class BaseSaml2Client:
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
                 "x509cert": certificate,
                 "privateKey": privkey,
-                "privateKeyPassphrase": conf.get("key_passphrase", None),
             },
         }
 
@@ -412,7 +410,6 @@ class BaseSaml2Client:
                 logout_response,
                 self.saml2_settings.get_sp_key(),
                 self.saml2_settings.get_sp_cert(),
-                key_passphrase=self.saml2_settings.get_sp_key_passphrase(),
                 sign_algorithm=OneLogin_Saml2_Constants.RSA_SHA256,
                 digest_algorithm=OneLogin_Saml2_Constants.SHA256,
             )

@@ -32,7 +32,6 @@ class EHerkenningConfig(TypedDict):
     services: list[ServiceConfig]
     want_assertions_encrypted: str
     want_assertions_signed: str
-    key_passphrase: str
     signature_algorithm: str
     digest_algorithm: str
     technical_contact_person_telephone: Optional[str]
