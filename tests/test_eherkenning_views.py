@@ -3,7 +3,7 @@ from base64 import b64decode
 from unittest.mock import patch
 
 from django.conf import settings
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -14,9 +14,7 @@ from furl import furl
 from lxml import etree
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
-from digid_eherkenning.choices import AssuranceLevels
 from digid_eherkenning.models import EherkenningConfiguration
-from digid_eherkenning.views import eHerkenningLoginView
 
 from .project.models import User
 from .utils import create_example_artifact, get_saml_element
@@ -146,7 +144,8 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
 
         config = EherkenningConfiguration.get_solo()
 
-        with config.certificate.public_certificate.open("r") as cert_file:
+        current_cert, _ = config._select_certificates()
+        with current_cert.public_certificate.open("r") as cert_file:
             cert = cert_file.read()
 
         encrypted_attribute = OneLogin_Saml2_Utils.generate_name_id(
