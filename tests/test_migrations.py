@@ -10,7 +10,7 @@ from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.test.certificate_generation import key_to_pem
 from simple_certmanager.utils import load_pem_x509_private_key
 
-from digid_eherkenning.choices import AssuranceLevels
+from digid_eherkenning.choices import AssuranceLevels, ConfigTypes
 
 
 @pytest.mark.django_db()
@@ -202,3 +202,64 @@ def test_decryption_migration_robustness(
         )
     except Exception:
         pytest.fail("Expected migration not to crash")
+
+
+@pytest.mark.parametrize(
+    "model_name,config_type",
+    [
+        ("DigidConfiguration", ConfigTypes.digid),
+        ("EherkenningConfiguration", ConfigTypes.eherkenning),
+    ],
+)
+def test_move_certificate(
+    temp_private_root,
+    migrator,
+    leaf_keypair,
+    model_name,
+    config_type,
+):
+    key, cert_pem = leaf_keypair
+    key_pem = key_to_pem(key, passphrase="")
+    old_state = migrator.apply_initial_migration(
+        (
+            "digid_eherkenning",
+            "0011_configcertificate_configcertificate_uniq_config_cert",
+        )
+    )
+    OldConfig = old_state.apps.get_model("digid_eherkenning", model_name)
+    Certificate = old_state.apps.get_model("simple_certmanager", "Certificate")
+    certificate = Certificate.objects.create(
+        label="Test certificate",
+        type=CertificateTypes.key_pair,
+        public_certificate=File(BytesIO(cert_pem), name="client_cert.pem"),
+        private_key=File(BytesIO(key_pem), name="client_key.pem"),
+    )
+    OldConfig.objects.create(certificate=certificate)
+
+    new_state = migrator.apply_tested_migration(
+        ("digid_eherkenning", "0012_move_config_certificate")
+    )
+
+    ConfigCertificate = new_state.apps.get_model(
+        "digid_eherkenning", "ConfigCertificate"
+    )
+    instance = ConfigCertificate.objects.get(certificate=certificate.pk)
+    assert instance.config_type == config_type
+
+
+def test_move_certificate_noop(migrator):
+    migrator.apply_initial_migration(
+        (
+            "digid_eherkenning",
+            "0011_configcertificate_configcertificate_uniq_config_cert",
+        )
+    )
+    # there are no config records on a fresh install
+    new_state = migrator.apply_tested_migration(
+        ("digid_eherkenning", "0012_move_config_certificate")
+    )
+
+    ConfigCertificate = new_state.apps.get_model(
+        "digid_eherkenning", "ConfigCertificate"
+    )
+    assert not ConfigCertificate.objects.exists()
