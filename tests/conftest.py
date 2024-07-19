@@ -7,7 +7,12 @@ import responses
 from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.models import Certificate
 
-from digid_eherkenning.models import DigidConfiguration, EherkenningConfiguration
+from digid_eherkenning.choices import ConfigTypes
+from digid_eherkenning.models import (
+    ConfigCertificate,
+    DigidConfiguration,
+    EherkenningConfiguration,
+)
 
 BASE_DIR = Path(__file__).parent.resolve()
 
@@ -72,7 +77,7 @@ def digid_certificate(temp_private_root) -> Certificate:
         DIGID_TEST_KEY_FILE.open("rb") as privkey,
         DIGID_TEST_CERTIFICATE_FILE.open("rb") as cert,
     ):
-        certificate, created = Certificate.objects.get_or_create(
+        certificate, _ = Certificate.objects.get_or_create(
             label="DigiD Tests",
             defaults={"type": CertificateTypes.key_pair},
         )
@@ -84,8 +89,11 @@ def digid_certificate(temp_private_root) -> Certificate:
 @pytest.fixture
 def digid_config_defaults(digid_certificate, temp_private_root):
     config = DigidConfiguration.get_solo()
-    if config.certificate != digid_certificate:
-        config.certificate = digid_certificate
+    # set up certificate
+    ConfigCertificate.objects.filter(config_type=ConfigTypes.digid).delete()
+    ConfigCertificate.objects.create(
+        config_type=ConfigTypes.digid, certificate=digid_certificate
+    )
     with DIGID_TEST_METADATA_FILE.open("rb") as metadata_file:
         config.idp_metadata_file.save("metadata", File(metadata_file), save=False)
     config.save()
@@ -109,7 +117,7 @@ def eherkenning_certificate(temp_private_root) -> Certificate:
         EHERKENNING_TEST_KEY_FILE.open("rb") as privkey,
         EHERKENNING_TEST_CERTIFICATE_FILE.open("rb") as cert,
     ):
-        certificate, created = Certificate.objects.get_or_create(
+        certificate, _ = Certificate.objects.get_or_create(
             label="eHerkenning Tests",
             defaults={"type": CertificateTypes.key_pair},
         )
@@ -121,8 +129,10 @@ def eherkenning_certificate(temp_private_root) -> Certificate:
 @pytest.fixture
 def eherkenning_config_defaults(eherkenning_certificate):
     config = EherkenningConfiguration.get_solo()
-    if config.certificate != eherkenning_certificate:
-        config.certificate = eherkenning_certificate
+    ConfigCertificate.objects.filter(config_type=ConfigTypes.eherkenning).delete()
+    ConfigCertificate.objects.create(
+        config_type=ConfigTypes.eherkenning, certificate=eherkenning_certificate
+    )
     with EHERKENNING_TEST_METADATA_FILE.open("rb") as metadata_file:
         config.idp_metadata_file.save("metadata", File(metadata_file), save=False)
     config.save()
