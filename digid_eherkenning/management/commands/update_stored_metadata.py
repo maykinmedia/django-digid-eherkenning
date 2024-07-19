@@ -1,7 +1,11 @@
 from django.core.management import BaseCommand
 
-from digid_eherkenning.models.digid import DigidConfiguration
-from digid_eherkenning.models.eherkenning import EherkenningConfiguration
+from ...models import DigidConfiguration, EherkenningConfiguration
+
+MODEL_MAP = {
+    "digid": DigidConfiguration,
+    "eherkenning": EherkenningConfiguration,
+}
 
 
 class Command(BaseCommand):
@@ -11,15 +15,13 @@ class Command(BaseCommand):
         parser.add_argument(
             "config_model",
             type=str,
-            choices=["digid", "eherkenning"],
+            choices=list(MODEL_MAP.keys()),
             help="Update the DigiD or Eherkenning configuration metadata.",
         )
 
     def handle(self, **options):
-        if options["config_model"] == "digid":
-            config = DigidConfiguration.get_solo()
-        elif options["config_model"] == "eherkenning":
-            config = EherkenningConfiguration.get_solo()
+        config_model = MODEL_MAP[options["config_model"]]
+        config = config_model.get_solo()
 
         if config.metadata_file_source:
             config.save(force_metadata_update=True)

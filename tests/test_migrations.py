@@ -7,7 +7,6 @@ from django.db import IntegrityError
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from simple_certmanager.constants import CertificateTypes
-from simple_certmanager.models import Certificate
 from simple_certmanager.test.certificate_generation import key_to_pem
 from simple_certmanager.utils import load_pem_x509_private_key
 
@@ -43,7 +42,7 @@ def test_fixing_misconfigured_eherkenning(migrator):
 
 @pytest.mark.django_db
 def test_decrypt_private_keys_with_passphrase(
-    migrator, encrypted_keypair: tuple[bytes, bytes]
+    temp_private_root, migrator, encrypted_keypair: tuple[bytes, bytes]
 ):
     old_state = migrator.apply_initial_migration(
         ("digid_eherkenning", "0008_update_loa_fields")
@@ -163,6 +162,7 @@ def _decryption_skip_cases_idfn(case):
 )
 @pytest.mark.django_db
 def test_decryption_migration_robustness(
+    temp_private_root,
     migrator,
     leaf_keypair: tuple[rsa.RSAPrivateKey, bytes],
     encrypted_keypair: tuple[bytes, bytes],
