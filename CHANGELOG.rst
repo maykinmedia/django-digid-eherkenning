@@ -2,6 +2,19 @@
 Changelog
 =========
 
+0.17.0 (DEVELOPMENT)
+====================
+
+**💥⚠️ Breaking changes**
+
+* Removed the ``generate_digid_metadata``, ``generate_eherkenning_metadata`` and
+  ``generate_eherkenning_dienstcatalogus`` management commands. This metadata is
+  available through the admin interface and existing URLs/views.
+
+**Features**
+
+...
+
 0.16.0 (2024-07-02)
 ===================
 
