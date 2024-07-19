@@ -4,6 +4,15 @@ from django.utils.translation import gettext_lazy as _
 from onelogin.saml2.constants import OneLogin_Saml2_Constants
 
 
+class ConfigTypes(models.TextChoices):
+    """
+    Maps a config type enum to a configuration model.
+    """
+
+    digid = "digid_eherkenning.DigidConfiguration", _("DigiD")
+    eherkenning = "digid_eherkenning.EherkenningConfiguration", _("eHerkenning")
+
+
 class SectorType(models.TextChoices):
     bsn = "s00000000", "BSN"
     sofi = "s00000001", "SOFI"

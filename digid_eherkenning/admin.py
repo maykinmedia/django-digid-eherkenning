@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
@@ -5,7 +7,7 @@ from privates.admin import PrivateMediaMixin
 from privates.widgets import PrivateFileWidget
 from solo.admin import SingletonModelAdmin
 
-from .models import DigidConfiguration, EherkenningConfiguration
+from .models import ConfigCertificate, DigidConfiguration, EherkenningConfiguration
 
 
 class CustomPrivateFileWidget(PrivateFileWidget):
@@ -166,3 +168,23 @@ class EherkenningConfigurationAdmin(CustomPrivateMediaMixin, SingletonModelAdmin
         "admin/digid_eherkenning/eherkenningconfiguration/change_form.html"
     )
     private_media_fields = ("idp_metadata_file",)
+
+
+@admin.register(ConfigCertificate)
+class ConfigCertificateAdmin(admin.ModelAdmin):
+    list_display = ("config_type", "certificate", "valid_from", "expiry_date")
+    list_filter = ("config_type",)
+    search_fields = ("certificate__label",)
+    raw_id_fields = ("certificate",)
+
+    @admin.display(description=_("valid from"))
+    def valid_from(self, obj: ConfigCertificate) -> datetime:
+        return obj.certificate.valid_from
+
+    @admin.display(description=_("expires on"))
+    def expiry_date(self, obj: ConfigCertificate) -> datetime:
+        return obj.certificate.expiry_date
+
+    @admin.display(description=_("valid?"), boolean=True)
+    def is_valid(self, obj: ConfigCertificate) -> bool:
+        return obj.is_valid_for_authn_requests
