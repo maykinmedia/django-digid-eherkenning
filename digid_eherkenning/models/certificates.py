@@ -4,13 +4,18 @@ Functionality to relate one or more certificates to a SAMLv2 configuration.
 
 from __future__ import annotations
 
+import logging
+
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.models import Certificate
 
 from ..choices import ConfigTypes
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigCertificateManager(models.Manager):
@@ -66,5 +71,35 @@ class ConfigCertificate(models.Model):
         return f"{config_type}: {certificate}"
 
     @property
-    def is_valid_for_authn_requests(self) -> bool:
-        raise NotImplementedError()
+    def is_ready_for_authn_requests(self) -> bool:
+        """
+        Introspect the certificate to determine if it's a candidate for authn requests.
+        """
+        try:
+            _certificate: Certificate = self.certificate
+        except Certificate.DoesNotExist:
+            return False
+
+        if _certificate.type != CertificateTypes.key_pair:
+            return False
+
+        if not (privkey := _certificate.private_key) or not privkey.storage.exists(
+            privkey.name
+        ):
+            return False
+
+        try:
+            valid_from, expiry_date = _certificate.valid_from, _certificate.expiry_date
+        except (FileNotFoundError, ValueError) as exc:
+            logger.info(
+                "Could not introspect certificate validity",
+                exc_info=exc,
+                extra={"certificate_pk": _certificate.pk},
+            )
+            return False
+
+        now = timezone.now()
+        if not (valid_from <= now <= expiry_date):
+            return False
+
+        return True

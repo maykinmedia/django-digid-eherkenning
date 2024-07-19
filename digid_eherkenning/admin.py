@@ -172,7 +172,13 @@ class EherkenningConfigurationAdmin(CustomPrivateMediaMixin, SingletonModelAdmin
 
 @admin.register(ConfigCertificate)
 class ConfigCertificateAdmin(admin.ModelAdmin):
-    list_display = ("config_type", "certificate", "valid_from", "expiry_date")
+    list_display = (
+        "config_type",
+        "certificate",
+        "valid_from",
+        "expiry_date",
+        "is_ready",
+    )
     list_filter = ("config_type",)
     search_fields = ("certificate__label",)
     raw_id_fields = ("certificate",)
@@ -185,6 +191,6 @@ class ConfigCertificateAdmin(admin.ModelAdmin):
     def expiry_date(self, obj: ConfigCertificate) -> datetime:
         return obj.certificate.expiry_date
 
-    @admin.display(description=_("valid?"), boolean=True)
-    def is_valid(self, obj: ConfigCertificate) -> bool:
-        return obj.is_valid_for_authn_requests
+    @admin.display(description=_("valid candidate?"), boolean=True)
+    def is_ready(self, obj: ConfigCertificate) -> bool:
+        return obj.is_ready_for_authn_requests
