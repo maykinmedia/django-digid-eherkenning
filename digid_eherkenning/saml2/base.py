@@ -291,6 +291,12 @@ class BaseSaml2Client:
             },
         }
 
+        # Used to provide the next certificate to be used for signing in the
+        # metadata so that the IDP can prepare.
+        if next_cert_file := conf.get("next_cert_file"):
+            with next_cert_file.open("r") as _next_cert_file:
+                setting_dict["sp"]["x509certNew"] = _next_cert_file.read()
+
         # check if we need to add the idp
         metadata_file = conf["metadata_file"]
         if metadata_file:

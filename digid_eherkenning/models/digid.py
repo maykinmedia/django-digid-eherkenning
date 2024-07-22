@@ -61,6 +61,7 @@ class DigidConfiguration(BaseConfiguration):
             "metadata_file": self.idp_metadata_file,
             "key_file": current_cert.private_key,
             "cert_file": current_cert.public_certificate,
+            "next_cert_file": next_cert.public_certificate if next_cert else None,
             "service_entity_id": self.idp_service_entity_id,
             "attribute_consuming_service_index": self.attribute_consuming_service_index,
             "service_name": self.service_name,

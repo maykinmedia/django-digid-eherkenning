@@ -272,6 +272,7 @@ class EherkenningConfiguration(BaseConfiguration):
             "metadata_file": self.idp_metadata_file,
             "key_file": current_cert.private_key,
             "cert_file": current_cert.public_certificate,
+            "next_cert_file": next_cert.public_certificate if next_cert else None,
             "service_entity_id": self.idp_service_entity_id,
             "oin": self.oin,
             "services": services,
