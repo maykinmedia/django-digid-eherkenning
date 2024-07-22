@@ -242,3 +242,27 @@ def test_current_and_next_certificate_in_metadata(
     key1_node, key2_node = key_nodes
     assert key1_node.attrib["use"] == "signing"
     assert key2_node.attrib["use"] == "signing"
+
+    with (
+        digid_certificate.public_certificate.open("r") as _current,
+        next_certificate.public_certificate.open("r") as _next,
+    ):
+        current_base64 = _current.read().replace("\n", "")
+        next_base64 = _next.read().replace("\n", "")
+
+    # certificate nodes include only the base64 encoded PEM data, without header/footer
+    cert1_node = key1_node.find(
+        "ds:KeyInfo/ds:X509Data/ds:X509Certificate", namespaces=NAME_SPACES
+    )
+    assert cert1_node is not None
+    assert cert1_node.text is not None
+    assert (cert_data_1 := cert1_node.text.strip()) in current_base64
+
+    cert2_node = key2_node.find(
+        "ds:KeyInfo/ds:X509Data/ds:X509Certificate", namespaces=NAME_SPACES
+    )
+    assert cert2_node is not None
+    assert cert2_node.text is not None
+    assert (cert_data_2 := cert2_node.text.strip()) in next_base64
+    # they should not be the same
+    assert cert_data_1 != cert_data_2
