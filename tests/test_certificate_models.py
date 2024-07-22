@@ -99,6 +99,18 @@ def test_private_key_missing(temp_private_root, digid_certificate, path):
     assert not config_certificate.is_ready_for_authn_requests
 
 
+def test_string_representation(settings, digid_certificate):
+    settings.LANGUAGE_CODE = "en"
+    digid_certificate.label = "SAML"
+    cc1 = ConfigCertificate(
+        config_type=ConfigTypes.digid, certificate=digid_certificate
+    )
+    assert str(cc1) == "DigiD: SAML"
+
+    cc2 = ConfigCertificate(config_type=ConfigTypes.eherkenning, certificate=None)
+    assert str(cc2) == "eHerkenning: (no certificate selected)"
+
+
 # Helpers for multiple certificates - can't call fixtures multiple times to get
 # different outcomes.
 

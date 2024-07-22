@@ -152,9 +152,8 @@ class ConfigCertificate(models.Model):
 
     def __str__(self):
         config_type = self.get_config_type_display()  # type: ignore
-        certificate = (
-            str(cert) if (cert := self.certificate) else _("(no certificate selected)")
-        )
+        _cert = self.certificate if self.certificate_id else None  # type: ignore
+        certificate = str(_cert) if _cert else _("(no certificate selected)")
         return f"{config_type}: {certificate}"
 
     def _meets_requirements_to_be_used_for_saml(self) -> bool:
