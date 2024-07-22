@@ -1,7 +1,7 @@
 import binascii
 from base64 import b64encode
 from io import BytesIO
-from typing import Union
+from typing import Union, no_type_check
 from uuid import uuid4
 
 from django.urls import reverse
@@ -9,7 +9,6 @@ from django.utils import timezone
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import load_pem_x509_certificate
-from furl.furl import furl
 from lxml.builder import ElementMaker
 from lxml.etree import Element, tostring
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
@@ -465,35 +464,17 @@ class eHerkenningClient(BaseSaml2Client):
             self._conf.setdefault("acs_path", reverse("eherkenning:acs"))
         return self._conf
 
+    @no_type_check  # my editor has more red than the red wedding in GOT
     def create_config_dict(self, conf: EHerkenningConfig) -> EHerkenningSAMLConfig:
         config_dict: EHerkenningSAMLConfig = super().create_config_dict(conf)
 
+        sp_config = config_dict["sp"]
+
+        # we have multiple services, so delete the config for the "single service" variant
         attribute_consuming_services = create_attribute_consuming_services(conf)
-        with (
-            conf["cert_file"].open("r") as cert_file,
-            conf["key_file"].open("r") as key_file,
-        ):
-            certificate = cert_file.read()
-            privkey = key_file.read()
-        acs_url = furl(conf["base_url"]) / conf["acs_path"]
-        config_dict.update(
-            {
-                "sp": {
-                    # Identifier of the SP entity  (must be a URI)
-                    "entityId": conf["entity_id"],
-                    # Specifies info about where and how the <AuthnResponse> message MUST be
-                    # returned to the requester, in this case our SP.
-                    "assertionConsumerService": {
-                        "url": acs_url.url,
-                        "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
-                    },
-                    "attributeConsumingServices": attribute_consuming_services,
-                    "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
-                    "x509cert": certificate,
-                    "privateKey": privkey,
-                },
-            }
-        )
+        del sp_config["attributeConsumingService"]
+        sp_config["attributeConsumingServices"] = attribute_consuming_services
+
         return config_dict
 
     def create_config(
