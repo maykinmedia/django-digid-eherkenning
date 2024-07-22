@@ -1,11 +1,14 @@
+from io import BytesIO
 from pathlib import Path
 
 from django.core.files import File
 
 import pytest
 import responses
+from cryptography.hazmat.primitives.asymmetric import rsa
 from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.models import Certificate
+from simple_certmanager.test.certificate_generation import key_to_pem
 
 from digid_eherkenning.choices import ConfigTypes
 from digid_eherkenning.models import (
@@ -154,3 +157,19 @@ def eherkenning_config(eherkenning_config_defaults):
 def mocked_responses():
     with responses.RequestsMock() as rsps:
         yield rsps
+
+
+@pytest.fixture
+def next_certificate(leaf_keypair: tuple[rsa.RSAPrivateKey, bytes]) -> Certificate:
+    """
+    Generate a key + certificate pair valid from timezone.now().
+    """
+    key, cert_pem = leaf_keypair
+    key_pem = key_to_pem(key)
+    certificate = Certificate.objects.create(
+        label="Next certificate",
+        type=CertificateTypes.key_pair,
+        public_certificate=File(BytesIO(cert_pem), name="public_certificate.pem"),
+        private_key=File(BytesIO(key_pem), name="private_key.pem"),
+    )
+    return certificate

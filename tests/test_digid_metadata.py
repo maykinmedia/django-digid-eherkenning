@@ -2,7 +2,10 @@ from django.test import TestCase
 
 import pytest
 from lxml import etree
+from simple_certmanager.models import Certificate
 
+from digid_eherkenning.choices import ConfigTypes
+from digid_eherkenning.models import ConfigCertificate, DigidConfiguration
 from digid_eherkenning.saml2.digid import generate_digid_metadata
 
 from .mixins import DigidMetadataMixin
@@ -211,3 +214,31 @@ class DigidMetadataGenerationTests(DigidMetadataMixin, TestCase):
             namespaces=NAME_SPACES,
         )
         self.assertIsNone(single_logout_service_node)
+
+
+@pytest.mark.django_db
+def test_current_and_next_certificate_in_metadata(
+    temp_private_root,
+    digid_config: DigidConfiguration,
+    digid_certificate: Certificate,
+    next_certificate: Certificate,
+):
+    ConfigCertificate.objects.create(
+        config_type=ConfigTypes.digid,
+        certificate=next_certificate,
+    )
+    assert ConfigCertificate.objects.count() == 2  # expect current and next
+
+    digid_metadata = generate_digid_metadata()
+
+    entity_descriptor_node = etree.XML(digid_metadata)
+
+    metadata_node = entity_descriptor_node.find(
+        "md:SPSSODescriptor", namespaces=NAME_SPACES
+    )
+    assert metadata_node is not None
+    key_nodes = metadata_node.findall("md:KeyDescriptor", namespaces=NAME_SPACES)
+    assert len(key_nodes) == 2  # we expect current + next key
+    key1_node, key2_node = key_nodes
+    assert key1_node.attrib["use"] == "signing"
+    assert key2_node.attrib["use"] == "signing"
