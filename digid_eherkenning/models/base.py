@@ -244,7 +244,7 @@ class BaseConfiguration(SingletonModel):
         opts = cls._meta
         return ConfigTypes(f"{opts.app_label}.{opts.object_name}")
 
-    def _select_certificates(self) -> tuple[Certificate, Certificate | None]:
+    def select_certificates(self) -> tuple[Certificate, Certificate | None]:
         try:
             current_cert, next_cert = ConfigCertificate.objects.for_config(
                 self

@@ -44,7 +44,7 @@ class DigidConfiguration(BaseConfiguration):
         """
         organization = None
 
-        current_cert, next_cert = self._select_certificates()
+        current_cert, next_cert = self.select_certificates()
 
         if self.organization_url and self.organization_name:
             organization = {

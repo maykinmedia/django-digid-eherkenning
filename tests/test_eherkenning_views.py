@@ -144,7 +144,7 @@ class eHerkenningAssertionConsumerServiceViewTests(TestCase):
 
         config = EherkenningConfiguration.get_solo()
 
-        current_cert, _ = config._select_certificates()
+        current_cert, _ = config.select_certificates()
         with current_cert.public_certificate.open("r") as cert_file:
             cert = cert_file.read()
 
