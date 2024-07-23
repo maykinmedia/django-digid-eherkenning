@@ -10,26 +10,17 @@ from privates.fields import PrivateMediaFileField
 from simple_certmanager.models import Certificate
 from solo.models import SingletonModel
 
-from ..choices import DigestAlgorithms, SignatureAlgorithms, XMLContentTypes
-
-
-class ConfigurationManager(models.Manager):
-    def get_queryset(self):
-        qs = super().get_queryset()
-        return qs.select_related("certificate")
+from ..choices import (
+    ConfigTypes,
+    DigestAlgorithms,
+    SignatureAlgorithms,
+    XMLContentTypes,
+)
+from ..exceptions import CertificateProblem
+from .certificates import ConfigCertificate
 
 
 class BaseConfiguration(SingletonModel):
-    certificate = models.ForeignKey(
-        Certificate,
-        null=True,
-        on_delete=models.PROTECT,
-        verbose_name=_("key pair"),
-        help_text=_(
-            "The private key and public certificate pair to use during the "
-            "authentication flow."
-        ),
-    )
     idp_metadata_file = PrivateMediaFileField(
         _("identity provider metadata"),
         blank=True,
@@ -167,8 +158,6 @@ class BaseConfiguration(SingletonModel):
         max_length=100,
     )
 
-    objects = ConfigurationManager()
-
     class Meta:
         abstract = True
 
@@ -240,6 +229,34 @@ class BaseConfiguration(SingletonModel):
         super().save(*args, **kwargs)
 
     def clean(self):
-        if not self.certificate:
-            raise ValidationError(_("You must select a certificate"))
         super().clean()
+
+        # require that a certificate is configured
+        if not ConfigCertificate.objects.for_config(self).exists():
+            raise ValidationError(
+                _(
+                    "You must prepare at least one certificate for the {verbose_name}."
+                ).format(verbose_name=self._meta.verbose_name)
+            )
+
+    @classmethod
+    def _as_config_type(cls) -> ConfigTypes:
+        opts = cls._meta
+        return ConfigTypes(f"{opts.app_label}.{opts.object_name}")
+
+    def select_certificates(self) -> tuple[Certificate, Certificate | None]:
+        try:
+            current_cert, next_cert = ConfigCertificate.objects.for_config(
+                self
+            ).select_certificates()
+        except ConfigCertificate.DoesNotExist as exc:
+            raise CertificateProblem(
+                "No (valid) certificate configured. The configuration needs a "
+                "certificate with private key and public certificate."
+            ) from exc
+        else:
+            # type checker shanigans, mostly
+            assert isinstance(current_cert, Certificate)
+            assert next_cert is None or isinstance(next_cert, Certificate)
+
+        return current_cert, next_cert
