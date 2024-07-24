@@ -2,8 +2,8 @@
 Changelog
 =========
 
-0.17.0 (DEVELOPMENT)
-====================
+0.17.0 (2024-07-24)
+===================
 
 **💥⚠️ Breaking changes**
 
@@ -13,7 +13,18 @@ Changelog
 
 **Features**
 
-...
+* [#75] The metadata XML pages now force the download of the XML file rather than
+  letting the browser display it.
+* [#74] Added support for "future" SAML certificates. When your current signing
+  certificate is close to expiry, you can prepare the new certificate and generate +
+  exchange the new metadata with the identity provider for a seamless transition once
+  the old certificate expires.
+
+**Other changes**
+
+* Support for encrypted private keys is moved to the certificate management
+  application. You can enter the passphrase there instead of in the DigiD/eHerkenning
+  configuration forms.
 
 0.16.0 (2024-07-02)
 ===================
