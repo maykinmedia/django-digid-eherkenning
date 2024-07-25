@@ -2,6 +2,11 @@
 Changelog
 =========
 
+0.17.1 (2024-07-25)
+===================
+
+Small bugfix to make sure ``CertificateProblem`` can be pickled.
+
 0.17.0 (2024-07-24)
 ===================
 
