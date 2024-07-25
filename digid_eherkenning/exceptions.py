@@ -12,5 +12,5 @@ class eHerkenningNoRSINError(eHerkenningError):
 
 class CertificateProblem(Exception):
     def __init__(self, msg: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(msg, *args, **kwargs)
         self.message = msg
