@@ -2,6 +2,14 @@
 Changelog
 =========
 
+0.17.2 (2024-07-26)
+===================
+
+Bugfix release
+
+* Fixed invalid key/certificate pairs not being skipped in the certificate selection
+  process.
+
 0.17.1 (2024-07-25)
 ===================
 

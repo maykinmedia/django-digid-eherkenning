@@ -2,7 +2,7 @@
 django-digid-eherkenning
 ========================
 
-:Version: 0.17.1
+:Version: 0.17.2
 :Source: https://github.com/maykinmedia/django-digid-eherkenning
 :Keywords: django, authentication, digid, eherkenning, eidas, dutch, nl, netherlands
 
