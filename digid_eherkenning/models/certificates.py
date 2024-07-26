@@ -173,6 +173,7 @@ class ConfigCertificate(models.Model):
         # Try loading it with cryptography
         try:
             _certificate.certificate
+            valid_pair = _certificate.is_valid_key_pair()
         except (FileNotFoundError, ValueError) as exc:
             logger.info(
                 "Could not introspect certificate validity",
@@ -180,6 +181,9 @@ class ConfigCertificate(models.Model):
                 extra={"certificate_pk": _certificate.pk},
             )
             return False
+        else:
+            if not valid_pair:
+                return False
 
         return True
 

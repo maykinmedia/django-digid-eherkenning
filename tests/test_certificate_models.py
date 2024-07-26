@@ -240,9 +240,9 @@ def test_skips_invalid_certificates_for_current(
     now = timezone.now()
 
     # all are currently valid - but we'll introduce problems
-    (c1, c2, c3, c4, c5) = [
+    (c1, c2, c3, c4, c5, c6) = [
         _generate_config_certificate(request, config_type, valid_from=now)
-        for _ in range(0, 5)
+        for _ in range(0, 6)
     ]
     # must be keypair
     c1.type = CertificateTypes.cert_only
@@ -252,7 +252,12 @@ def test_skips_invalid_certificates_for_current(
     c3.public_certificate = ""
     c3.save()
     c4.public_certificate.storage.delete(c4.public_certificate.name)
-    c5.private_key.storage.delete(c5.public_certificate.name)
+    c5.private_key.storage.delete(
+        c5.public_certificate.name
+    )  # introduce mismatch between key and certificate
+    c6.public_certificate = c1.public_certificate
+    c6.save()
+
     # this one is okay
     _current = _generate_config_certificate(request, config_type, valid_from=now)
 
