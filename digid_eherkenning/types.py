@@ -20,6 +20,7 @@ class ServiceConfig(TypedDict):
     entity_concerned_types_allowed: list[dict]
     language: str
     classifiers: Optional[list[str]]
+    mark_default: bool
 
 
 class EHerkenningConfig(TypedDict):

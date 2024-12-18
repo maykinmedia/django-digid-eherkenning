@@ -235,42 +235,49 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         eh_attribute_consuming_service_node = attribute_consuming_service_nodes[0]
         eidas_attribute_consuming_service_node = attribute_consuming_service_nodes[1]
 
-        self.assertEqual(
-            "urn:etoegang:DV:00000000000000000011:services:9050",
-            eh_attribute_consuming_service_node.find(
-                ".//md:RequestedAttribute", namespaces=NAME_SPACES
-            ).attrib["Name"],
-        )
-        self.assertEqual(
-            "Test Service Name",
-            eh_attribute_consuming_service_node.find(
-                ".//md:ServiceName", namespaces=NAME_SPACES
-            ).text,
-        )
-        self.assertEqual(
-            "Test Service Description",
-            eh_attribute_consuming_service_node.find(
-                ".//md:ServiceDescription", namespaces=NAME_SPACES
-            ).text,
-        )
-        self.assertEqual(
-            "urn:etoegang:DV:00000000000000000011:services:9051",
-            eidas_attribute_consuming_service_node.find(
-                ".//md:RequestedAttribute", namespaces=NAME_SPACES
-            ).attrib["Name"],
-        )
-        self.assertEqual(
-            "Test Service Name (eIDAS)",
-            eidas_attribute_consuming_service_node.find(
-                ".//md:ServiceName", namespaces=NAME_SPACES
-            ).text,
-        )
-        self.assertEqual(
-            "Test Service Description",
-            eidas_attribute_consuming_service_node.find(
-                ".//md:ServiceDescription", namespaces=NAME_SPACES
-            ).text,
-        )
+        with self.subTest("eh attribute consuming service"):
+            self.assertEqual(
+                eh_attribute_consuming_service_node.attrib["isDefault"],
+                "true",
+            )
+            self.assertEqual(
+                "urn:etoegang:DV:00000000000000000011:services:9050",
+                eh_attribute_consuming_service_node.find(
+                    ".//md:RequestedAttribute", namespaces=NAME_SPACES
+                ).attrib["Name"],
+            )
+            self.assertEqual(
+                "Test Service Name",
+                eh_attribute_consuming_service_node.find(
+                    ".//md:ServiceName", namespaces=NAME_SPACES
+                ).text,
+            )
+            self.assertEqual(
+                "Test Service Description",
+                eh_attribute_consuming_service_node.find(
+                    ".//md:ServiceDescription", namespaces=NAME_SPACES
+                ).text,
+            )
+
+        with self.subTest("eidas attribute consuming service"):
+            self.assertEqual(
+                "urn:etoegang:DV:00000000000000000011:services:9051",
+                eidas_attribute_consuming_service_node.find(
+                    ".//md:RequestedAttribute", namespaces=NAME_SPACES
+                ).attrib["Name"],
+            )
+            self.assertEqual(
+                "Test Service Name (eIDAS)",
+                eidas_attribute_consuming_service_node.find(
+                    ".//md:ServiceName", namespaces=NAME_SPACES
+                ).text,
+            )
+            self.assertEqual(
+                "Test Service Description",
+                eidas_attribute_consuming_service_node.find(
+                    ".//md:ServiceDescription", namespaces=NAME_SPACES
+                ).text,
+            )
 
         organisation_name_node = entity_descriptor_node.find(
             ".//md:OrganizationName",

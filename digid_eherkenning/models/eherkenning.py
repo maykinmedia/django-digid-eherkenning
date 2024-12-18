@@ -203,6 +203,10 @@ class EherkenningConfiguration(BaseConfiguration):
                 "service_uuid": str(self.eh_service_uuid),
                 "service_name": self.service_name,
                 "attribute_consuming_service_index": self.eh_attribute_consuming_service_index,
+                # always mark EH as default and EIDAS as not the default. If we ever support
+                # more assertion consumer services than these two, then we need to expand on
+                # this logic/configuration.
+                "mark_default": True,
                 "service_instance_uuid": str(self.eh_service_instance_uuid),
                 "service_description": self.service_description,
                 "service_description_url": self.service_description_url,

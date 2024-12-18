@@ -84,6 +84,8 @@ class BaseSaml2Client:
         "custom_base_path": None,
     }
 
+    settings_cls = OneLogin_Saml2_Settings
+
     def __init__(self, conf=None):
         self.authn_storage = AuthnRequestStorage(
             self.cache_key_prefix, self.cache_timeout
@@ -203,7 +205,8 @@ class BaseSaml2Client:
         """
         Convert to the format expected by the OneLogin SAML2 library.
         """
-        return OneLogin_Saml2_Settings(config_dict, **self.saml2_setting_kwargs)
+        cls = self.settings_cls
+        return cls(config_dict, **self.saml2_setting_kwargs)
 
     def create_config_dict(self, conf):
         """
