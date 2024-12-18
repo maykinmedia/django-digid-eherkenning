@@ -48,7 +48,7 @@ class ServiceProviderSAMLConfig(TypedDict):
     assertionConsumerService: dict
     singleLogoutService: dict
     attributeConsumingServices: list[dict]
-    NameIDFormat: str
+    NameIDFormat: str  # may not be included for eHerkenning
     x509cert: str
     privateKey: str
     privateKeyPassphrase: Optional[str]

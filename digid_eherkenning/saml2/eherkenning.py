@@ -469,6 +469,11 @@ class eHerkenningClient(BaseSaml2Client):
         config_dict: EHerkenningSAMLConfig = super().create_config_dict(conf)
 
         sp_config = config_dict["sp"]
+        # may not be included for eHerkenning/EIDAS since AS1.24a, see:
+        # https://afsprakenstelsel.etoegang.nl/Startpagina/v3/dv-metadata-for-hm
+        #
+        #    ... Elements not listed in this table MUST NOT be included in the metadata.
+        del sp_config["NameIDFormat"]
 
         # we have multiple services, so delete the config for the "single service" variant
         attribute_consuming_services = create_attribute_consuming_services(conf)
