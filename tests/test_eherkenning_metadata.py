@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.test import TestCase
 
 import pytest
@@ -12,6 +14,13 @@ from digid_eherkenning.saml2.eherkenning import (
 )
 
 from .mixins import EherkenningMetadataMixin
+from .utils import validate_against_xsd
+
+_repo_root = Path(__file__).parent.parent.resolve()
+
+SAML_METADATA_XSD = (
+    _repo_root / "digid_eherkenning" / "xsd" / "saml-schema-metadata-2.0.xsd"
+)
 
 NAME_SPACES = {
     "md": "urn:oasis:names:tc:SAML:2.0:metadata",
@@ -162,6 +171,10 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.save()
 
         eherkenning_metadata = generate_eherkenning_metadata()
+
+        with self.subTest("passes XSD validation"):
+            validate_against_xsd(eherkenning_metadata, SAML_METADATA_XSD)
+
         self.assertEqual(eherkenning_metadata[:5], b"<?xml")
         entity_descriptor_node = etree.XML(eherkenning_metadata)
 
