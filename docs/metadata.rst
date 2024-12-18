@@ -1,3 +1,5 @@
+.. _metadata:
+
 ===================
 Metadata generation
 ===================
@@ -21,17 +23,19 @@ If you wish, you can still use :ref:`management commands<cli>` to generate the m
 eHerkenning / eIDAS
 -------------------
 
+.. _metadata_requested_attributes:
+
 Configuring RequestedAttribute
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the field ``RequestedAttribute`` one can specify all the attributes that may be requested by the service
-when a company/person logs in with eHerkenning or eIDAS.
+In the field ``RequestedAttribute`` one can specify all the attributes that may be
+requested by the service when a company/person logs in with eHerkenning or eIDAS.
 
-The values specified need to come from the "`Attribuutcatalogus <https://afsprakenstelsel.etoegang.nl/Startpagina/v1/attribuutcatalogus>`_"
-(there are multiple catalogues: 'generiek', 'natuurlijke personen' and 'non-natuurlijke personen').
+The values specified need to come from the Attribuutcatalogus_ (there are multiple
+catalogues: 'generiek', 'natuurlijke personen' and 'non-natuurlijke personen').
 
-In the admin, these can be specified as a list of dictionaries. For example, for eIDAS one could use the following JSON
-to request the first name of the person who logged in:
+In the admin, these can be specified as a list of dictionaries. For example, for eIDAS
+one could use the following JSON to request the first name of the person who logged in:
 
 .. code-block:: json
 
@@ -45,3 +49,15 @@ to request the first name of the person who logged in:
        }
      }
    ]
+
+.. warning:: YOU MAY NOT REQUEST ATTRIBUTES LISTED IN "Identificerende kenmerken". If
+   you do so, the metadata will be rejected by the broker. In practice this means:
+
+   * don't request the ``KVKNr`` attribute
+   * don't request the ``Pseudo`` attribute
+   * don't request the ``RSIN`` attribute
+   * don't request the ``BSN`` attribute
+
+   These attributes are pre-configured and will be returned without asking for them.
+
+.. _Attribuutcatalogus: https://afsprakenstelsel.etoegang.nl/Startpagina/v3/attribuutcatalogus

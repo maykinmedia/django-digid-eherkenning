@@ -9,19 +9,6 @@ from ..validators import oin_validator
 from .base import BaseConfiguration
 
 
-def get_default_requested_attributes_eherkenning():
-    return [
-        {
-            "name": "urn:etoegang:1.11:attribute-represented:CompanyName",
-            "required": True,
-            "purpose_statements": {
-                "en": "For testing purposes.",
-                "nl": "Voor testdoeleinden.",
-            },
-        }
-    ]
-
-
 def get_default_requested_attributes_eidas():
     return [
         {
@@ -76,7 +63,8 @@ class EherkenningConfiguration(BaseConfiguration):
     )
     eh_requested_attributes = models.JSONField(
         _("requested attributes"),
-        default=get_default_requested_attributes_eherkenning,
+        default=list,
+        blank=True,
         help_text=_(
             "A list of additional requested attributes. A single requested attribute "
             "can be a string (the name of the attribute) or an object with keys 'name' "
@@ -115,7 +103,8 @@ class EherkenningConfiguration(BaseConfiguration):
     )
     eidas_requested_attributes = models.JSONField(
         _("requested attributes"),
-        default=get_default_requested_attributes_eidas,
+        default=list,
+        blank=True,
         help_text=_(
             "A list of additional requested attributes. A single requested attribute "
             "can be a string (the name of the attribute) or an object with keys 'name' "
