@@ -489,6 +489,20 @@ class CustomOneLogin_Saml2_Metadata(OneLogin_Saml2_Metadata):
 
         return result
 
+    @staticmethod
+    def _add_x509_key_descriptors(root, cert: str, use=None):
+        """
+        Override the usage of the 'use' attribute.
+
+        This patch is a hack on top of the python3-saml library. We deliberately ignore
+        any "use" attribute in the generated metadata so that we don't affect the
+        runtime behaviour.
+        """
+        fixed_use = None  # ignore the use parameter entirely.
+        super(
+            CustomOneLogin_Saml2_Metadata, CustomOneLogin_Saml2_Metadata
+        )._add_x509_key_descriptors(root, cert=cert, use=fixed_use)
+
 
 class CustomOneLogin_Saml2_Settings(OneLogin_Saml2_Settings):
     metadata_class = CustomOneLogin_Saml2_Metadata
