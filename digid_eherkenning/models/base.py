@@ -1,3 +1,5 @@
+from typing import TypeVar
+
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
@@ -12,12 +14,45 @@ from solo.models import SingletonModel
 
 from ..choices import (
     ConfigTypes,
-    DigestAlgorithms,
-    SignatureAlgorithms,
+    DeprecatedDigestAlgorithms,
+    DeprecatedSignatureAlgorithms,
     XMLContentTypes,
 )
 from ..exceptions import CertificateProblem
 from .certificates import ConfigCertificate
+
+M = TypeVar("M", bound=type[models.Model])
+
+
+def override_choices(
+    field: str,
+    new_choices: type[models.TextChoices],
+    new_default: models.TextChoices | None = None,
+):
+    """
+    Decorator to override the field choices and default for a concrete model.
+
+    The :class:`BaseConfiguration` allows choice selection that can be wider than desired
+    for specific subclasses. Use this decorator on the subclass to narrow them.
+
+    :arg field: field name to override. The field must exist on the model.
+    :arg new_choices: the new choices class to use.
+    :arg new_default: the new default value to use, optional.
+    """
+
+    def decorator(cls: M) -> M:
+        model_field = cls._meta.get_field(field)
+        assert isinstance(model_field, models.Field)
+        assert model_field.choices
+
+        # replace the choices and default
+        model_field.choices = new_choices.choices
+        if new_default is not None:
+            model_field.default = new_default
+
+        return cls
+
+    return decorator
 
 
 class BaseConfiguration(SingletonModel):
@@ -76,8 +111,8 @@ class BaseConfiguration(SingletonModel):
     signature_algorithm = models.CharField(
         _("signature algorithm"),
         blank=True,
-        choices=SignatureAlgorithms.choices,
-        default=SignatureAlgorithms.rsa_sha1,
+        choices=DeprecatedSignatureAlgorithms.choices,
+        default=DeprecatedSignatureAlgorithms.rsa_sha1,
         help_text=_(
             "Signature algorithm. Note that DSA_SHA1 and RSA_SHA1 are deprecated, but "
             "RSA_SHA1 is still the default value in the SAMLv2 standard. Warning: "
@@ -89,8 +124,8 @@ class BaseConfiguration(SingletonModel):
     digest_algorithm = models.CharField(
         _("digest algorithm"),
         blank=True,
-        choices=DigestAlgorithms.choices,
-        default=DigestAlgorithms.sha1,
+        choices=DeprecatedDigestAlgorithms.choices,
+        default=DeprecatedDigestAlgorithms.sha1,
         help_text=_(
             "Digest algorithm. Note that SHA1 is deprecated, but still the default "
             "value in the SAMLv2 standard. Warning: "

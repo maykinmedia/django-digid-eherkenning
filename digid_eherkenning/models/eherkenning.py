@@ -3,10 +3,10 @@ import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from ..choices import AssuranceLevels
+from ..choices import AssuranceLevels, DigestAlgorithms, SignatureAlgorithms
 from ..types import EHerkenningConfig
 from ..validators import oin_validator
-from .base import BaseConfiguration
+from .base import BaseConfiguration, override_choices
 
 
 def get_default_requested_attributes_eidas():
@@ -46,6 +46,16 @@ def get_default_requested_attributes_eidas():
     ]
 
 
+@override_choices(
+    "signature_algorithm",
+    new_choices=SignatureAlgorithms,
+    new_default=SignatureAlgorithms.rsa_sha256,
+)
+@override_choices(
+    "digest_algorithm",
+    new_choices=DigestAlgorithms,
+    new_default=DigestAlgorithms.sha256,
+)
 class EherkenningConfiguration(BaseConfiguration):
     eh_loa = models.CharField(
         _("eHerkenning LoA"),
