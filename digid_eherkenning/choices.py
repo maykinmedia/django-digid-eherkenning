@@ -19,13 +19,28 @@ class SectorType(models.TextChoices):
 
 
 class DigestAlgorithms(models.TextChoices):
-    sha1 = OneLogin_Saml2_Constants.SHA1, "SHA1"
     sha256 = OneLogin_Saml2_Constants.SHA256, "SHA256"
     sha384 = OneLogin_Saml2_Constants.SHA384, "SHA384"
     sha512 = OneLogin_Saml2_Constants.SHA512, "SHA512"
 
 
 class SignatureAlgorithms(models.TextChoices):
+    # Deprecated because of the SHA1 options, which appear to still be used with DigiD
+    rsa_sha256 = OneLogin_Saml2_Constants.RSA_SHA256, "RSA_SHA256"
+    rsa_sha384 = OneLogin_Saml2_Constants.RSA_SHA384, "RSA_SHA384"
+    rsa_sha512 = OneLogin_Saml2_Constants.RSA_SHA512, "RSA_SHA512"
+
+
+class DeprecatedDigestAlgorithms(models.TextChoices):
+    # Deprecated because of the SHA1 options, which appear to still be used with DigiD
+    sha1 = OneLogin_Saml2_Constants.SHA1, "SHA1"
+    sha256 = OneLogin_Saml2_Constants.SHA256, "SHA256"
+    sha384 = OneLogin_Saml2_Constants.SHA384, "SHA384"
+    sha512 = OneLogin_Saml2_Constants.SHA512, "SHA512"
+
+
+class DeprecatedSignatureAlgorithms(models.TextChoices):
+    # Deprecated because of the SHA1 options, which appear to still be used with DigiD
     dsa_sha1 = OneLogin_Saml2_Constants.DSA_SHA1, "DSA_SHA1"
     rsa_sha1 = OneLogin_Saml2_Constants.RSA_SHA1, "RSA_SHA1"
     rsa_sha256 = OneLogin_Saml2_Constants.RSA_SHA256, "RSA_SHA256"

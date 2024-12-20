@@ -20,6 +20,7 @@ class ServiceConfig(TypedDict):
     entity_concerned_types_allowed: list[dict]
     language: str
     classifiers: Optional[list[str]]
+    mark_default: bool
 
 
 class EHerkenningConfig(TypedDict):
@@ -48,7 +49,7 @@ class ServiceProviderSAMLConfig(TypedDict):
     assertionConsumerService: dict
     singleLogoutService: dict
     attributeConsumingServices: list[dict]
-    NameIDFormat: str
+    NameIDFormat: str  # may not be included for eHerkenning
     x509cert: str
     privateKey: str
     privateKeyPassphrase: Optional[str]

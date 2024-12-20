@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.test import TestCase
 
 import pytest
@@ -12,6 +14,13 @@ from digid_eherkenning.saml2.eherkenning import (
 )
 
 from .mixins import EherkenningMetadataMixin
+from .utils import validate_against_xsd
+
+_repo_root = Path(__file__).parent.parent.resolve()
+
+SAML_METADATA_XSD = (
+    _repo_root / "digid_eherkenning" / "xsd" / "saml-schema-metadata-2.0.xsd"
+)
 
 NAME_SPACES = {
     "md": "urn:oasis:names:tc:SAML:2.0:metadata",
@@ -162,6 +171,10 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         self.eherkenning_config.save()
 
         eherkenning_metadata = generate_eherkenning_metadata()
+
+        with self.subTest("passes XSD validation"):
+            validate_against_xsd(eherkenning_metadata, SAML_METADATA_XSD)
+
         self.assertEqual(eherkenning_metadata[:5], b"<?xml")
         entity_descriptor_node = etree.XML(eherkenning_metadata)
 
@@ -169,40 +182,56 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
             "http://test-entity.id", entity_descriptor_node.attrib["entityID"]
         )
 
-        sspo_descriptor_node = entity_descriptor_node.find(
-            ".//md:SPSSODescriptor",
-            namespaces=NAME_SPACES,
-        )
+        with self.subTest("metadata signature"):
+            certificate_node = entity_descriptor_node.find(
+                ".//ds:X509Certificate",
+                namespaces=NAME_SPACES,
+            )
+            self.assertIn(
+                "MIIC0DCCAbigAwIBAgIUEjGmfCGa1cOiTi+UKtDQVtySOHUwDQYJKoZIhvcNAQEL",
+                certificate_node.text,
+            )
 
-        self.assertEqual("true", sspo_descriptor_node.attrib["AuthnRequestsSigned"])
-        self.assertEqual("true", sspo_descriptor_node.attrib["WantAssertionsSigned"])
+            signature_algorithm_node = entity_descriptor_node.find(
+                ".//ds:SignatureMethod",
+                namespaces=NAME_SPACES,
+            )
+            self.assertEqual(
+                "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+                signature_algorithm_node.attrib["Algorithm"],
+            )
 
-        certificate_node = entity_descriptor_node.find(
-            ".//ds:X509Certificate",
-            namespaces=NAME_SPACES,
-        )
-        self.assertIn(
-            "MIIC0DCCAbigAwIBAgIUEjGmfCGa1cOiTi+UKtDQVtySOHUwDQYJKoZIhvcNAQEL",
-            certificate_node.text,
-        )
+            digest_algorithm_node = entity_descriptor_node.find(
+                ".//ds:DigestMethod",
+                namespaces=NAME_SPACES,
+            )
+            self.assertEqual(
+                "http://www.w3.org/2001/04/xmlenc#sha256",
+                digest_algorithm_node.attrib["Algorithm"],
+            )
 
-        signature_algorithm_node = entity_descriptor_node.find(
-            ".//ds:SignatureMethod",
-            namespaces=NAME_SPACES,
-        )
-        self.assertEqual(
-            "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
-            signature_algorithm_node.attrib["Algorithm"],
-        )
+        with self.subTest("SPSSODescriptor"):
+            sspo_descriptor_node = entity_descriptor_node.find(
+                ".//md:SPSSODescriptor",
+                namespaces=NAME_SPACES,
+            )
+            assert sspo_descriptor_node is not None
 
-        digest_algorithm_node = entity_descriptor_node.find(
-            ".//ds:DigestMethod",
-            namespaces=NAME_SPACES,
-        )
-        self.assertEqual(
-            "http://www.w3.org/2001/04/xmlenc#sha256",
-            digest_algorithm_node.attrib["Algorithm"],
-        )
+            self.assertEqual("true", sspo_descriptor_node.attrib["AuthnRequestsSigned"])
+            self.assertEqual(
+                "true", sspo_descriptor_node.attrib["WantAssertionsSigned"]
+            )
+
+        with self.subTest("key descriptors"):
+            key_descriptor_nodes = sspo_descriptor_node.findall(
+                ".//md:KeyDescriptor", namespaces=NAME_SPACES
+            )
+            self.assertEqual(len(key_descriptor_nodes), 1)
+
+            key_descriptor_node = key_descriptor_nodes[0]
+            # use attribute should not be specified if it's used for both signing and
+            # encryption
+            self.assertNotIn("use", key_descriptor_node.attrib)
 
         assertion_consuming_service_node = entity_descriptor_node.find(
             ".//md:AssertionConsumerService",
@@ -222,78 +251,87 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         eh_attribute_consuming_service_node = attribute_consuming_service_nodes[0]
         eidas_attribute_consuming_service_node = attribute_consuming_service_nodes[1]
 
-        self.assertEqual(
-            "urn:etoegang:DV:00000000000000000011:services:9050",
-            eh_attribute_consuming_service_node.find(
-                ".//md:RequestedAttribute", namespaces=NAME_SPACES
-            ).attrib["Name"],
-        )
-        self.assertEqual(
-            "Test Service Name",
-            eh_attribute_consuming_service_node.find(
-                ".//md:ServiceName", namespaces=NAME_SPACES
-            ).text,
-        )
-        self.assertEqual(
-            "Test Service Description",
-            eh_attribute_consuming_service_node.find(
-                ".//md:ServiceDescription", namespaces=NAME_SPACES
-            ).text,
-        )
-        self.assertEqual(
-            "urn:etoegang:DV:00000000000000000011:services:9051",
-            eidas_attribute_consuming_service_node.find(
-                ".//md:RequestedAttribute", namespaces=NAME_SPACES
-            ).attrib["Name"],
-        )
-        self.assertEqual(
-            "Test Service Name (eIDAS)",
-            eidas_attribute_consuming_service_node.find(
-                ".//md:ServiceName", namespaces=NAME_SPACES
-            ).text,
-        )
-        self.assertEqual(
-            "Test Service Description",
-            eidas_attribute_consuming_service_node.find(
-                ".//md:ServiceDescription", namespaces=NAME_SPACES
-            ).text,
-        )
+        with self.subTest("eh attribute consuming service"):
+            self.assertEqual(
+                eh_attribute_consuming_service_node.attrib["isDefault"],
+                "true",
+            )
+            self.assertEqual(
+                "urn:etoegang:DV:00000000000000000011:services:9050",
+                eh_attribute_consuming_service_node.find(
+                    ".//md:RequestedAttribute", namespaces=NAME_SPACES
+                ).attrib["Name"],
+            )
+            self.assertEqual(
+                "Test Service Name",
+                eh_attribute_consuming_service_node.find(
+                    ".//md:ServiceName", namespaces=NAME_SPACES
+                ).text,
+            )
+            self.assertEqual(
+                "Test Service Description",
+                eh_attribute_consuming_service_node.find(
+                    ".//md:ServiceDescription", namespaces=NAME_SPACES
+                ).text,
+            )
 
-        organisation_name_node = entity_descriptor_node.find(
-            ".//md:OrganizationName",
-            namespaces=NAME_SPACES,
-        )
-        self.assertEqual("Test organisation", organisation_name_node.text)
+        with self.subTest("eidas attribute consuming service"):
+            self.assertEqual(
+                "urn:etoegang:DV:00000000000000000011:services:9051",
+                eidas_attribute_consuming_service_node.find(
+                    ".//md:RequestedAttribute", namespaces=NAME_SPACES
+                ).attrib["Name"],
+            )
+            self.assertEqual(
+                "Test Service Name (eIDAS)",
+                eidas_attribute_consuming_service_node.find(
+                    ".//md:ServiceName", namespaces=NAME_SPACES
+                ).text,
+            )
+            self.assertEqual(
+                "Test Service Description",
+                eidas_attribute_consuming_service_node.find(
+                    ".//md:ServiceDescription", namespaces=NAME_SPACES
+                ).text,
+            )
 
-        organisation_display_node = entity_descriptor_node.find(
-            ".//md:OrganizationDisplayName",
-            namespaces=NAME_SPACES,
-        )
-        self.assertEqual("Test organisation", organisation_display_node.text)
+        with self.subTest("organization details"):
+            organisation_name_node = entity_descriptor_node.find(
+                ".//md:OrganizationName",
+                namespaces=NAME_SPACES,
+            )
+            self.assertEqual("Test organisation", organisation_name_node.text)
 
-        organisation_url_node = entity_descriptor_node.find(
-            ".//md:OrganizationURL",
-            namespaces=NAME_SPACES,
-        )
-        self.assertEqual("http://test-organisation.nl", organisation_url_node.text)
+            organisation_display_node = entity_descriptor_node.find(
+                ".//md:OrganizationDisplayName",
+                namespaces=NAME_SPACES,
+            )
+            self.assertEqual("Test organisation", organisation_display_node.text)
 
-        contact_person_node = entity_descriptor_node.find(
-            ".//md:ContactPerson",
-            namespaces=NAME_SPACES,
-        )
-        self.assertEqual("technical", contact_person_node.attrib["contactType"])
+            organisation_url_node = entity_descriptor_node.find(
+                ".//md:OrganizationURL",
+                namespaces=NAME_SPACES,
+            )
+            self.assertEqual("http://test-organisation.nl", organisation_url_node.text)
 
-        contact_email_node = entity_descriptor_node.find(
-            ".//md:EmailAddress",
-            namespaces=NAME_SPACES,
-        )
-        self.assertEqual("test@test.nl", contact_email_node.text)
+        with self.subTest("technical contact person details"):
+            contact_person_node = entity_descriptor_node.find(
+                ".//md:ContactPerson",
+                namespaces=NAME_SPACES,
+            )
+            self.assertEqual("technical", contact_person_node.attrib["contactType"])
 
-        contact_telephone_node = entity_descriptor_node.find(
-            ".//md:TelephoneNumber",
-            namespaces=NAME_SPACES,
-        )
-        self.assertEqual("06123123123", contact_telephone_node.text)
+            contact_email_node = entity_descriptor_node.find(
+                ".//md:EmailAddress",
+                namespaces=NAME_SPACES,
+            )
+            self.assertEqual("test@test.nl", contact_email_node.text)
+
+            contact_telephone_node = entity_descriptor_node.find(
+                ".//md:TelephoneNumber",
+                namespaces=NAME_SPACES,
+            )
+            self.assertEqual("06123123123", contact_telephone_node.text)
 
     def test_contact_telephone_no_email(self):
         self.eherkenning_config.technical_contact_person_telephone = "06123123123"
@@ -398,8 +436,8 @@ def test_current_and_next_certificate_in_metadata(
     key_nodes = metadata_node.findall("md:KeyDescriptor", namespaces=NAME_SPACES)
     assert len(key_nodes) == 2  # we expect current + next key
     key1_node, key2_node = key_nodes
-    assert key1_node.attrib["use"] == "signing"
-    assert key2_node.attrib["use"] == "signing"
+    assert "use" not in key1_node.attrib
+    assert "use" not in key2_node.attrib
 
     with (
         eherkenning_certificate.public_certificate.open("r") as _current,

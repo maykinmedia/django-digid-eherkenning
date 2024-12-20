@@ -3,23 +3,10 @@ import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from ..choices import AssuranceLevels
+from ..choices import AssuranceLevels, DigestAlgorithms, SignatureAlgorithms
 from ..types import EHerkenningConfig
 from ..validators import oin_validator
-from .base import BaseConfiguration
-
-
-def get_default_requested_attributes_eherkenning():
-    return [
-        {
-            "name": "urn:etoegang:1.11:attribute-represented:CompanyName",
-            "required": True,
-            "purpose_statements": {
-                "en": "For testing purposes.",
-                "nl": "Voor testdoeleinden.",
-            },
-        }
-    ]
+from .base import BaseConfiguration, override_choices
 
 
 def get_default_requested_attributes_eidas():
@@ -59,6 +46,16 @@ def get_default_requested_attributes_eidas():
     ]
 
 
+@override_choices(
+    "signature_algorithm",
+    new_choices=SignatureAlgorithms,
+    new_default=SignatureAlgorithms.rsa_sha256,
+)
+@override_choices(
+    "digest_algorithm",
+    new_choices=DigestAlgorithms,
+    new_default=DigestAlgorithms.sha256,
+)
 class EherkenningConfiguration(BaseConfiguration):
     eh_loa = models.CharField(
         _("eHerkenning LoA"),
@@ -76,7 +73,8 @@ class EherkenningConfiguration(BaseConfiguration):
     )
     eh_requested_attributes = models.JSONField(
         _("requested attributes"),
-        default=get_default_requested_attributes_eherkenning,
+        default=list,
+        blank=True,
         help_text=_(
             "A list of additional requested attributes. A single requested attribute "
             "can be a string (the name of the attribute) or an object with keys 'name' "
@@ -115,7 +113,8 @@ class EherkenningConfiguration(BaseConfiguration):
     )
     eidas_requested_attributes = models.JSONField(
         _("requested attributes"),
-        default=get_default_requested_attributes_eidas,
+        default=list,
+        blank=True,
         help_text=_(
             "A list of additional requested attributes. A single requested attribute "
             "can be a string (the name of the attribute) or an object with keys 'name' "
@@ -214,6 +213,10 @@ class EherkenningConfiguration(BaseConfiguration):
                 "service_uuid": str(self.eh_service_uuid),
                 "service_name": self.service_name,
                 "attribute_consuming_service_index": self.eh_attribute_consuming_service_index,
+                # always mark EH as default and EIDAS as not the default. If we ever support
+                # more assertion consumer services than these two, then we need to expand on
+                # this logic/configuration.
+                "mark_default": True,
                 "service_instance_uuid": str(self.eh_service_instance_uuid),
                 "service_description": self.service_description,
                 "service_description_url": self.service_description_url,

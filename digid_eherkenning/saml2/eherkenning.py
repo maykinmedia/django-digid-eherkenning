@@ -11,6 +11,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import load_pem_x509_certificate
 from lxml.builder import ElementMaker
 from lxml.etree import Element, tostring
+from onelogin.saml2.metadata import OneLogin_Saml2_Metadata
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
 from ..models import EherkenningConfiguration
@@ -406,7 +407,7 @@ def get_metadata_eherkenning_requested_attributes(
     conf: ServiceConfig, service_id: str
 ) -> list[dict]:
     # There needs to be a RequestedAttribute element where the name is the ServiceID
-    # https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
+    # https://afsprakenstelsel.etoegang.nl/Startpagina/v3/dv-metadata-for-hm
     requested_attributes = [{"name": service_id, "isRequired": False}]
     for requested_attribute in conf.get("requested_attributes", []):
         if isinstance(requested_attribute, dict):
@@ -447,14 +448,71 @@ def create_attribute_consuming_services(conf: EHerkenningConfig) -> list[dict]:
                 "serviceDescription": service_description,
                 "requestedAttributes": requested_attributes,
                 "language": service.get("language", "nl"),
+                "mark_default": service.get("mark_default", False),
             }
         )
     return attribute_consuming_services
 
 
+class CustomOneLogin_Saml2_Metadata(OneLogin_Saml2_Metadata):
+    """
+    Modify the generated metadata to comply with AfsprakenStelsel 1.24a
+    """
+
+    @staticmethod
+    def make_attribute_consuming_services(service_provider: dict):
+        """
+        Add an attribute to the default AttributeConsumingService element.
+
+        .. note:: the upstream master branch has refactored this interface, so once we
+           rebase on master (quite a task I think), we will have to deal with this too.
+        """
+        result = super(
+            CustomOneLogin_Saml2_Metadata, CustomOneLogin_Saml2_Metadata
+        ).make_attribute_consuming_services(service_provider)
+
+        attribute_consuming_services = service_provider["attributeConsumingServices"]
+        if len(attribute_consuming_services) > 1:
+            # find the ACS that's marked as default - there *must* be one otherwise we
+            # don't comply with AfsprakenStelsel 1.24a requirements
+            default_service_index = next(
+                acs["index"]
+                for acs in attribute_consuming_services
+                if acs["mark_default"]
+            )
+
+            # do string replacement, because we can't pass any options to the metadata
+            # generation to modify this behaviour :/
+            needle = f'<md:AttributeConsumingService index="{default_service_index}">'
+            replacement = f'<md:AttributeConsumingService index="{default_service_index}" isDefault="true">'
+            result = result.replace(needle, replacement, 1)
+
+        return result
+
+    @staticmethod
+    def _add_x509_key_descriptors(root, cert: str, use=None):
+        """
+        Override the usage of the 'use' attribute.
+
+        This patch is a hack on top of the python3-saml library. We deliberately ignore
+        any "use" attribute in the generated metadata so that we don't affect the
+        runtime behaviour.
+        """
+        fixed_use = None  # ignore the use parameter entirely.
+        super(
+            CustomOneLogin_Saml2_Metadata, CustomOneLogin_Saml2_Metadata
+        )._add_x509_key_descriptors(root, cert=cert, use=fixed_use)
+
+
+class CustomOneLogin_Saml2_Settings(OneLogin_Saml2_Settings):
+    metadata_class = CustomOneLogin_Saml2_Metadata
+
+
 class eHerkenningClient(BaseSaml2Client):
     cache_key_prefix = "eherkenning"
     cache_timeout = 60 * 60  # 1 hour
+
+    settings_cls = CustomOneLogin_Saml2_Settings
 
     @property
     def conf(self) -> EHerkenningConfig:
@@ -469,6 +527,11 @@ class eHerkenningClient(BaseSaml2Client):
         config_dict: EHerkenningSAMLConfig = super().create_config_dict(conf)
 
         sp_config = config_dict["sp"]
+        # may not be included for eHerkenning/EIDAS since AS1.24a, see:
+        # https://afsprakenstelsel.etoegang.nl/Startpagina/v3/dv-metadata-for-hm
+        #
+        #    ... Elements not listed in this table MUST NOT be included in the metadata.
+        del sp_config["NameIDFormat"]
 
         # we have multiple services, so delete the config for the "single service" variant
         attribute_consuming_services = create_attribute_consuming_services(conf)
