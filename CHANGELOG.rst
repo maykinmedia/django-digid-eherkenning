@@ -2,6 +2,25 @@
 Changelog
 =========
 
+0.18.0 (2024-12-27)
+===================
+
+Metadata-generation tweaks.
+
+It was reported to Open Formulieren that the generated (eHerkenning) metadata is not
+according to spec. This has been resolved in this release. No runtime authentication
+behaviour should be changed.
+
+* Updated the XSD for service catalog to v1.24.
+* Removed the default requested attributes from eHerkenning config model.
+* eHerkenning metadata tests now perform SAML v2.0 XSD validation.
+* Removed the forbidden NameIDFormat element from the eHerkenning metadata.
+* If both eHerkenning and eIDAS assertion consumer services are included, the
+  eHerkenning service is marked as default.
+* Removed the SHA1 signing/digest algorithms from the available options for eHerkenning.
+* Removed the ``use`` attribute from  the key descriptors in the eHerkenning metadata,
+  marking each key as used for both encryption and signing.
+
 0.17.2 (2024-07-26)
 ===================
 
