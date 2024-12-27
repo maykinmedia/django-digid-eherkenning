@@ -14,34 +14,14 @@ def get_default_requested_attributes_eidas():
         {
             "name": "urn:etoegang:1.9:attribute:FirstName",
             "required": True,
-            "purpose_statements": {
-                "en": "For testing purposes.",
-                "nl": "Voor testdoeleinden.",
-            },
         },
         {
             "name": "urn:etoegang:1.9:attribute:FamilyName",
             "required": True,
-            "purpose_statements": {
-                "en": "For testing purposes.",
-                "nl": "Voor testdoeleinden.",
-            },
         },
         {
             "name": "urn:etoegang:1.9:attribute:DateOfBirth",
             "required": True,
-            "purpose_statements": {
-                "en": "For testing purposes.",
-                "nl": "Voor testdoeleinden.",
-            },
-        },
-        {
-            "name": "urn:etoegang:1.11:attribute-represented:CompanyName",
-            "required": True,
-            "purpose_statements": {
-                "en": "For testing purposes.",
-                "nl": "Voor testdoeleinden.",
-            },
         },
     ]
 
