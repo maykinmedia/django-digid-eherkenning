@@ -60,4 +60,4 @@ one could use the following JSON to request the first name of the person who log
 
    These attributes are pre-configured and will be returned without asking for them.
 
-.. _Attribuutcatalogus: https://afsprakenstelsel.etoegang.nl/Startpagina/v3/attribuutcatalogus
+.. _Attribuutcatalogus: https://afsprakenstelsel.etoegang.nl/Startpagina/AS1.24b/attribuutcatalogus
