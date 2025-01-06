@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import resolve_url
 from django.urls import reverse
 from django.utils.encoding import force_str
@@ -45,3 +46,16 @@ def get_idp_login_url():
         "digid-mock:login"
     )
     return resolve_url(url)
+
+
+def should_validate_idp_callback_urls() -> bool:
+    """
+    Whether to validate that the `next_url` and `cancel_urls` are safe
+    """
+    flag = getattr(settings, "DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS", settings.DEBUG)
+    if not isinstance(flag, bool):
+        raise ImproperlyConfigured(
+            "DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS should be a boolean"
+        )
+
+    return flag

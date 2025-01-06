@@ -1,10 +1,16 @@
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, modify_settings, override_settings
 from django.urls import reverse, reverse_lazy
 
 from furl import furl
+
+from digid_eherkenning.mock.conf import (
+    ImproperlyConfigured,
+    should_validate_idp_callback_urls,
+)
 
 
 class DigidMockTestCase(TestCase):
@@ -70,6 +76,80 @@ class LoginViewTests(DigidMockTestCase):
         self.assertContains(response, "FooBarBazz-MockApp")
         self.assertContains(response, reverse("digid-mock:password"))
         self.assertNoDigidURLS(response)
+
+    @override_settings(DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS=True)
+    def test_cancel_url_cannot_have_different_host(self):
+        url = reverse("digid-mock:login")
+        data = {
+            "acs": reverse("digid:acs"),
+            "next": reverse("test-success"),
+            "cancel": "http://some-other-testserver" + reverse("test-index"),
+        }
+        response = self.client.get(url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.content, b"'cancel_url' parameter must be a safe url")
+
+        with override_settings(DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS=False):
+            response = self.client.get(url, data=data)
+            self.assertEqual(response.status_code, 200)
+
+    @override_settings(DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS=True)
+    def test_next_url_cannot_have_different_host(self):
+        url = reverse("digid-mock:login")
+        data = {
+            "acs": reverse("digid:acs"),
+            "next": "http://some-other-testserver" + reverse("test-success"),
+            "cancel": reverse("test-index"),
+        }
+        response = self.client.get(url, data=data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.content, b"'next_url' parameter must be a safe url")
+
+        with override_settings(DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS=False):
+            response = self.client.get(url, data=data)
+            self.assertEqual(response.status_code, 200)
+
+    @override_settings(DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS=True)
+    def test_next_and_cancel_url_can_be_relative(self):
+        url = reverse("digid-mock:login")
+        data = {
+            "acs": reverse("digid:acs"),
+            "next": reverse("test-success"),
+            "cancel": reverse("test-index"),
+        }
+        response = self.client.get(url, data=data)
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS=True)
+    def test_next_and_cancel_url_must_be_secure_if_idp_is_secure(self):
+        url = reverse("digid-mock:login")
+        data = {
+            "acs": reverse("digid:acs"),
+            "next": "http://testserver" + reverse("test-success"),
+            "cancel": "http://testserver" + reverse("test-index"),
+        }
+        response = self.client.get(url, data=data, secure=True)
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.get(url, data=data, secure=False)
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS="True")
+    def test_conf_setting_must_be_a_bool(self):
+        with self.assertRaises(ImproperlyConfigured):
+            should_validate_idp_callback_urls()
+
+    @override_settings()
+    def test_conf_setting_defaults_to_debug_flag(self):
+        del settings.DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS
+
+        with override_settings(DEBUG=True):
+            self.assertTrue(should_validate_idp_callback_urls())
+
+        with override_settings(DEBUG=False):
+            self.assertFalse(should_validate_idp_callback_urls())
 
 
 @override_settings(**OVERRIDE_SETTINGS)
