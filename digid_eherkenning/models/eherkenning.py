@@ -265,6 +265,7 @@ class EherkenningConfiguration(BaseConfiguration):
             "signature_algorithm": self.signature_algorithm,
             "digest_algorithm": self.digest_algorithm or None,
             "technical_contact_person": self.technical_contact_person,
+            "administrative_contact_person": self.administrative_contact_person,
             "organization": organization,
             "organization_name": self.organization_name,
             "artifact_resolve_content_type": self.artifact_resolve_content_type,

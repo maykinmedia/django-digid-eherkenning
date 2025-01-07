@@ -324,10 +324,15 @@ class BaseSaml2Client:
                 )
 
         technical_contact: ContactPerson | None = conf.get("technical_contact_person")
+        administrative_contact: ContactPerson | None = conf.get(
+            "administrative_contact_person"
+        )
+        if technical_contact or administrative_contact:
+            setting_dict.setdefault("contactPerson", {})
         if technical_contact:
-            setting_dict["contactPerson"] = {
-                "technical": technical_contact,
-            }
+            setting_dict["contactPerson"]["technical"] = technical_contact
+        if administrative_contact:
+            setting_dict["contactPerson"]["administrative"] = administrative_contact
 
         organization = conf.get("organization")
         if organization:

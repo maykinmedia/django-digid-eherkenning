@@ -43,6 +43,7 @@ class EHerkenningConfig(TypedDict):
     signature_algorithm: str
     digest_algorithm: str
     technical_contact_person: ContactPerson | None
+    administrative_contact_person: ContactPerson | None
     organization: str
     organization_name: str
     artifact_resolve_content_type: str
