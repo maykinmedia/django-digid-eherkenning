@@ -4,6 +4,11 @@ from typing import Optional, TypedDict, Union
 from django.db.models.fields.files import FieldFile
 
 
+class ContactPerson(TypedDict):
+    telephoneNumber: str
+    emailAddress: str
+
+
 class ServiceConfig(TypedDict):
     service_uuid: str
     service_name: str
@@ -37,8 +42,7 @@ class EHerkenningConfig(TypedDict):
     want_assertions_signed: str
     signature_algorithm: str
     digest_algorithm: str
-    technical_contact_person_telephone: Optional[str]
-    technical_contact_person_email: Optional[str]
+    technical_contact_person: ContactPerson | None
     organization: str
     organization_name: str
     artifact_resolve_content_type: str
@@ -93,5 +97,5 @@ class EHerkenningSAMLConfig(TypedDict):
     sp: ServiceProviderSAMLConfig
     idp: IdentityProviderSAMLConfig
     security: SecuritySAMLConfig
-    contactPerson: dict
+    contactPerson: ContactPerson
     organization: dict

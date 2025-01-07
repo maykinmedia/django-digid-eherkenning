@@ -264,10 +264,7 @@ class EherkenningConfiguration(BaseConfiguration):
             "want_assertions_signed": self.want_assertions_signed,
             "signature_algorithm": self.signature_algorithm,
             "digest_algorithm": self.digest_algorithm or None,
-            "technical_contact_person_telephone": self.technical_contact_person_telephone
-            or None,
-            "technical_contact_person_email": self.technical_contact_person_email
-            or None,
+            "technical_contact_person": self.technical_contact_person,
             "organization": organization,
             "organization_name": self.organization_name,
             "artifact_resolve_content_type": self.artifact_resolve_content_type,

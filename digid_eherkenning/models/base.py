@@ -19,6 +19,7 @@ from ..choices import (
     XMLContentTypes,
 )
 from ..exceptions import CertificateProblem
+from ..types import ContactPerson
 from .certificates import ConfigCertificate
 
 M = TypeVar("M", bound=type[models.Model])
@@ -202,6 +203,17 @@ class BaseConfiguration(SingletonModel):
 
     def __str__(self):
         return force_str(self._meta.verbose_name)
+
+    @property
+    def technical_contact_person(self) -> ContactPerson | None:
+        if (telephone := self.technical_contact_person_telephone) and (
+            email := self.technical_contact_person_email
+        ):
+            return {
+                "telephoneNumber": telephone,
+                "emailAddress": email,
+            }
+        return None
 
     def populate_xml_fields(self, urls: dict[str, str], xml: bytes) -> None:
         """
