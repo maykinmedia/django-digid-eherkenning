@@ -159,6 +159,7 @@ class EherkenningConfigurationAdmin(BaseAdmin):
                         "eidas_attribute_consuming_service_index",
                         "eidas_service_uuid",
                         "eidas_service_instance_uuid",
+                        "eidas_service_description",
                         "eidas_loa",
                     ),
                 },

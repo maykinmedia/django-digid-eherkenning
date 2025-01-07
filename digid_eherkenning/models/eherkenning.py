@@ -117,6 +117,15 @@ class EherkenningConfiguration(BaseConfiguration):
             "changing the value is a manual process."
         ),
     )
+    eidas_service_description = models.CharField(
+        _("service description (eIDAS)"),
+        help_text=_(
+            "A description of the service you are providing. If left blank, "
+            "the eHerkenning description is re-used."
+        ),
+        max_length=100,
+        blank=True,
+    )
     oin = models.CharField(
         _("OIN"),
         help_text=_("The OIN of the company providing the service."),
@@ -231,7 +240,8 @@ class EherkenningConfiguration(BaseConfiguration):
                 "service_name": f"{self.service_name} (eIDAS)",
                 "attribute_consuming_service_index": self.eidas_attribute_consuming_service_index,
                 "service_instance_uuid": str(self.eidas_service_instance_uuid),
-                "service_description": self.service_description,
+                "service_description": self.eidas_service_description
+                or self.service_description,
                 "service_description_url": self.service_description_url,
                 "service_url": self.base_url,
                 "loa": self.eidas_loa,
