@@ -161,6 +161,7 @@ class EHerkenningMetadataTests(TestCase):
         base_url="http://test-entity.id",
         service_name="Test Service Name",
         service_description="Test Service Description",
+        eidas_service_description="Test EIDAS Service Description",
         oin="00000000000000000011",
         makelaar_id="00000000000000000022",
         eh_attribute_consuming_service_index="9050",
@@ -302,7 +303,7 @@ class EHerkenningMetadataTests(TestCase):
                 ).text,
             )
             self.assertEqual(
-                "Test Service Description",
+                "Test EIDAS Service Description",
                 eidas_attribute_consuming_service_node.find(
                     ".//md:ServiceDescription", namespaces=NAME_SPACES
                 ).text,
@@ -371,7 +372,6 @@ class EHerkenningMetadataTests(TestCase):
         entity_id="http://test-entity.id",
         base_url="http://test-entity.id",
         service_name="Test Service Name",
-        service_description="Test Service Description",
         oin="00000000000000000011",
         makelaar_id="00000000000000000022",
         eh_attribute_consuming_service_index="9050",
@@ -399,7 +399,6 @@ class EHerkenningMetadataTests(TestCase):
         entity_id="http://test-entity.id",
         base_url="http://test-entity.id",
         service_name="Test Service Name",
-        service_description="Test Service Description",
         oin="00000000000000000011",
         makelaar_id="00000000000000000022",
         eh_attribute_consuming_service_index="9050",
