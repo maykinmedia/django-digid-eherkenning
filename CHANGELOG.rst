@@ -2,6 +2,15 @@
 Changelog
 =========
 
+0.19.1 (2025-01-08)
+===================
+
+Small patch release.
+
+* Fixed new-migration check because of outdated help text.
+* Added the option to validate redirect URIs in the DigiD mock, mostly to avoid
+  unproductive discussions with auditors.
+
 0.19.0 (2025-01-08)
 ===================
 
