@@ -88,6 +88,8 @@ def _fieldset_factory(middle):
                 "fields": (
                     "technical_contact_person_telephone",
                     "technical_contact_person_email",
+                    "administrative_contact_person_telephone",
+                    "administrative_contact_person_email",
                     "organization_url",
                     "organization_name",
                 ),
@@ -157,6 +159,7 @@ class EherkenningConfigurationAdmin(BaseAdmin):
                         "eidas_attribute_consuming_service_index",
                         "eidas_service_uuid",
                         "eidas_service_instance_uuid",
+                        "eidas_service_description",
                         "eidas_loa",
                     ),
                 },

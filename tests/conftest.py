@@ -130,7 +130,7 @@ def eherkenning_certificate(temp_private_root) -> Certificate:
 
 
 @pytest.fixture
-def eherkenning_config_defaults(eherkenning_certificate):
+def eherkenning_config_defaults(request, eherkenning_certificate):
     config = EherkenningConfiguration.get_solo()
     ConfigCertificate.objects.filter(config_type=ConfigTypes.eherkenning).delete()
     ConfigCertificate.objects.create(
@@ -138,13 +138,20 @@ def eherkenning_config_defaults(eherkenning_certificate):
     )
     with EHERKENNING_TEST_METADATA_FILE.open("rb") as metadata_file:
         config.idp_metadata_file.save("metadata", File(metadata_file), save=False)
+
+    # specify config overrides via @pytest.mark.eh_config(**fields)
+    marker = request.node.get_closest_marker("eh_config")
+    if marker is not None:
+        for field, value in marker.kwargs.items():
+            setattr(config, field, value)
+
     config.save()
     return config
 
 
 @pytest.fixture
-def eherkenning_config(eherkenning_config_defaults):
-    # set remaining values
+def eherkenning_config(eherkenning_config_defaults: EherkenningConfiguration):
+    # set remaining values and/or overrides via marker
     for field, value in EHERKENNING_TEST_CONFIG.items():
         current_value = getattr(eherkenning_config_defaults, field)
         if current_value != value:

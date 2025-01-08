@@ -13,7 +13,6 @@ from digid_eherkenning.saml2.eherkenning import (
     generate_eherkenning_metadata,
 )
 
-from .mixins import EherkenningMetadataMixin
 from .utils import validate_against_xsd
 
 _repo_root = Path(__file__).parent.parent.resolve()
@@ -156,19 +155,34 @@ class EHerkenningClientTests(TestCase):
 
 
 @pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")
-class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
+class EHerkenningMetadataTests(TestCase):
+    @pytest.mark.eh_config(
+        entity_id="http://test-entity.id",
+        base_url="http://test-entity.id",
+        service_name="Test Service Name",
+        service_description="Test Service Description",
+        eidas_service_description="Test EIDAS Service Description",
+        oin="00000000000000000011",
+        makelaar_id="00000000000000000022",
+        eh_attribute_consuming_service_index="9050",
+        eidas_attribute_consuming_service_index="9051",
+        privacy_policy="http://test-privacy.nl",
+    )
     def test_generate_metadata_all_options_specified(self):
-        self.eherkenning_config.signature_algorithm = (
+        eherkenning_config = EherkenningConfiguration.get_solo()
+        eherkenning_config.signature_algorithm = (
             "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
         )
-        self.eherkenning_config.digest_algorithm = (
-            "http://www.w3.org/2001/04/xmlenc#sha256"
+        eherkenning_config.digest_algorithm = "http://www.w3.org/2001/04/xmlenc#sha256"
+        eherkenning_config.technical_contact_person_telephone = "06123123123"
+        eherkenning_config.technical_contact_person_email = "test@test.nl"
+        eherkenning_config.administrative_contact_person_telephone = "0612345678"
+        eherkenning_config.administrative_contact_person_email = (
+            "administrative@test.nl"
         )
-        self.eherkenning_config.technical_contact_person_telephone = "06123123123"
-        self.eherkenning_config.technical_contact_person_email = "test@test.nl"
-        self.eherkenning_config.organization_name = "Test organisation"
-        self.eherkenning_config.organization_url = "http://test-organisation.nl"
-        self.eherkenning_config.save()
+        eherkenning_config.organization_name = "Test organisation"
+        eherkenning_config.organization_url = "http://test-organisation.nl"
+        eherkenning_config.save()
 
         eherkenning_metadata = generate_eherkenning_metadata()
 
@@ -289,7 +303,7 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
                 ).text,
             )
             self.assertEqual(
-                "Test Service Description",
+                "Test EIDAS Service Description",
                 eidas_attribute_consuming_service_node.find(
                     ".//md:ServiceDescription", namespaces=NAME_SPACES
                 ).text,
@@ -314,29 +328,58 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
             )
             self.assertEqual("http://test-organisation.nl", organisation_url_node.text)
 
-        with self.subTest("technical contact person details"):
-            contact_person_node = entity_descriptor_node.find(
-                ".//md:ContactPerson",
-                namespaces=NAME_SPACES,
-            )
-            self.assertEqual("technical", contact_person_node.attrib["contactType"])
+        _contact_person_nodes = entity_descriptor_node.findall(
+            ".//md:ContactPerson", namespaces=NAME_SPACES
+        )
+        self.assertEqual(len(_contact_person_nodes), 2)
+        contact_person_nodes = {
+            node.attrib["contactType"]: node for node in _contact_person_nodes
+        }
 
-            contact_email_node = entity_descriptor_node.find(
+        with self.subTest("technical contact person details"):
+            self.assertIn("technical", contact_person_nodes)
+            contact_person_node = contact_person_nodes["technical"]
+
+            contact_email_node = contact_person_node.find(
                 ".//md:EmailAddress",
                 namespaces=NAME_SPACES,
             )
             self.assertEqual("test@test.nl", contact_email_node.text)
 
-            contact_telephone_node = entity_descriptor_node.find(
+            contact_telephone_node = contact_person_node.find(
                 ".//md:TelephoneNumber",
                 namespaces=NAME_SPACES,
             )
             self.assertEqual("06123123123", contact_telephone_node.text)
 
-    def test_contact_telephone_no_email(self):
-        self.eherkenning_config.technical_contact_person_telephone = "06123123123"
-        self.eherkenning_config.save()
+        with self.subTest("administrative contact person details"):
+            self.assertIn("administrative", contact_person_nodes)
+            contact_person_node = contact_person_nodes["administrative"]
 
+            contact_email_node = contact_person_node.find(
+                ".//md:EmailAddress",
+                namespaces=NAME_SPACES,
+            )
+            self.assertEqual(contact_email_node.text, "administrative@test.nl")
+
+            contact_telephone_node = contact_person_node.find(
+                ".//md:TelephoneNumber",
+                namespaces=NAME_SPACES,
+            )
+            self.assertEqual(contact_telephone_node.text, "0612345678")
+
+    @pytest.mark.eh_config(
+        entity_id="http://test-entity.id",
+        base_url="http://test-entity.id",
+        service_name="Test Service Name",
+        oin="00000000000000000011",
+        makelaar_id="00000000000000000022",
+        eh_attribute_consuming_service_index="9050",
+        eidas_attribute_consuming_service_index="9051",
+        privacy_policy="http://test-privacy.nl",
+        technical_contact_person_telephone="06123123123",
+    )
+    def test_contact_telephone_no_email(self):
         eherkenning_metadata = generate_eherkenning_metadata()
         entity_descriptor_node = etree.XML(eherkenning_metadata)
 
@@ -352,10 +395,18 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         self.assertIsNone(contact_email_node)
         self.assertIsNone(contact_telephone_node)
 
+    @pytest.mark.eh_config(
+        entity_id="http://test-entity.id",
+        base_url="http://test-entity.id",
+        service_name="Test Service Name",
+        oin="00000000000000000011",
+        makelaar_id="00000000000000000022",
+        eh_attribute_consuming_service_index="9050",
+        eidas_attribute_consuming_service_index="9051",
+        privacy_policy="http://test-privacy.nl",
+        organization_url="http://test-organisation.nl",
+    )
     def test_organisation_url_no_service(self):
-        self.eherkenning_config.organization_url = "http://test-organisation.nl"
-        self.eherkenning_config.save()
-
         eherkenning_metadata = generate_eherkenning_metadata()
         entity_descriptor_node = etree.XML(eherkenning_metadata)
 
@@ -376,9 +427,19 @@ class EHerkenningMetadataTests(EherkenningMetadataMixin, TestCase):
         self.assertIsNone(organisation_display_node)
         self.assertIsNone(organisation_url_node)
 
+    @pytest.mark.eh_config(
+        entity_id="http://test-entity.id",
+        base_url="http://test-entity.id",
+        service_name="Test Service Name",
+        service_description="Test Service Description",
+        oin="00000000000000000011",
+        makelaar_id="00000000000000000022",
+        eh_attribute_consuming_service_index="9050",
+        eidas_attribute_consuming_service_index="9051",
+        privacy_policy="http://test-privacy.nl",
+        no_eidas=True,
+    )
     def test_no_eidas_service(self):
-        self.eherkenning_config.no_eidas = True
-        self.eherkenning_config.save()
 
         eherkenning_metadata = generate_eherkenning_metadata()
 

@@ -72,10 +72,8 @@ class DigidConfiguration(BaseConfiguration):
             "want_assertions_signed": self.want_assertions_signed,
             "signature_algorithm": self.signature_algorithm,
             "digest_algorithm": self.digest_algorithm or None,
-            "technical_contact_person_telephone": self.technical_contact_person_telephone
-            or None,
-            "technical_contact_person_email": self.technical_contact_person_email
-            or None,
+            "technical_contact_person": self.technical_contact_person,
+            "administrative_contact_person": self.administrative_contact_person,
             "organization": organization,
             "session_age": get_setting("DIGID_SESSION_AGE"),
             "slo": self.slo,

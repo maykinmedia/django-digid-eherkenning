@@ -18,6 +18,8 @@ from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
 
 from digid_eherkenning.utils import get_client_ip
 
+from ..types import ContactPerson
+
 logger = logging.getLogger(__name__)
 
 
@@ -321,12 +323,16 @@ class BaseSaml2Client:
                     "artifact_resolve_content_type", "application/soap+xml"
                 )
 
-        telephone = conf.get("technical_contact_person_telephone")
-        email = conf.get("technical_contact_person_email")
-        if telephone and email:
-            setting_dict["contactPerson"] = {
-                "technical": {"telephoneNumber": telephone, "emailAddress": email}
-            }
+        technical_contact: ContactPerson | None = conf.get("technical_contact_person")
+        administrative_contact: ContactPerson | None = conf.get(
+            "administrative_contact_person"
+        )
+        if technical_contact or administrative_contact:
+            setting_dict.setdefault("contactPerson", {})
+        if technical_contact:
+            setting_dict["contactPerson"]["technical"] = technical_contact
+        if administrative_contact:
+            setting_dict["contactPerson"]["administrative"] = administrative_contact
 
         organization = conf.get("organization")
         if organization:

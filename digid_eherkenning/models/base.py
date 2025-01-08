@@ -19,6 +19,7 @@ from ..choices import (
     XMLContentTypes,
 )
 from ..exceptions import CertificateProblem
+from ..types import ContactPerson
 from .certificates import ConfigCertificate
 
 M = TypeVar("M", bound=type[models.Model])
@@ -157,7 +158,7 @@ class BaseConfiguration(SingletonModel):
         blank=True,
         help_text=_(
             "Telephone number of the technical person responsible for this "
-            "DigiD/eHerkenning/eIDAS setup. For it to show up in the metata, you "
+            "DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you "
             "should also specify the email address."
         ),
         max_length=100,
@@ -167,6 +168,26 @@ class BaseConfiguration(SingletonModel):
         blank=True,
         help_text=_(
             "Email address of the technical person responsible for this "
+            "DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you "
+            "should also specify the phone number."
+        ),
+        max_length=100,
+    )
+    administrative_contact_person_telephone = models.CharField(
+        _("administrative contact: phone number"),
+        blank=True,
+        help_text=_(
+            "Telephone number of the administrive contact person responsible for this "
+            "DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you "
+            "should also specify the email address."
+        ),
+        max_length=100,
+    )
+    administrative_contact_person_email = models.CharField(
+        _("administrative contact: email"),
+        blank=True,
+        help_text=_(
+            "Email address of the administrive contact person responsible for this "
             "DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you "
             "should also specify the phone number."
         ),
@@ -202,6 +223,28 @@ class BaseConfiguration(SingletonModel):
 
     def __str__(self):
         return force_str(self._meta.verbose_name)
+
+    @property
+    def technical_contact_person(self) -> ContactPerson | None:
+        if (telephone := self.technical_contact_person_telephone) and (
+            email := self.technical_contact_person_email
+        ):
+            return {
+                "telephoneNumber": telephone,
+                "emailAddress": email,
+            }
+        return None
+
+    @property
+    def administrative_contact_person(self) -> ContactPerson | None:
+        if (telephone := self.administrative_contact_person_telephone) and (
+            email := self.administrative_contact_person_email
+        ):
+            return {
+                "telephoneNumber": telephone,
+                "emailAddress": email,
+            }
+        return None
 
     def populate_xml_fields(self, urls: dict[str, str], xml: bytes) -> None:
         """

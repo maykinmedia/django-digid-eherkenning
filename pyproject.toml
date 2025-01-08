@@ -92,6 +92,7 @@ DJANGO_SETTINGS_MODULE = "tests.project.settings"
 markers = [
     "callback: additional configuration for the callback fixture",
     "mock_backend: class/claims to be returned by the mock backend fixture",
+    "eh_config: EHerkenningConfig field value overrides",
 ]
 
 [tool.bumpversion]
