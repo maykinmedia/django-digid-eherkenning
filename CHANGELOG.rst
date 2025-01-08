@@ -2,6 +2,14 @@
 Changelog
 =========
 
+0.19.0 (2025-01-08)
+===================
+
+Added some additional eHerkenning/eIDAS metadata fields.
+
+* Added fields for administrative contact person details.
+* Added a field for a separate eIDAS service description.
+
 0.18.0 (2024-12-27)
 ===================
 

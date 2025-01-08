@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-digid-eherkenning"
-version = "0.18.0"
+version = "0.19.0"
 description = "A Django app for DigiD/eHerkenning authentication flows"
 authors = [
     {name = "Maykin Media", email = "support@maykinmedia.nl"}
@@ -96,7 +96,7 @@ markers = [
 ]
 
 [tool.bumpversion]
-current_version = "0.18.0"
+current_version = "0.19.0"
 files = [
     {filename = "pyproject.toml"},
     {filename = "README.rst"},
