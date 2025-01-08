@@ -1,7 +1,7 @@
 import binascii
 from base64 import b64encode
 from io import BytesIO
-from typing import Union, no_type_check
+from typing import no_type_check
 from uuid import uuid4
 
 from django.urls import reverse
@@ -35,24 +35,31 @@ MD = ElementMaker(namespace=namespaces["md"], nsmap=namespaces)
 xml_nl_lang = {"{http://www.w3.org/XML/1998/namespace}lang": "nl"}
 
 
-def generate_dienst_catalogus_metadata(eherkenning_config=None):
+def generate_dienst_catalogus_metadata(
+    eherkenning_config: EherkenningConfiguration | None = None,
+):
     eherkenning_config = eherkenning_config or EherkenningConfiguration.get_solo()
     settings: EHerkenningConfig = eherkenning_config.as_dict()
     # ensure that the single language strings are output in both nl and en
     for service in settings["services"]:
         name = service["service_name"]
+        assert isinstance(name, str)
         service["service_name"] = {"nl": name, "en": name}
 
         description = service["service_description"]
+        assert isinstance(description, str)
         service["service_description"] = {"nl": description, "en": description}
 
         privacy_policy_url = service["privacy_policy_url"]
+        assert isinstance(privacy_policy_url, str)
         service["privacy_policy_url"] = {"nl": privacy_policy_url}
 
         service_description_url = service["service_description_url"]
-        service["service_description_url"] = (
-            {"nl": service_description_url} if service_description_url else None
-        )
+        if service_description_url:
+            assert isinstance(service_description_url, str)
+            service["service_description_url"] = {"nl": service_description_url}
+        else:
+            service["service_description_url"] = None
 
     return create_service_catalogus(settings)
 
@@ -74,8 +81,8 @@ def xml_datetime(d):
 
 def create_language_elements(
     element_name: str,
-    option_value: Union[dict[str, str], str, None],
-    languages: Union[list[str], None] = None,
+    option_value: dict[str, str] | str | None,
+    languages: list[str] | None = None,
 ) -> list[Element]:
     """
     Convert a configuration option into zero or more eHerkenning dienstcatalogus
