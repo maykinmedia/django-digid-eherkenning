@@ -177,7 +177,7 @@ class BaseConfiguration(SingletonModel):
         _("administrative contact: phone number"),
         blank=True,
         help_text=_(
-            "Telephone number of the administrive contact person responsible for this "
+            "Telephone number of the administrative contact person responsible for this "
             "DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you "
             "should also specify the email address."
         ),
@@ -187,7 +187,7 @@ class BaseConfiguration(SingletonModel):
         _("administrative contact: email"),
         blank=True,
         help_text=_(
-            "Email address of the administrive contact person responsible for this "
+            "Email address of the administrative contact person responsible for this "
             "DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you "
             "should also specify the phone number."
         ),
