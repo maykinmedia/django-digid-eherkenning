@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name="administrative_contact_person_email",
             field=models.CharField(
                 blank=True,
-                help_text="Email address of the administrive contact person responsible for this DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you should also specify the phone number.",
+                help_text="Email address of the administrative contact person responsible for this DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you should also specify the phone number.",
                 max_length=100,
                 verbose_name="administrative contact: email",
             ),
@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
             name="administrative_contact_person_telephone",
             field=models.CharField(
                 blank=True,
-                help_text="Telephone number of the administrive contact person responsible for this DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you should also specify the email address.",
+                help_text="Telephone number of the administrative contact person responsible for this DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you should also specify the email address.",
                 max_length=100,
                 verbose_name="administrative contact: phone number",
             ),
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
             name="administrative_contact_person_email",
             field=models.CharField(
                 blank=True,
-                help_text="Email address of the administrive contact person responsible for this DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you should also specify the phone number.",
+                help_text="Email address of the administrative contact person responsible for this DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you should also specify the phone number.",
                 max_length=100,
                 verbose_name="administrative contact: email",
             ),
@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
             name="administrative_contact_person_telephone",
             field=models.CharField(
                 blank=True,
-                help_text="Telephone number of the administrive contact person responsible for this DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you should also specify the email address.",
+                help_text="Telephone number of the administrative contact person responsible for this DigiD/eHerkenning/eIDAS setup. For it to show up in the metadata, you should also specify the email address.",
                 max_length=100,
                 verbose_name="administrative contact: phone number",
             ),
