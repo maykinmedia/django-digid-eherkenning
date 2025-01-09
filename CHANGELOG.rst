@@ -2,6 +2,14 @@
 Changelog
 =========
 
+0.19.2 (2025-01-09)
+===================
+
+Very small patch release.
+
+* The default value for DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS is no longer equal to
+  settings.DEBUG but to its inverse.
+
 0.19.1 (2025-01-08)
 ===================
 
