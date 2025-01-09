@@ -52,7 +52,9 @@ def should_validate_idp_callback_urls() -> bool:
     """
     Whether to validate that the `next_url` and `cancel_urls` are safe
     """
-    flag = getattr(settings, "DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS", settings.DEBUG)
+    flag = getattr(
+        settings, "DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS", not settings.DEBUG
+    )
     if not isinstance(flag, bool):
         raise ImproperlyConfigured(
             "DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS should be a boolean"

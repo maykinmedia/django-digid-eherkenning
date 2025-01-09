@@ -142,13 +142,13 @@ class LoginViewTests(DigidMockTestCase):
             should_validate_idp_callback_urls()
 
     @override_settings()
-    def test_conf_setting_defaults_to_debug_flag(self):
+    def test_conf_setting_defaults_to_inverse_of_debug_flag(self):
         del settings.DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS
 
-        with override_settings(DEBUG=True):
+        with override_settings(DEBUG=False):
             self.assertTrue(should_validate_idp_callback_urls())
 
-        with override_settings(DEBUG=False):
+        with override_settings(DEBUG=True):
             self.assertFalse(should_validate_idp_callback_urls())
 
 
