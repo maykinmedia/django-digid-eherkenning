@@ -4,15 +4,6 @@ from django.db import migrations, models
 
 import digid_eherkenning.choices
 
-from ..choices import AssuranceLevels
-
-
-def set_default_loa(apps, schema_editor):
-    EherkenningConfiguration = apps.get_model(
-        "digid_eherkenning", "EherkenningConfiguration"
-    )
-    EherkenningConfiguration.objects.filter(loa="").update(loa=AssuranceLevels.low_plus)
-
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -20,7 +11,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(set_default_loa),
+        # RunPython removed as part of the 0.20 release cycle
         migrations.AlterField(
             model_name="eherkenningconfiguration",
             name="loa",
