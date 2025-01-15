@@ -2,6 +2,14 @@
 Changelog
 =========
 
+0.20.0 (unreleased)
+===================
+
+**💥⚠️ Breaking changes**
+
+* Data migrations were removed. If you still need them make sure you upgrade to v0.19
+  first.
+
 0.19.2 (2025-01-09)
 ===================
 
