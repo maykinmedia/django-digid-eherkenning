@@ -104,8 +104,8 @@ DATABASES = {
             "NAME": os.getenv("PGDATABASE", "django_digid_eherkenning"),
             "USER": os.getenv("PGUSER", "django_digid_eherkenning"),
             "PASSWORD": os.getenv("PGPASSWORD", "django_digid_eherkenning"),
-            "HOST": os.getenv("DB_HOST", "localhost"),
-            "PORT": os.getenv("DB_PORT", 5432),
+            "HOST": os.getenv("PGHOST", "localhost"),
+            "PORT": os.getenv("PGPORT", 5432),
         }
         if OIDC_ENABLED
         else {

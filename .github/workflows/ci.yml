@@ -46,7 +46,7 @@ jobs:
 
       - name: Run tests
         run: |
-          tox -- ${{ matrix.oidc_enabled != 'yes' && '--ignore tests/oidc' || '' }}
+          tox
         env:
           PYTHON_VERSION: ${{ matrix.python }}
           DJANGO: ${{ matrix.django }}
