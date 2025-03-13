@@ -38,6 +38,7 @@ class EHerkenningConfig(TypedDict):
     entity_id: str
     metadata_file: str
     cert_file: Path | FieldFile
+    next_cert_file: Path | FieldFile | None
     key_file: Path | FieldFile
     service_entity_id: str
     oin: str
