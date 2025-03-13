@@ -2,13 +2,22 @@
 Changelog
 =========
 
-0.20.0 (unreleased)
+0.20.0 (2025-03-13)
 ===================
 
 **💥⚠️ Breaking changes**
 
 * Data migrations were removed. If you still need them make sure you upgrade to v0.19
   first.
+
+**Other changes**
+
+* Squashed the migrations - new installs now use optimized migrations.
+* Fixed running ``tox`` locally.
+* eHerkenning service catalog generation now takes the next certificate into account if
+  one is available.
+* Pinned the support ``xmlsec`` version to 1.3.14 due to build errors in combination
+  with ``lxml``. We expect this to be resolved upstream soon-ish.
 
 0.19.2 (2025-01-09)
 ===================
