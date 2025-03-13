@@ -2,9 +2,10 @@ from django.test import TestCase
 
 import pytest
 from lxml import etree
+from simple_certmanager.models import Certificate
 
-from digid_eherkenning.choices import AssuranceLevels
-from digid_eherkenning.models import EherkenningConfiguration
+from digid_eherkenning.choices import AssuranceLevels, ConfigTypes
+from digid_eherkenning.models import ConfigCertificate, EherkenningConfiguration
 from digid_eherkenning.saml2.eherkenning import (
     create_service_catalogus,
     generate_dienst_catalogus_metadata,
@@ -287,6 +288,49 @@ def test_makelaar_oin_is_configurable(eherkenning_config_defaults, temp_private_
     )
     for node in makelaar_id_nodes:
         assert node.text == "00000000000000000123"
+
+
+@pytest.mark.django_db
+def test_current_and_next_certificate_available(
+    temp_private_root,
+    eherkenning_config: EherkenningConfiguration,
+    eherkenning_certificate: Certificate,
+    next_certificate: Certificate,
+):
+    ConfigCertificate.objects.create(
+        config_type=ConfigTypes.eherkenning,
+        certificate=next_certificate,
+    )
+    assert ConfigCertificate.objects.count() == 2  # expect current and next
+
+    catalogus = create_service_catalogus(eherkenning_config.as_dict(), validate=False)
+
+    catalogus_node = etree.XML(catalogus)
+    key_descriptor_nodes = catalogus_node.findall(
+        ".//esc:ServiceCertificate/md:KeyDescriptor", namespaces=NAMESPACES
+    )
+    assert len(key_descriptor_nodes) == 2  # one for EH, one for eIDAS
+
+    with next_certificate.public_certificate.open("r") as _next:
+        next_base64 = _next.read().replace("\n", "")
+
+    key1_node, key2_node = key_descriptor_nodes
+
+    # certificate nodes include only the base64 encoded PEM data, without header/footer
+    cert1_node = key1_node.find(
+        "ds:KeyInfo/ds:X509Data/ds:X509Certificate", namespaces=NAMESPACES
+    )
+    assert cert1_node is not None
+    assert cert1_node.text is not None
+    assert (cert_data_1 := cert1_node.text.strip()) in next_base64
+
+    # different services is expected to use the same (next) certificate
+    cert2_node = key2_node.find(
+        "ds:KeyInfo/ds:X509Data/ds:X509Certificate", namespaces=NAMESPACES
+    )
+    assert cert2_node is not None
+    assert cert2_node.text is not None
+    assert cert2_node.text.strip() == cert_data_1
 
 
 @pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")

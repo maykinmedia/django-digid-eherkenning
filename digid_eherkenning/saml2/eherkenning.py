@@ -329,7 +329,8 @@ def create_service_catalogus(conf: EHerkenningConfig, validate: bool = True) -> 
     """
     https://afsprakenstelsel.etoegang.nl/display/as/Service+catalog
     """
-    with conf["cert_file"].open("rb") as cert_file:
+    cert_file = conf["next_cert_file"] or conf["cert_file"]
+    with cert_file.open("rb") as cert_file:
         x509_certificate_content: bytes = cert_file.read()
 
     sc_id = str(uuid4())
