@@ -1,19 +1,22 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from ...models.digid import MockDigidUser
 from ...validators import BSNValidator
 
 
-class PasswordLoginForm(forms.Form):
-    auth_name = forms.CharField(
-        max_length=255,
+class BsnLoginUserModelForm(forms.Form):
+    auth_user = forms.ModelChoiceField(
+        queryset=MockDigidUser.objects.all(),
+        label=_("DigiD mock gebruiker"),
         required=True,
-        label=_("DigiD gebruikersnaam"),
+    )
+
+
+class BsnLoginTextInputForm(forms.Form):
+    auth_bsn = forms.CharField(
+        max_length=9,
+        label=_("Burgerservicenummer"),
+        required=True,
         validators=[BSNValidator()],
-    )
-    auth_pass = forms.CharField(
-        max_length=255, required=True, label=_("Wachtwoord"), widget=forms.PasswordInput
-    )
-    remember_login = forms.CharField(
-        label=_("Onthoud mijn DigiD gebruikersnaam"), required=False
     )
