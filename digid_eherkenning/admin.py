@@ -11,6 +11,7 @@ from solo.admin import SingletonModelAdmin
 
 from .models import ConfigCertificate, DigidConfiguration, EherkenningConfiguration
 from .models.base import BaseConfiguration
+from .models.digid import MockDigidUser
 
 
 class CustomPrivateFileWidget(PrivateFileWidget):
@@ -196,3 +197,8 @@ class ConfigCertificateAdmin(admin.ModelAdmin):
     @admin.display(description=_("valid candidate?"), boolean=True)
     def is_ready(self, obj: ConfigCertificate) -> bool:
         return obj.is_ready_for_authn_requests
+
+
+@admin.register(MockDigidUser)
+class MockDigidUserAdmin(admin.ModelAdmin):
+    fields = ["name", "bsn"]

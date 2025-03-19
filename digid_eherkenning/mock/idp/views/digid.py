@@ -8,7 +8,11 @@ from django.views.generic import FormView, TemplateView
 from furl import furl
 
 from digid_eherkenning.mock import conf
-from digid_eherkenning.mock.idp.forms import PasswordLoginForm
+from digid_eherkenning.mock.idp.forms import (
+    BsnLoginTextInputForm,
+    BsnLoginUserModelForm,
+)
+from digid_eherkenning.models.digid import MockDigidUser
 from digid_eherkenning.views.base import get_redirect_url
 
 logger = logging.getLogger(__name__)
@@ -93,23 +97,31 @@ class DigiDMockIDPLoginView(_BaseIDPViewMixin):
         }
         return {
             "cancel_url": params["cancel"],
-            "password_login_url": f"{reverse('digid-mock:password')}?{urlencode(params)}",
+            "password_login_url": f"{reverse('digid-mock:bsn')}?{urlencode(params)}",
             **super().get_context_data(**kwargs),
         }
 
 
-class DigiDMockIDPPasswordLoginView(_BaseIDPViewMixin, FormView):
+class DigiDMockIDPBSNLoginView(_BaseIDPViewMixin, FormView):
     """
-    Username/password login page
+    BSN login page
     """
 
-    template_name = "digid_eherkenning/mock/password.html"
-    page_title = "DigiD: Inloggen | Gebruikersnaam en wachtwoord"
+    template_name = "digid_eherkenning/mock/bsn.html"
+    page_title = "DigiD: Inloggen | BSN"
 
-    form_class = PasswordLoginForm
+    def get_form_class(self):
+        if MockDigidUser.objects.count():
+            return BsnLoginUserModelForm
+        else:
+            return BsnLoginTextInputForm
 
     def form_valid(self, form):
-        self.bsn = form.cleaned_data["auth_name"]
+        match form:
+            case BsnLoginUserModelForm():
+                self.bsn = form.cleaned_data["auth_user"].bsn
+            case BsnLoginTextInputForm():
+                self.bsn = form.cleaned_data["auth_bsn"]
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
@@ -119,7 +131,7 @@ class DigiDMockIDPPasswordLoginView(_BaseIDPViewMixin, FormView):
             "cancel": self.cancel_url,
         }
         return {
-            "action_url": f"{reverse('digid-mock:password')}?{urlencode(params)}",
+            "action_url": f"{reverse('digid-mock:bsn')}?{urlencode(params)}",
             "back_url": f"{reverse('digid-mock:login')}?{urlencode(params)}",
             **super().get_context_data(**kwargs),
         }
