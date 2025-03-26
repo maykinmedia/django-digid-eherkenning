@@ -2,6 +2,18 @@
 Changelog
 =========
 
+0.21.0 (2025-03-26)
+===================
+
+Release to tweak the SAML metadata generation.
+
+The changes in 0.18.0 were not sufficient - eHerkenning brokers & DigiD metadata
+consumers reported back that they don't want to see the current certificate in the
+metadata because it will soon expire. Now we include the next certificate if one is
+available, and otherwise use the current certificate, meaning there will only ever be
+one certificate in the metadata. This is consistent with the service catalog change in
+0.20.0.
+
 0.20.0 (2025-03-13)
 ===================
 
