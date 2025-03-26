@@ -229,8 +229,11 @@ class BaseSaml2Client:
         service_description = get_service_description(conf)
         requested_attributes = get_requested_attributes(conf)
 
+        # if a next certificate is provided, brokers only (apparently) want to receive
+        # that one and not both current + next
+        cert_file = conf.get("next_cert_file") or conf["cert_file"]
         with (
-            conf["cert_file"].open("r") as cert_file,
+            cert_file.open("r") as cert_file,
             conf["key_file"].open("r") as key_file,
         ):
             certificate = cert_file.read()
@@ -295,12 +298,6 @@ class BaseSaml2Client:
                 "privateKey": privkey,
             },
         }
-
-        # Used to provide the next certificate to be used for signing in the
-        # metadata so that the IDP can prepare.
-        if next_cert_file := conf.get("next_cert_file"):
-            with next_cert_file.open("r") as _next_cert_file:
-                setting_dict["sp"]["x509certNew"] = _next_cert_file.read()
 
         # check if we need to add the idp
         metadata_file = conf["metadata_file"]
