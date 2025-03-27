@@ -21,7 +21,7 @@
                         {% endfor %}
                     </select>
                 {% else %}
-                    <input class="form__item__field" spellcheck="false" placeholder=" " type="number" name="{{ form.auth_bsn.name }}" value="{% firstof form.auth_bsn.value '' %}"> 
+                    <input class="form__item__field" spellcheck="false" placeholder=" " type="text" name="{{ form.auth_bsn.name }}" value="{% firstof form.auth_bsn.value '' %}"> 
                 {% endif %}
 
                 <ul id="authentication_username__empty" class="form__item__errors digidmock-error {% if form.auth_user.errors or form.auth_bsn.errors %}digidmock-show{% endif %}">

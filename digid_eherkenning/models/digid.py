@@ -83,7 +83,7 @@ class DigidConfiguration(BaseConfiguration):
 
 class MockDigidUser(models.Model):
     name = models.CharField(max_length=50, help_text="Name of the mock user.")
-    bsn = models.IntegerField(help_text="Burgerservicenummer")
+    bsn = models.CharField(max_length=9, help_text="Burgerservicenummer")
 
     def __str__(self):
         return f"{self.name} ({self.bsn})"

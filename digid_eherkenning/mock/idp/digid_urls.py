@@ -1,6 +1,6 @@
 from django.urls import path
 
-from digid_eherkenning.mock.idp.views.digid import (  # DigiDMockIDPPasswordLoginView,
+from digid_eherkenning.mock.idp.views.digid import (
     DigiDMockIDPBSNLoginView,
     DigiDMockIDPLoginView,
 )

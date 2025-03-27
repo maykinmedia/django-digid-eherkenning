@@ -202,3 +202,4 @@ class ConfigCertificateAdmin(admin.ModelAdmin):
 @admin.register(MockDigidUser)
 class MockDigidUserAdmin(admin.ModelAdmin):
     fields = ["name", "bsn"]
+    ordering = ["name"]

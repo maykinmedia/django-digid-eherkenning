@@ -12,6 +12,10 @@ class BsnLoginUserModelForm(forms.Form):
         required=True,
     )
 
+    @property
+    def bsn(self):
+        return self.cleaned_data["auth_user"].bsn
+
 
 class BsnLoginTextInputForm(forms.Form):
     auth_bsn = forms.CharField(
@@ -20,3 +24,7 @@ class BsnLoginTextInputForm(forms.Form):
         required=True,
         validators=[BSNValidator()],
     )
+
+    @property
+    def bsn(self):
+        return self.cleaned_data["auth_bsn"]
