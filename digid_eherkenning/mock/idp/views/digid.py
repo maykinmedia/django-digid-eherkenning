@@ -111,17 +111,13 @@ class DigiDMockIDPBSNLoginView(_BaseIDPViewMixin, FormView):
     page_title = "DigiD: Inloggen | BSN"
 
     def get_form_class(self):
-        if MockDigidUser.objects.count():
+        if MockDigidUser.objects.exists():
             return BsnLoginUserModelForm
         else:
             return BsnLoginTextInputForm
 
     def form_valid(self, form):
-        match form:
-            case BsnLoginUserModelForm():
-                self.bsn = form.cleaned_data["auth_user"].bsn
-            case BsnLoginTextInputForm():
-                self.bsn = form.cleaned_data["auth_bsn"]
+        self.bsn = form.bsn
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
