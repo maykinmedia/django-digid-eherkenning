@@ -8,3 +8,6 @@ class OIDCAppConfig(AppConfig):
     # can't change this label because of existing migrations in Open Forms/Open Inwoner
     label = "digid_eherkenning_oidc_generics"
     default_auto_field = "django.db.models.AutoField"
+
+    def ready(self) -> None:
+        from . import plugins  # noqa
