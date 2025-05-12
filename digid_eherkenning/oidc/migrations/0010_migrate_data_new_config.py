@@ -70,7 +70,7 @@ def move_data_forward(apps, schema_editor):
             "loa_settings": {
                 "claim_path": digid_config_old.loa_claim,
                 "default": digid_config_old.default_loa,
-                "value_path": digid_config_old.loa_value_mapping,
+                "value_mapping": digid_config_old.loa_value_mapping,
             },
             "user_settings": {
                 "bsn_claim_path": digid_config_old.bsn_claim,
@@ -84,7 +84,7 @@ def move_data_forward(apps, schema_editor):
             "loa_settings": {
                 "claim_path": digid_machtigen_config_old.loa_claim,
                 "default": digid_machtigen_config_old.default_loa,
-                "value_path": digid_machtigen_config_old.loa_value_mapping,
+                "value_mapping": digid_machtigen_config_old.loa_value_mapping,
             },
             "machtigen_settings": {
                 "representee_claim_path": digid_machtigen_config_old.representee_bsn_claim,
@@ -102,7 +102,7 @@ def move_data_forward(apps, schema_editor):
             "loa_settings": {
                 "claim_path": eherkenning_config_old.loa_claim,
                 "default": eherkenning_config_old.default_loa,
-                "value_path": eherkenning_config_old.loa_value_mapping,
+                "value_mapping": eherkenning_config_old.loa_value_mapping,
             },
             "eherkenning_settings": {
                 "identifier_type_claim_path": eherkenning_config_old.identifier_type_claim,
@@ -123,7 +123,7 @@ def move_data_forward(apps, schema_editor):
             "loa_settings": {
                 "claim_path": eherkenning_bewindvoering_config_old.loa_claim,
                 "default": eherkenning_bewindvoering_config_old.default_loa,
-                "value_path": eherkenning_bewindvoering_config_old.loa_value_mapping,
+                "value_mapping": eherkenning_bewindvoering_config_old.loa_value_mapping,
             },
             "eherkenning_settings": {
                 "identifier_type_claim_path": eherkenning_bewindvoering_config_old.identifier_type_claim,

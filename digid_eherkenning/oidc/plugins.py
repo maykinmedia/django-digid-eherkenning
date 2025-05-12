@@ -3,14 +3,16 @@ from django.http import HttpRequest, HttpResponse
 
 from mozilla_django_oidc_db.plugins import OIDCBasePlugin
 from mozilla_django_oidc_db.registry import register
+from mozilla_django_oidc_db.typing import JSONObject
 
-from ..types import JSONObject
 from .constants import (
     OIDC_DIGID_IDENTIFIER,
     OIDC_DIGID_MACHTIGEN_IDENTIFIER,
     OIDC_EH_BEWINDVOERING_IDENTIFIER,
     OIDC_EH_IDENTIFIER,
 )
+from .schemas import DIGID_OPTIONS_SCHEMA
+from .views import default_callback_view
 
 
 @register(OIDC_DIGID_IDENTIFIER)
@@ -19,7 +21,7 @@ class OIDCDigidPlugin(OIDCBasePlugin):
         pass
 
     def get_schema(self) -> JSONObject:
-        pass
+        return DIGID_OPTIONS_SCHEMA
 
     def validate_settings(self) -> None:
         pass
@@ -31,10 +33,11 @@ class OIDCDigidPlugin(OIDCBasePlugin):
         pass
 
     def update_user(self, user: AbstractUser, claims: JSONObject) -> AbstractUser:
-        pass
+        # do nothing by default
+        return user
 
     def handle_callback(self, request: HttpRequest) -> HttpResponse:
-        pass
+        return default_callback_view(request)
 
 
 @register(OIDC_DIGID_MACHTIGEN_IDENTIFIER)
@@ -55,10 +58,11 @@ class OIDCDigidMachtigenPlugin(OIDCBasePlugin):
         pass
 
     def update_user(self, user: AbstractUser, claims: JSONObject) -> AbstractUser:
-        pass
+        # do nothing by default
+        return user
 
     def handle_callback(self, request: HttpRequest) -> HttpResponse:
-        pass
+        return default_callback_view(request)
 
 
 @register(OIDC_EH_IDENTIFIER)
@@ -79,10 +83,11 @@ class OIDCEherkenningPlugin(OIDCBasePlugin):
         pass
 
     def update_user(self, user: AbstractUser, claims: JSONObject) -> AbstractUser:
-        pass
+        # do nothing by default
+        return user
 
     def handle_callback(self, request: HttpRequest) -> HttpResponse:
-        pass
+        return default_callback_view(request)
 
 
 @register(OIDC_EH_BEWINDVOERING_IDENTIFIER)
@@ -103,7 +108,8 @@ class OIDCEherkenningBewindvoeringPlugin(OIDCBasePlugin):
         pass
 
     def update_user(self, user: AbstractUser, claims: JSONObject) -> AbstractUser:
-        pass
+        # do nothing by default
+        return user
 
     def handle_callback(self, request: HttpRequest) -> HttpResponse:
-        pass
+        return default_callback_view(request)
