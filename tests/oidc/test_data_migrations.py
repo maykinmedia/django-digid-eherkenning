@@ -56,30 +56,18 @@ def test_migrate_digid_configuration_forward():
         [("digid_eherkenning_oidc_generics", "0010_migrate_data_new_config")]
     )
 
-    OIDCConfig = new_state.apps.get_model("mozilla_django_oidc_db", "OIDCConfig")
+    OIDCClient = new_state.apps.get_model("mozilla_django_oidc_db", "OIDCClient")
 
-    new_digid_config = OIDCConfig.objects.get(identifier=OIDC_DIGID_IDENTIFIER)
+    new_digid_config = OIDCClient.objects.get(identifier=OIDC_DIGID_IDENTIFIER)
 
+    assert new_digid_config.oidc_provider.oidc_op_discovery_endpoint == f"{BASE}/oidc/"
+    assert new_digid_config.oidc_provider.oidc_op_jwks_endpoint == f"{BASE}/oidc/jwks"
     assert (
-        new_digid_config.oidc_provider_config.oidc_op_discovery_endpoint
-        == f"{BASE}/oidc/"
-    )
-    assert (
-        new_digid_config.oidc_provider_config.oidc_op_jwks_endpoint
-        == f"{BASE}/oidc/jwks"
-    )
-    assert (
-        new_digid_config.oidc_provider_config.oidc_op_authorization_endpoint
+        new_digid_config.oidc_provider.oidc_op_authorization_endpoint
         == f"{BASE}/oidc/auth"
     )
-    assert (
-        new_digid_config.oidc_provider_config.oidc_op_token_endpoint
-        == f"{BASE}/oidc/token"
-    )
-    assert (
-        new_digid_config.oidc_provider_config.oidc_op_user_endpoint
-        == f"{BASE}/oidc/user"
-    )
+    assert new_digid_config.oidc_provider.oidc_op_token_endpoint == f"{BASE}/oidc/token"
+    assert new_digid_config.oidc_provider.oidc_op_user_endpoint == f"{BASE}/oidc/user"
 
     assert new_digid_config.enabled
     assert new_digid_config.oidc_rp_client_id == "fake"
@@ -87,10 +75,10 @@ def test_migrate_digid_configuration_forward():
     assert new_digid_config.oidc_rp_sign_algo == "RS256"
     assert new_digid_config.oidc_rp_scopes_list == ["openid", "bsn"]
     assert new_digid_config.oidc_rp_idp_sign_key == ""
-    assert not new_digid_config.oidc_token_use_basic_auth
-    assert new_digid_config.oidc_use_nonce
-    assert new_digid_config.oidc_nonce_size == 32
-    assert new_digid_config.oidc_state_size == 32
+    assert not new_digid_config.oidc_provider.oidc_token_use_basic_auth
+    assert new_digid_config.oidc_provider.oidc_use_nonce
+    assert new_digid_config.oidc_provider.oidc_nonce_size == 32
+    assert new_digid_config.oidc_provider.oidc_state_size == 32
     assert new_digid_config.oidc_keycloak_idp_hint == ""
     assert (
         new_digid_config.userinfo_claims_source
@@ -154,20 +142,17 @@ def test_migrate_digid_machtigen_configuration_forward():
         [("digid_eherkenning_oidc_generics", "0010_migrate_data_new_config")]
     )
 
-    OIDCConfig = new_state.apps.get_model("mozilla_django_oidc_db", "OIDCConfig")
+    OIDCClient = new_state.apps.get_model("mozilla_django_oidc_db", "OIDCClient")
 
-    new_config = OIDCConfig.objects.get(identifier=OIDC_DIGID_MACHTIGEN_IDENTIFIER)
+    new_config = OIDCClient.objects.get(identifier=OIDC_DIGID_MACHTIGEN_IDENTIFIER)
 
-    assert new_config.oidc_provider_config.oidc_op_discovery_endpoint == f"{BASE}/oidc/"
-    assert new_config.oidc_provider_config.oidc_op_jwks_endpoint == f"{BASE}/oidc/jwks"
+    assert new_config.oidc_provider.oidc_op_discovery_endpoint == f"{BASE}/oidc/"
+    assert new_config.oidc_provider.oidc_op_jwks_endpoint == f"{BASE}/oidc/jwks"
     assert (
-        new_config.oidc_provider_config.oidc_op_authorization_endpoint
-        == f"{BASE}/oidc/auth"
+        new_config.oidc_provider.oidc_op_authorization_endpoint == f"{BASE}/oidc/auth"
     )
-    assert (
-        new_config.oidc_provider_config.oidc_op_token_endpoint == f"{BASE}/oidc/token"
-    )
-    assert new_config.oidc_provider_config.oidc_op_user_endpoint == f"{BASE}/oidc/user"
+    assert new_config.oidc_provider.oidc_op_token_endpoint == f"{BASE}/oidc/token"
+    assert new_config.oidc_provider.oidc_op_user_endpoint == f"{BASE}/oidc/user"
 
     assert new_config.enabled
     assert new_config.oidc_rp_client_id == "fake"
@@ -175,10 +160,10 @@ def test_migrate_digid_machtigen_configuration_forward():
     assert new_config.oidc_rp_sign_algo == "RS256"
     assert new_config.oidc_rp_scopes_list == ["openid", "bsn"]
     assert new_config.oidc_rp_idp_sign_key == ""
-    assert not new_config.oidc_token_use_basic_auth
-    assert new_config.oidc_use_nonce
-    assert new_config.oidc_nonce_size == 32
-    assert new_config.oidc_state_size == 32
+    assert not new_config.oidc_provider.oidc_token_use_basic_auth
+    assert new_config.oidc_provider.oidc_use_nonce
+    assert new_config.oidc_provider.oidc_nonce_size == 32
+    assert new_config.oidc_provider.oidc_state_size == 32
     assert new_config.oidc_keycloak_idp_hint == ""
     assert (
         new_config.userinfo_claims_source
@@ -241,20 +226,17 @@ def test_migrate_eherkenning_configuration_forward():
         [("digid_eherkenning_oidc_generics", "0010_migrate_data_new_config")]
     )
 
-    OIDCConfig = new_state.apps.get_model("mozilla_django_oidc_db", "OIDCConfig")
+    OIDCClient = new_state.apps.get_model("mozilla_django_oidc_db", "OIDCClient")
 
-    new_config = OIDCConfig.objects.get(identifier=OIDC_EH_IDENTIFIER)
+    new_config = OIDCClient.objects.get(identifier=OIDC_EH_IDENTIFIER)
 
-    assert new_config.oidc_provider_config.oidc_op_discovery_endpoint == f"{BASE}/oidc/"
-    assert new_config.oidc_provider_config.oidc_op_jwks_endpoint == f"{BASE}/oidc/jwks"
+    assert new_config.oidc_provider.oidc_op_discovery_endpoint == f"{BASE}/oidc/"
+    assert new_config.oidc_provider.oidc_op_jwks_endpoint == f"{BASE}/oidc/jwks"
     assert (
-        new_config.oidc_provider_config.oidc_op_authorization_endpoint
-        == f"{BASE}/oidc/auth"
+        new_config.oidc_provider.oidc_op_authorization_endpoint == f"{BASE}/oidc/auth"
     )
-    assert (
-        new_config.oidc_provider_config.oidc_op_token_endpoint == f"{BASE}/oidc/token"
-    )
-    assert new_config.oidc_provider_config.oidc_op_user_endpoint == f"{BASE}/oidc/user"
+    assert new_config.oidc_provider.oidc_op_token_endpoint == f"{BASE}/oidc/token"
+    assert new_config.oidc_provider.oidc_op_user_endpoint == f"{BASE}/oidc/user"
 
     assert new_config.enabled
     assert new_config.oidc_rp_client_id == "fake"
@@ -262,10 +244,10 @@ def test_migrate_eherkenning_configuration_forward():
     assert new_config.oidc_rp_sign_algo == "RS256"
     assert new_config.oidc_rp_scopes_list == ["openid", "kvk"]
     assert new_config.oidc_rp_idp_sign_key == ""
-    assert not new_config.oidc_token_use_basic_auth
-    assert new_config.oidc_use_nonce
-    assert new_config.oidc_nonce_size == 32
-    assert new_config.oidc_state_size == 32
+    assert not new_config.oidc_provider.oidc_token_use_basic_auth
+    assert new_config.oidc_provider.oidc_use_nonce
+    assert new_config.oidc_provider.oidc_nonce_size == 32
+    assert new_config.oidc_provider.oidc_state_size == 32
     assert new_config.oidc_keycloak_idp_hint == ""
     assert (
         new_config.userinfo_claims_source
@@ -331,20 +313,17 @@ def test_migrate_eherkenning_bewindvoering_configuration_forward():
         [("digid_eherkenning_oidc_generics", "0010_migrate_data_new_config")]
     )
 
-    OIDCConfig = new_state.apps.get_model("mozilla_django_oidc_db", "OIDCConfig")
+    OIDCClient = new_state.apps.get_model("mozilla_django_oidc_db", "OIDCClient")
 
-    new_config = OIDCConfig.objects.get(identifier=OIDC_EH_BEWINDVOERING_IDENTIFIER)
+    new_config = OIDCClient.objects.get(identifier=OIDC_EH_BEWINDVOERING_IDENTIFIER)
 
-    assert new_config.oidc_provider_config.oidc_op_discovery_endpoint == f"{BASE}/oidc/"
-    assert new_config.oidc_provider_config.oidc_op_jwks_endpoint == f"{BASE}/oidc/jwks"
+    assert new_config.oidc_provider.oidc_op_discovery_endpoint == f"{BASE}/oidc/"
+    assert new_config.oidc_provider.oidc_op_jwks_endpoint == f"{BASE}/oidc/jwks"
     assert (
-        new_config.oidc_provider_config.oidc_op_authorization_endpoint
-        == f"{BASE}/oidc/auth"
+        new_config.oidc_provider.oidc_op_authorization_endpoint == f"{BASE}/oidc/auth"
     )
-    assert (
-        new_config.oidc_provider_config.oidc_op_token_endpoint == f"{BASE}/oidc/token"
-    )
-    assert new_config.oidc_provider_config.oidc_op_user_endpoint == f"{BASE}/oidc/user"
+    assert new_config.oidc_provider.oidc_op_token_endpoint == f"{BASE}/oidc/token"
+    assert new_config.oidc_provider.oidc_op_user_endpoint == f"{BASE}/oidc/user"
 
     assert new_config.enabled
     assert new_config.oidc_rp_client_id == "fake"
@@ -352,10 +331,10 @@ def test_migrate_eherkenning_bewindvoering_configuration_forward():
     assert new_config.oidc_rp_sign_algo == "RS256"
     assert new_config.oidc_rp_scopes_list == ["openid", "bsn"]
     assert new_config.oidc_rp_idp_sign_key == ""
-    assert not new_config.oidc_token_use_basic_auth
-    assert new_config.oidc_use_nonce
-    assert new_config.oidc_nonce_size == 32
-    assert new_config.oidc_state_size == 32
+    assert not new_config.oidc_provider.oidc_token_use_basic_auth
+    assert new_config.oidc_provider.oidc_use_nonce
+    assert new_config.oidc_provider.oidc_nonce_size == 32
+    assert new_config.oidc_provider.oidc_state_size == 32
     assert new_config.oidc_keycloak_idp_hint == ""
     assert (
         new_config.userinfo_claims_source

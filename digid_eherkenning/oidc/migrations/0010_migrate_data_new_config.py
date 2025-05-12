@@ -11,11 +11,11 @@ from ..constants import (
 
 
 def _migrate_config_forward(config_old, identifier, options, apps):
-    OIDCConfig = apps.get_model("mozilla_django_oidc_db", "OIDCConfig")
-    OIDCProviderConfig = apps.get_model("mozilla_django_oidc_db", "OIDCProviderConfig")
+    OIDCClient = apps.get_model("mozilla_django_oidc_db", "OIDCClient")
+    OIDCProvider = apps.get_model("mozilla_django_oidc_db", "OIDCProvider")
 
     # Maybe reuse an existing provider
-    oidc_provider_config, _ = OIDCProviderConfig.objects.get_or_create(
+    oidc_provider, _ = OIDCProvider.objects.get_or_create(
         oidc_op_discovery_endpoint=(config_old.oidc_op_discovery_endpoint),
         defaults={
             "identifier": f"{identifier}-provider",
@@ -27,23 +27,23 @@ def _migrate_config_forward(config_old, identifier, options, apps):
             "oidc_op_token_endpoint": config_old.oidc_op_token_endpoint,
             "oidc_op_user_endpoint": config_old.oidc_op_user_endpoint,
             "oidc_op_logout_endpoint": config_old.oidc_op_logout_endpoint,
+            "oidc_token_use_basic_auth": config_old.oidc_token_use_basic_auth,
+            "oidc_use_nonce": config_old.oidc_use_nonce,
+            "oidc_nonce_size": config_old.oidc_nonce_size,
+            "oidc_state_size": config_old.oidc_state_size,
         },
     )
 
-    OIDCConfig.objects.update_or_create(
+    OIDCClient.objects.update_or_create(
         identifier=identifier,
         defaults={
             "enabled": config_old.enabled,
-            "oidc_provider_config": oidc_provider_config,
+            "oidc_provider": oidc_provider,
             "oidc_rp_client_id": config_old.oidc_rp_client_id,
             "oidc_rp_client_secret": config_old.oidc_rp_client_secret,
             "oidc_rp_sign_algo": config_old.oidc_rp_sign_algo,
             "oidc_rp_scopes_list": config_old.oidc_rp_scopes_list,
             "oidc_rp_idp_sign_key": config_old.oidc_rp_idp_sign_key,
-            "oidc_token_use_basic_auth": config_old.oidc_token_use_basic_auth,
-            "oidc_use_nonce": config_old.oidc_use_nonce,
-            "oidc_nonce_size": config_old.oidc_nonce_size,
-            "oidc_state_size": config_old.oidc_state_size,
             "oidc_keycloak_idp_hint": config_old.oidc_keycloak_idp_hint,
             "userinfo_claims_source": config_old.userinfo_claims_source,
             "options": options,
@@ -144,6 +144,7 @@ def move_data_forward(apps, schema_editor):
 
 
 def move_data_backwards(apps, schema_editor):
+    # TODO
     pass
 
 
@@ -156,7 +157,7 @@ class Migration(migrations.Migration):
         ),
         (
             "mozilla_django_oidc_db",
-            "0006_oidcproviderconfig_oidcconfig",
+            "0008_delete_openidconnectconfig",
         ),
     ]
 

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal, TypedDict, Union
+from typing import Literal, TypeAlias, TypedDict, Union
 
 from django.db.models.fields.files import FieldFile
 
@@ -105,3 +105,8 @@ class EHerkenningSAMLConfig(TypedDict):
     security: SecuritySAMLConfig
     contactPerson: dict[Literal["technical", "administrative"], ContactPerson]
     organization: dict
+
+
+JSONPrimitive: TypeAlias = str | int | float | bool | None
+JSONValue: TypeAlias = "JSONPrimitive | list[JSONValue] | JSONObject"
+JSONObject: TypeAlias = dict[str, JSONValue]
