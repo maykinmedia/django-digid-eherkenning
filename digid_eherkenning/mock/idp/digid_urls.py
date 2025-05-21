@@ -9,5 +9,5 @@ app_name = "digid-mock"
 
 urlpatterns = [
     path("inloggen/", DigiDMockIDPLoginView.as_view(), name="login"),
-    path("inloggen_ww/", DigiDMockIDPBSNLoginView.as_view(), name="bsn"),
+    path("inloggen_bsn/", DigiDMockIDPBSNLoginView.as_view(), name="bsn"),
 ]
