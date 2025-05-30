@@ -79,3 +79,14 @@ class DigidConfiguration(BaseConfiguration):
             "slo": self.slo,
             "artifact_resolve_content_type": self.artifact_resolve_content_type,
         }
+
+
+class MockDigidUser(models.Model):
+    name = models.CharField(max_length=50, help_text="Name of the mock user.")
+    bsn = models.CharField(max_length=9, help_text="Burgerservicenummer")
+
+    def __str__(self):
+        return f"{self.name} ({self.bsn})"
+
+    class Meta:
+        verbose_name = "Mock DigiD user"

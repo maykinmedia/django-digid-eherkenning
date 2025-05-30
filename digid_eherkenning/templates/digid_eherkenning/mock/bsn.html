@@ -1,0 +1,51 @@
+{% extends "digid_eherkenning/mock/base.html" %}
+
+{% block body %}
+    <h2 class="orange_heading">Vul hieronder uw Burgerservicenummer in.</h2>
+
+    <form class="remember_login" id="new_authentication" action="{{ action_url }}"
+        accept-charset="UTF-8" method="post">
+        {% csrf_token %}
+        <input name="utf8" type="hidden" value="✓">
+
+        <div class="normal-login" id="normal-login">
+            <header class="form__header"></header>
+
+            <fieldset class="form__item" id="username-field">
+                <label class="form__item__label" for="authentication_username">Burgerservicenummer</label>
+
+                {% if form.auth_user %}
+                    <select class="form__item__field" id="id_auth_user" name="auth_user">
+                        {% for mock_bsn_user in form.auth_user %}
+                            {{ mock_bsn_user }}
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <input class="form__item__field" spellcheck="false" placeholder=" " type="text" name="{{ form.auth_bsn.name }}" value="{% firstof form.auth_bsn.value '' %}"> 
+                {% endif %}
+
+                <ul id="authentication_username__empty" class="form__item__errors digidmock-error {% if form.auth_user.errors or form.auth_bsn.errors %}digidmock-show{% endif %}">
+                    <li><strong>Vul een geldig burgerservicenummer in.</strong> <br>Dit is een verplicht
+                        veld.
+                    </li>
+                </ul>
+            </fieldset>
+
+            <div class="actions">
+                <button name="commit" type="submit" class="actions__right--button primary--button arrow"
+                    data-disable-with="Inloggen" id="submit-button" arrow="true" value="Inloggen">
+                    Inloggen
+                </button>
+                <a action="previous" arrow="true" css_type="button" class="actions__left--button arrow"
+                    href="{{ back_url }}">Vorige</a>
+            </div>
+        </div>
+    </form>
+
+    <ul class='list-with-arrows'>
+        <li id='forgot_password'><a class="digidmock-anchor-placeholder">Wachtwoord
+            vergeten?</a></li>
+        <li id='request-new-digid'><a class="digidmock-anchor-placeholder">Nog
+            geen DigiD? Vraag uw DigiD aan</a></li>
+    </ul>
+{% endblock %}

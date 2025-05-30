@@ -11,6 +11,7 @@ from digid_eherkenning.mock.conf import (
     ImproperlyConfigured,
     should_validate_idp_callback_urls,
 )
+from digid_eherkenning.models.digid import MockDigidUser
 
 
 class DigidMockTestCase(TestCase):
@@ -74,7 +75,7 @@ class LoginViewTests(DigidMockTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "FooBarBazz-MockApp")
-        self.assertContains(response, reverse("digid-mock:password"))
+        self.assertContains(response, reverse("digid-mock:bsn"))
         self.assertNoDigidURLS(response)
 
     @override_settings(DIGID_MOCK_IDP_VALIDATE_CALLBACK_URLS=True)
@@ -154,15 +155,20 @@ class LoginViewTests(DigidMockTestCase):
 
 @override_settings(**OVERRIDE_SETTINGS)
 @modify_settings(**MODIFY_SETTINGS)
-class PasswordLoginViewTests(DigidMockTestCase):
+class MockBsnLoginViewTests(DigidMockTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.mock_user = MockDigidUser.objects.create(bsn="296648875", name="Henk")
+
     def test_get_returns_http400_on_missing_params(self):
-        url = reverse("digid-mock:password")
+        url = reverse("digid-mock:bsn")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 400)
 
     def test_get_returns_valid_response(self):
-        url = reverse("digid-mock:password")
+        url = reverse("digid-mock:bsn")
         data = {
             "acs": reverse("digid:acs"),
             "next": reverse("test-success"),
@@ -176,7 +182,7 @@ class PasswordLoginViewTests(DigidMockTestCase):
         self.assertNoDigidURLS(response)
 
     def test_post_redirects_and_authenticates(self):
-        url = reverse("digid-mock:password")
+        url = reverse("digid-mock:bsn")
         params = {
             "acs": reverse("digid:acs"),
             "next": reverse("test-success"),
@@ -184,11 +190,8 @@ class PasswordLoginViewTests(DigidMockTestCase):
         }
         url = f"{url}?{urlencode(params)}"
 
-        data = {
-            "auth_name": "296648875",
-            "auth_pass": "bar",
-        }
-        # post our password to the IDP
+        data = {"auth_user": self.mock_user.id}
+        # post our mock user to the IDP
         response = self.client.post(url, data, follow=False)
 
         # it will redirect to our ACS
@@ -199,7 +202,7 @@ class PasswordLoginViewTests(DigidMockTestCase):
         response = self.client.get(response["Location"], follow=False)
 
         User = get_user_model()
-        user = User.digid_objects.get(bsn="296648875")
+        user = User.digid_objects.get(bsn=self.mock_user.bsn)
 
         # follow redirect to 'next'
         self.assertRedirects(response, reverse("test-success"))
@@ -208,10 +211,88 @@ class PasswordLoginViewTests(DigidMockTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Je bent ingelogged als gebruiker")
         self.assertContains(response, "<code>{}</code>".format(str(user)))
-        self.assertContains(response, "<code>296648875</code>")
+        self.assertContains(response, f"<code>{self.mock_user.bsn}</code>")
+
+    def test_post_redirects_and_authenticates_with_free_input(self):
+
+        # Remove mock users so that a new BSN should
+        #  be passed rather than a mock user with a BSN
+        MockDigidUser.objects.all().delete()
+
+        url = reverse("digid-mock:bsn")
+        params = {
+            "acs": reverse("digid:acs"),
+            "next": reverse("test-success"),
+            "cancel": reverse("test-index"),
+        }
+        url = f"{url}?{urlencode(params)}"
+
+        data = {"auth_bsn": self.mock_user.bsn}
+
+        # post our mock bsn to the IDP
+        response = self.client.post(url, data, follow=False)
+
+        # it will redirect to our ACS
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("digid:acs"), response["Location"])
+
+        # follow the ACS redirect and get/create the user
+        response = self.client.get(response["Location"], follow=False)
+
+        User = get_user_model()
+        user = User.digid_objects.get(bsn=self.mock_user.bsn)
+
+        # follow redirect to 'next'
+        self.assertRedirects(response, reverse("test-success"))
+
+        response = self.client.get(response["Location"], follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Je bent ingelogged als gebruiker")
+        self.assertContains(response, "<code>{}</code>".format(str(user)))
+        self.assertContains(response, f"<code>{self.mock_user.bsn}</code>")
+
+    def test_post_redirects_and_authenticates_with_leading_zero(self):
+
+        # Remove mock users so that a new BSN should
+        #  be passed rather than a mock user with a BSN
+        MockDigidUser.objects.all().delete()
+
+        url = reverse("digid-mock:bsn")
+        params = {
+            "acs": reverse("digid:acs"),
+            "next": reverse("test-success"),
+            "cancel": reverse("test-index"),
+        }
+        url = f"{url}?{urlencode(params)}"
+
+        leading_zero_bsn = "021396826"
+
+        data = {"auth_bsn": leading_zero_bsn}
+
+        # post our mock bsn to the IDP
+        response = self.client.post(url, data, follow=False)
+
+        # it will redirect to our ACS
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("digid:acs"), response["Location"])
+
+        # follow the ACS redirect and get/create the user
+        response = self.client.get(response["Location"], follow=False)
+
+        User = get_user_model()
+        user = User.digid_objects.get(bsn=leading_zero_bsn)
+
+        # follow redirect to 'next'
+        self.assertRedirects(response, reverse("test-success"))
+
+        response = self.client.get(response["Location"], follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Je bent ingelogged als gebruiker")
+        self.assertContains(response, "<code>{}</code>".format(str(user)))
+        self.assertContains(response, f"<code>{leading_zero_bsn}</code>")
 
     def test_post_redirect_retains_acs_querystring_params(self):
-        url = reverse("digid-mock:password")
+        url = reverse("digid-mock:bsn")
         params = {
             "acs": f"{reverse('digid:acs')}?foo=bar",
             "next": reverse("test-success"),
@@ -219,18 +300,16 @@ class PasswordLoginViewTests(DigidMockTestCase):
         }
         url = f"{url}?{urlencode(params)}"
 
-        data = {
-            "auth_name": "296648875",
-            "auth_pass": "bar",
-        }
-        # post our password to the IDP
+        data = {"auth_user": self.mock_user.id}
+
+        # post our mock user to the IDP
         response = self.client.post(url, data, follow=False)
 
         # it will redirect to our ACS
         expected_redirect = furl(reverse("digid:acs")).set(
             {
                 "foo": "bar",
-                "bsn": "296648875",
+                "bsn": self.mock_user.bsn,
                 "next": reverse("test-success"),
             }
         )
