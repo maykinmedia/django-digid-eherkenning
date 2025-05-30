@@ -15,7 +15,7 @@ matter of installing the package with all extras:
 
 .. code-block:: bash
 
-    pip install -e .[tests,pep8,coverage,docs,release]
+    pip install -e .[tests,coverage,docs,release,oidc]
 
 Then you can run tests with:
 
@@ -32,11 +32,13 @@ To run all tests and checks on all supported environments:
 Local development server
 ------------------------
 
-You can spin up a local development server using the tests configuration:
+You can spin up a local development server using the tests configuration (from the root directory):
 
 .. code-block:: bash
 
-    export DJANGO_SETTINGS_MODULE=testapp.settings
+    export OIDC_ENABLED=yes # If using OIDC
+    export PYTHONPATH=$PYTHONPATH:`pwd`
+    export DJANGO_SETTINGS_MODULE=tests.project.settings
     django-admin migrate
     django-admin runserver
 
