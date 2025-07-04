@@ -9,6 +9,7 @@
 __pycache__
 *~
 docs/_build/
+.python-version
 
 # Coverage reports
 /reports/
