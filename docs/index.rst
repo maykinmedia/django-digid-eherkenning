@@ -20,7 +20,6 @@ Features
    :caption: Contents:
 
    quickstart
-   oidc
    configuration
    metadata
    cli
