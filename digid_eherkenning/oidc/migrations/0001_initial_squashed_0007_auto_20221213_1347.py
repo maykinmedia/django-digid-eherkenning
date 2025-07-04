@@ -3,7 +3,6 @@
 from django.db import migrations, models
 
 import django_jsonform.models.fields
-import mozilla_django_oidc_db.models
 
 import digid_eherkenning.oidc.models
 
