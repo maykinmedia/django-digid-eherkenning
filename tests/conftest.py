@@ -1,7 +1,9 @@
+from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
 
 from django.core.files import File
+from django.utils import timezone
 
 import pytest
 import responses

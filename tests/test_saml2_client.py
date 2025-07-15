@@ -1,15 +1,27 @@
+from datetime import timedelta
+
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 import pytest
 
 from digid_eherkenning.models import DigidConfiguration, EherkenningConfiguration
+from digid_eherkenning.models.certificates import ConfigCertificate
 from digid_eherkenning.saml2.digid import DigiDClient
 from digid_eherkenning.saml2.eherkenning import eHerkenningClient
 
 
 @pytest.mark.usefixtures("digid_config_defaults", "temp_private_root")
 class DigidClientTests(TestCase):
+
+    def setUp(self):
+        configCertificate = ConfigCertificate.objects.first()
+        configCertificate.activation_date = (
+            configCertificate.certificate.valid_from + timedelta(days=10)
+        )
+        configCertificate.save()
+
     def test_wants_assertions_signed_setting_default(self):
         config = DigidConfiguration.get_solo()
 
@@ -70,6 +82,13 @@ class DigidClientTests(TestCase):
 
 @pytest.mark.usefixtures("eherkenning_config_defaults", "temp_private_root")
 class EHerkenningClientTests(TestCase):
+    def setUp(self):
+        configCertificate = ConfigCertificate.objects.first()
+        configCertificate.activation_date = (
+            configCertificate.certificate.valid_from + timedelta(days=10)
+        )
+        configCertificate.save()
+
     def test_wants_assertions_signed_setting_default(self):
         config = EherkenningConfiguration.get_solo()
 

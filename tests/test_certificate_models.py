@@ -1,11 +1,14 @@
 from datetime import datetime, timedelta
 from io import BytesIO
 
+from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.utils import timezone
 
 import pytest
 from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun import freeze_time
 from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.models import Certificate
@@ -30,6 +33,7 @@ def test_valid_certificate(temp_private_root, digid_certificate):
     config_certificate = ConfigCertificate(
         config_type=ConfigTypes.digid,
         certificate=digid_certificate,
+        activation_date=timezone.now() - timedelta(days=2),
     )
 
     assert config_certificate.is_ready_for_authn_requests
@@ -119,6 +123,8 @@ def _generate_config_certificate(
     request: pytest.FixtureRequest,
     config_type: ConfigTypes,
     valid_from: datetime,
+    set_activation_date: bool = True,
+    activation_date: datetime = None,
 ) -> Certificate:
     request.getfixturevalue("temp_private_root")
     subject = x509.Name(
@@ -135,6 +141,7 @@ def _generate_config_certificate(
     key = gen_key()
     # hack to work around the hardcoded timezone.now() usage in the mkcert helper
     assert valid_from.tzinfo is not None, "Thou shall not use naive datetimes"
+
     with freeze_time(valid_from):
         cert = mkcert(
             subject=subject,
@@ -151,8 +158,55 @@ def _generate_config_certificate(
         public_certificate=File(BytesIO(cert_pem), name="public_certificate.pem"),
         private_key=File(BytesIO(key_pem), name="private_key.pem"),
     )
-    ConfigCertificate.objects.create(config_type=config_type, certificate=certificate)
+    ConfigCertificate.objects.create(
+        config_type=config_type,
+        certificate=certificate,
+        activation_date=(
+            activation_date
+            if activation_date is not None
+            else (valid_from if set_activation_date else None)
+        ),
+    )
     return certificate
+
+
+@pytest.mark.parametrize("model", (DigidConfiguration, EherkenningConfiguration))
+def test_activation_date_must_fall_between_certificate_period(
+    request: pytest.FixtureRequest,
+    model: type[DigidConfiguration] | type[EherkenningConfiguration],
+    digid_certificate,
+):
+    config = model.get_solo()
+    config_type = config._as_config_type()
+
+    with pytest.raises(ValidationError):
+        configCert = ConfigCertificate.objects.create(
+            config_type=config_type,
+            certificate=digid_certificate,
+            activation_date=timezone.now() + timedelta(days=20000),
+        )
+        configCert.full_clean()
+
+
+@pytest.mark.parametrize("model", (DigidConfiguration, EherkenningConfiguration))
+def test_if_no_activation_date_then_skip_certificate_period_check(
+    request: pytest.FixtureRequest,
+    model: type[DigidConfiguration] | type[EherkenningConfiguration],
+):
+    config = model.get_solo()
+    config_type = config._as_config_type()
+
+    try:
+        cert = _generate_config_certificate(
+            request, config_type, valid_from=timezone.now(), set_activation_date=False
+        )
+        config_cert = ConfigCertificate.objects.get(certificate=cert)
+        config_cert.full_clean()
+    except ValidationError:
+        pytest.fail(
+            "ConfigCertificate should not check if the activation date falls between"
+            " the valid_from - expiry_date period if no activation_date was given."
+        )
 
 
 @pytest.mark.parametrize("model", (DigidConfiguration, EherkenningConfiguration))
@@ -192,21 +246,37 @@ def test_certificate_selection_picks_correct_2(
     config_type = config._as_config_type()
     # expired
     _generate_config_certificate(
-        request, config_type, valid_from=timezone.now() - timedelta(days=5)
+        request,
+        config_type,
+        valid_from=timezone.now() - timedelta(days=5),
+        activation_date=timezone.now() - timedelta(days=4, hours=6),
     )
-    # currently valid
+    # currently valid and active
     _old_current = _generate_config_certificate(
-        request, config_type, valid_from=timezone.now()
+        request,
+        config_type,
+        valid_from=timezone.now() - timedelta(days=1),
+        activation_date=timezone.now() - timedelta(hours=6),
     )
-    # valid tomorrow
+
+    # valid tomorrow, active 4 days later
     _new_current = _generate_config_certificate(
         request,
         config_type,
         valid_from=timezone.now() + timedelta(days=1),
+        activation_date=timezone.now() + timedelta(days=1, hours=7),
     )
 
-    # "current" has now expired
-    with freeze_time(timezone.now() + timedelta(days=1, hours=1)):
+    # Since _new_current only activates after a day + 7 hours, an exception
+    # should be raised in this case saying no suitable
+    # certificates could be found:
+    with freeze_time(timezone.now() + timedelta(days=1, hours=2)):
+        with pytest.raises(CertificateProblem):
+            current_cert, next_cert = config.select_certificates()
+
+    # "current" has now expired, and enough time has passed
+    # for '_new_current' to become activated
+    with freeze_time(timezone.now() + timedelta(days=1, hours=12)):
         assert timezone.now() > _old_current.expiry_date
         current_cert, next_cert = config.select_certificates()
 
