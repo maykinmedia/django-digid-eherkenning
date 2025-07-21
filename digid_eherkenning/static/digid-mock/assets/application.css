@@ -2970,7 +2970,10 @@ ul.form__item__errors {
     font-size: 110%;
     margin-right: 6px;
     padding: 8px 3%;
-    height: 30px
+    height: 30px;
+}
+select.form__item__field {
+    padding-blocK: 0;
 }
 
 .code_box[data-code], .form__item__field[data-code], .form__item__field--extra-small[data-code], .form__item__field--medium[data-code], .form__item__field--small[data-code], .code_box[data-capitals], .form__item__field[data-capitals], .form__item__field--extra-small[data-capitals], .form__item__field--medium[data-capitals], .form__item__field--small[data-capitals] {
