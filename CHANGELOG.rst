@@ -2,6 +2,24 @@
 Changelog
 =========
 
+0.22.0 (2025-07-21)
+===================
+
+UX improvement for mock DigiD login page.
+
+**💥⚠️ Breaking changes**
+
+The ``inloggen_ww/`` (name: ``digid-mock:password``) URL in the ``mock`` package is
+replaced with ``inloggen_bsn/`` (name: ``digid-mock:bsn``). Update your URL configs if
+you use these mock IDP endpoints.
+
+The 'username/password' mock login is removed in favour of the BSN field/dropdown.
+
+**Features**
+
+* [#93] You can now define BSN/name pairs in the admin UI to use for the mock login
+  page.
+
 0.21.0 (2025-03-26)
 ===================
 
