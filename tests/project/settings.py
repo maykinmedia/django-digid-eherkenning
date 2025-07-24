@@ -34,6 +34,7 @@ _OIDC_APPS = [
     "mozilla_django_oidc",
     "mozilla_django_oidc_db",
     "digid_eherkenning.oidc",
+    "tests.oidc_project",
 ]
 
 INSTALLED_APPS = [
@@ -176,3 +177,6 @@ DIGID_MOCK_APP_TITLE = "DigiD Mock Test App"
 # DIGID_MOCK_IDP_LOGIN_URL = 'http://localhost:8008/digid/idp/inloggen/'
 # DIGID_MOCK_RETURN_URL = '/'
 # DIGID_MOCK_CANCEL_URL = '/'
+
+OIDC_CALLBACK_CLASS = "mozilla_django_oidc_db.views.OIDCCallbackView"
+OIDC_AUTHENTICATE_CLASS = "mozilla_django_oidc_db.views.OIDCAuthenticationRequestView"
