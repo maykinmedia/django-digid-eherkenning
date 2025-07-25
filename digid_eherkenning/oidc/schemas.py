@@ -1,37 +1,46 @@
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from ..choices import AssuranceLevels, DigiDAssuranceLevels
 
-LOA_MAPPING_SCHEMA = {
-    "description": _(
-        "Level of assurance claim value mappings. Useful if the values in the LOA "
-        "claim are proprietary, so you can translate them into their standardized "
-        "identifiers."
-    ),
-    "type": "array",
-    "items": {
-        "type": "object",
-        "required": ["from", "to"],
-        "properties": {
-            "from": {
-                "anyOf": [
-                    {
-                        "type": "string",
-                        "title": _("String value"),
-                    },
-                    {
-                        "type": "number",
-                        "title": _("Number value"),
-                    },
-                ],
+
+def get_loa_mapping_schema(options: models.TextChoices) -> dict:
+    return {
+        "title": _("LoA mapping schema"),
+        "description": _(
+            "Level of assurance claim value mappings. Useful if the values in the LOA "
+            "claim are proprietary, so you can translate them into their standardized "
+            "identifiers."
+        ),
+        "type": "array",
+        "items": {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {
+                "from": {
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "title": _("String value"),
+                        },
+                        {
+                            "type": "number",
+                            "title": _("Number value"),
+                            "choices": [
+                                {"title": label, "value": value}
+                                for value, label in options.choices
+                            ],
+                        },
+                    ],
+                },
+                "to": {
+                    "type": "string",
+                },
             },
-            "to": {
-                "type": "string",
-            },
+            "additionalProperties": False,
         },
-        "additionalProperties": False,
-    },
-}
+    }
+
 
 DIGID_OPTIONS_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -41,10 +50,12 @@ DIGID_OPTIONS_SCHEMA = {
     "required": ["identity_settings"],
     "properties": {
         "loa_settings": {
+            "title": _("LoA settings"),
             "description": _("Level of Assurance related settings."),
             "type": "object",
             "properties": {
                 "claim_path": {
+                    "title": _("Claim path"),
                     "description": _(
                         "Path to the claim value holding the level of assurance. If left empty, it is "
                         "assumed there is no LOA claim and the configured fallback value will be "
@@ -56,6 +67,7 @@ DIGID_OPTIONS_SCHEMA = {
                     },
                 },
                 "default": {
+                    "title": _("Default"),
                     "description": _(
                         "Fallback level of assurance, in case no claim value could be extracted."
                     ),
@@ -65,7 +77,7 @@ DIGID_OPTIONS_SCHEMA = {
                         for value, label in DigiDAssuranceLevels.choices
                     ],
                 },
-                "value_mapping": LOA_MAPPING_SCHEMA,
+                "value_mapping": get_loa_mapping_schema(DigiDAssuranceLevels),
             },
         },
         # TODO: Not sure about the best name for this
@@ -75,6 +87,7 @@ DIGID_OPTIONS_SCHEMA = {
             "required": ["bsn_claim_path"],
             "properties": {
                 "bsn_claim_path": {
+                    "title": _("BSN claim path"),
                     "description": _(
                         "Path to the claim holding the authenticated user's BSN."
                     ),
@@ -97,10 +110,12 @@ EHERKENNING_OPTIONS_SCHEMA = {
     "required": ["identity_settings"],
     "properties": {
         "loa_settings": {
+            "title": _("LoA settings"),
             "description": _("Level of Assurance related settings."),
             "type": "object",
             "properties": {
                 "claim_path": {
+                    "title": _("Claim path"),
                     "description": _(
                         "Path to the claim value holding the level of assurance. If left empty, it is "
                         "assumed there is no LOA claim and the configured fallback value will be "
@@ -112,6 +127,7 @@ EHERKENNING_OPTIONS_SCHEMA = {
                     },
                 },
                 "default": {
+                    "title": _("Default"),
                     "description": _(
                         "Fallback level of assurance, in case no claim value could be extracted."
                     ),
@@ -121,7 +137,7 @@ EHERKENNING_OPTIONS_SCHEMA = {
                         for value, label in AssuranceLevels.choices
                     ],
                 },
-                "value_mapping": LOA_MAPPING_SCHEMA,
+                "value_mapping": get_loa_mapping_schema(AssuranceLevels),
             },
         },
         "identity_settings": {
@@ -132,6 +148,7 @@ EHERKENNING_OPTIONS_SCHEMA = {
                 "identifier_type_claim_path": {
                     # XXX: this may require a value mapping, depending on what brokers return
                     # XXX: this may require a fallback value, depending on what brokers return
+                    "title": _("Identifier-type claim path"),
                     "description": _(
                         "Path to the claim value that specifies how the legal subject claim must be interpreted. "
                         "The expected claim value is one of: "
@@ -145,6 +162,7 @@ EHERKENNING_OPTIONS_SCHEMA = {
                     },
                 },
                 "legal_subject_claim_path": {
+                    "title": _("Legal subject claim path"),
                     # TODO: what if the claims for kvk/RSIN are different claims names?
                     "description": _(
                         "Path to the claim value holding the identifier of the authenticated company."
@@ -156,6 +174,7 @@ EHERKENNING_OPTIONS_SCHEMA = {
                     },
                 },
                 "acting_subject_claim_path": {
+                    "title": _("Acting subject claim path"),
                     "description": _(
                         "Path to the claim value holding the (opaque) identifier of the user "
                         "representing the authenticated company.."
@@ -167,6 +186,7 @@ EHERKENNING_OPTIONS_SCHEMA = {
                     },
                 },
                 "branch_number_claim_path": {
+                    "title": _("Branch number claim path"),
                     "description": _(
                         "Name of the claim holding the value of the branch number for the "
                         "authenticated company, if such a restriction applies."
@@ -190,10 +210,12 @@ DIGID_MACHTIGEN_OPTIONS_SCHEMA = {
     "required": ["identity_settings"],
     "properties": {
         "loa_settings": {
+            "title": _("LoA settings"),
             "description": _("Level of Assurance related settings."),
             "type": "object",
             "properties": {
                 "claim_path": {
+                    "title": _("Claim path"),
                     "description": _(
                         "Path to the claim value holding the level of assurance. If left empty, it is "
                         "assumed there is no LOA claim and the configured fallback value will be "
@@ -205,6 +227,7 @@ DIGID_MACHTIGEN_OPTIONS_SCHEMA = {
                     },
                 },
                 "default": {
+                    "title": _("Default"),
                     "description": _(
                         "Fallback level of assurance, in case no claim value could be extracted."
                     ),
@@ -214,7 +237,7 @@ DIGID_MACHTIGEN_OPTIONS_SCHEMA = {
                         for value, label in DigiDAssuranceLevels.choices
                     ],
                 },
-                "value_mapping": LOA_MAPPING_SCHEMA,
+                "value_mapping": get_loa_mapping_schema(DigiDAssuranceLevels),
             },
         },
         "identity_settings": {
@@ -227,6 +250,7 @@ DIGID_MACHTIGEN_OPTIONS_SCHEMA = {
             ],
             "properties": {
                 "representee_bsn_claim_path": {
+                    "title": _("Representee BSN claim path"),
                     "description": _(
                         "Path to the claim value holding the BSN of the represented user."
                     ),
@@ -237,6 +261,7 @@ DIGID_MACHTIGEN_OPTIONS_SCHEMA = {
                     },
                 },
                 "authorizee_bsn_claim_path": {
+                    "title": _("Authorizee BSN claim path"),
                     "description": _(
                         "Path to the claim value holding the BSN of the authorised user."
                     ),
@@ -247,6 +272,7 @@ DIGID_MACHTIGEN_OPTIONS_SCHEMA = {
                     },
                 },
                 "mandate_service_id_claim_path": {
+                    "title": _("Mandate service ID claim path"),
                     "description": _(
                         "Path to the claim value holding the service UUID for which the acting subject "
                         "is authorized."
@@ -270,10 +296,12 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
     "required": ["identity_settings"],
     "properties": {
         "loa_settings": {
+            "title": _("LoA settings"),
             "description": _("Level of Assurance related settings."),
             "type": "object",
             "properties": {
                 "claim_path": {
+                    "title": _("Claim path"),
                     "description": _(
                         "Path to the claim value holding the level of assurance. If left empty, it is "
                         "assumed there is no LOA claim and the configured fallback value will be "
@@ -285,6 +313,7 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
                     },
                 },
                 "default": {
+                    "title": _("Default"),
                     "description": _(
                         "Fallback level of assurance, in case no claim value could be extracted."
                     ),
@@ -294,7 +323,7 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
                         for value, label in AssuranceLevels.choices
                     ],
                 },
-                "value_mapping": LOA_MAPPING_SCHEMA,
+                "value_mapping": get_loa_mapping_schema(AssuranceLevels),
             },
         },
         "identity_settings": {
@@ -311,6 +340,7 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
                 "identifier_type_claim_path": {
                     # XXX: this may require a value mapping, depending on what brokers return
                     # XXX: this may require a fallback value, depending on what brokers return
+                    "title": _("Identifier-type claim path"),
                     "description": _(
                         "Path to the claim value that specifies how the legal subject claim must be interpreted. "
                         "The expected claim value is one of: "
@@ -325,6 +355,7 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
                 },
                 "legal_subject_claim_path": {
                     # TODO: what if the claims for kvk/RSIN are different claims names?
+                    "title": _("Legal subject claim path"),
                     "description": _(
                         "Path to the claim value holding the identifier of the authenticated company."
                     ),
@@ -335,6 +366,7 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
                     },
                 },
                 "acting_subject_claim_path": {
+                    "title": _("Acting subject claim path"),
                     "description": _(
                         "Path to the claim value holding the (opaque) identifier of the user "
                         "representing the authenticated company.."
@@ -346,6 +378,7 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
                     },
                 },
                 "branch_number_claim_path": {
+                    "title": _("Branch number claim path"),
                     "description": _(
                         "Name of the claim holding the value of the branch number for the "
                         "authenticated company, if such a restriction applies."
@@ -359,6 +392,7 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
                 "representee_claim_path": {
                     # NOTE: Discussion with an employee from Anoigo states this will always be a BSN,
                     # not an RSIN or CoC number.
+                    "title": _("Representee claim path"),
                     "description": _(
                         "Path to the claim value holding the BSN of the represented person."
                     ),
@@ -370,6 +404,7 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
                     },
                 },
                 "mandate_service_id_claim_path": {
+                    "title": _("Mandate service ID claim path"),
                     "description": _(
                         "Path to the claim value holding the service ID for which the company "
                         "is authorized."
@@ -381,6 +416,7 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
                     },
                 },
                 "mandate_service_uuid_claim_path": {
+                    "title": _("Mandate service UUID claim path"),
                     "description": _(
                         "Path to the claim value holding the service UUID for which the company "
                         "is authorized."

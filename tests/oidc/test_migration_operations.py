@@ -1,8 +1,8 @@
-from django.conf import settings
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
 import pytest
+from django_test_migrations.migrator import Migrator
 from mozilla_django_oidc_db.models import UserInformationClaimsSources
 from solo.models import DEFAULT_SINGLETON_INSTANCE_ID
 
@@ -112,35 +112,29 @@ def _prepare_state_forward(old_apps):
 
 @pytest.mark.django_db
 def test_migrate_forward():
-    executor = MigrationExecutor(connection)
-    old_migrate_state = executor.migrate(
+    migrator = Migrator(database="default")
+
+    old_state = migrator.apply_initial_migration(
         [
             ("oidc_project", "0001_initial"),
+            (
+                "mozilla_django_oidc_db",
+                "0006_oidcprovider_oidcclient",
+            ),
+            (
+                "digid_eherkenning_oidc_generics",
+                "0009_remove_digidconfig_oidc_exempt_urls_and_more",
+            ),
         ]
     )
-    old_apps = old_migrate_state.apps
+    old_apps = old_state.apps
 
-    #
-    # Prepare state before migration
-    #
     _prepare_state_forward(old_apps)
 
-    #
-    # Apply migration
-    #
-    executor = MigrationExecutor(connection)
-    executor.loader.build_graph()  # reload.
-    executor.migrate(
-        [
-            ("oidc_project", "0002_move_oidc_data"),
-        ]
+    new_state = migrator.apply_tested_migration(
+        [("oidc_project", "0002_move_oidc_data")]
     )
-
-    apps = executor.loader.project_state(
-        [
-            ("oidc_project", "0002_move_oidc_data"),
-        ]
-    ).apps
+    apps = new_state.apps
 
     #
     # Test DigiD outcome
@@ -336,29 +330,18 @@ def _prepare_state_backward(apps):
 
 @pytest.mark.django_db
 def test_migrate_backwards():
-    executor = MigrationExecutor(connection)
-    old_migrate_state = executor.migrate(
+    migrator = Migrator(database="default")
+    old_state = migrator.apply_initial_migration(
         [
             ("oidc_project", "0002_move_oidc_data"),
         ]
     )
-    old_apps = old_migrate_state.apps
+    old_apps = old_state.apps
 
     _prepare_state_backward(old_apps)
 
-    #
-    # Apply migration
-    #
-    executor = MigrationExecutor(connection)
-    executor.loader.build_graph()  # reload.
-    executor.migrate(
-        [
-            ("oidc_project", "0001_initial"),
-        ]
-    )
-
     # If only using ("oidc_project", "0001_initial") the other apps are not at the right state
-    apps = executor.loader.project_state(
+    apps = migrator.apply_tested_migration(
         [
             ("oidc_project", "0001_initial"),
             (
