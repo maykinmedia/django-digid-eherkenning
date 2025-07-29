@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from ..choices import AssuranceLevels, DigiDAssuranceLevels
 
 
-def get_loa_mapping_schema(options: models.TextChoices) -> dict:
+def get_loa_mapping_schema(options: type[models.TextChoices]) -> dict:
     return {
         "title": _("LoA mapping schema"),
         "description": _(
@@ -82,6 +82,7 @@ DIGID_OPTIONS_SCHEMA = {
         },
         # TODO: Not sure about the best name for this
         "identity_settings": {
+            "title": _("Identity settings"),
             "description": _("DigiD settings about the user."),
             "type": "object",
             "required": ["bsn_claim_path"],
@@ -141,6 +142,7 @@ EHERKENNING_OPTIONS_SCHEMA = {
             },
         },
         "identity_settings": {
+            "title": _("Identity settings"),
             "description": _("eHerkenning settings."),
             "type": "object",
             "required": ["legal_subject_claim_path", "acting_subject_claim_path"],
@@ -241,6 +243,7 @@ DIGID_MACHTIGEN_OPTIONS_SCHEMA = {
             },
         },
         "identity_settings": {
+            "title": _("Identity settings"),
             "description": _("DigiD Machtigen settings."),
             "type": "object",
             "required": [
@@ -327,6 +330,7 @@ EHERKENNING_BEWINDVOERING_OPTIONS_SCHEMA = {
             },
         },
         "identity_settings": {
+            "title": _("Identity settings"),
             "description": _("eHerkenning Bewindvoering settings."),
             "type": "object",
             "required": [

@@ -1,6 +1,3 @@
-from django.db import connection
-from django.db.migrations.executor import MigrationExecutor
-
 import pytest
 from django_test_migrations.migrator import Migrator
 from mozilla_django_oidc_db.models import UserInformationClaimsSources
@@ -111,9 +108,7 @@ def _prepare_state_forward(old_apps):
 
 
 @pytest.mark.django_db
-def test_migrate_forward():
-    migrator = Migrator(database="default")
-
+def test_migrate_forward(migrator: Migrator):
     old_state = migrator.apply_initial_migration(
         [
             ("oidc_project", "0001_initial"),
@@ -329,8 +324,7 @@ def _prepare_state_backward(apps):
 
 
 @pytest.mark.django_db
-def test_migrate_backwards():
-    migrator = Migrator(database="default")
+def test_migrate_backwards(migrator: Migrator):
     old_state = migrator.apply_initial_migration(
         [
             ("oidc_project", "0002_move_oidc_data"),
