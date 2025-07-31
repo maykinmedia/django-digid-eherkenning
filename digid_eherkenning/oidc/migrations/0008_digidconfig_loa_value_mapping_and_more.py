@@ -6,7 +6,6 @@ import django_jsonform.models.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         (
             "digid_eherkenning_oidc_generics",

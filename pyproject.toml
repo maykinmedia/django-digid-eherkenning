@@ -47,7 +47,7 @@ Changelog = "https://github.com/maykinmedia/django-digid-eherkenning/blob/master
 
 [project.optional-dependencies]
 oidc = [
-    "mozilla-django-oidc-db>=0.19.1",
+    "mozilla-django-oidc-db@git+https://github.com/maykinmedia/mozilla-django-oidc-db.git@97931e3ce2a7da475adc20e32371c87383638971",
 ]
 tests = [
     "django-test-migrations",

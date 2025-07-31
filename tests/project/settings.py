@@ -36,6 +36,7 @@ _OIDC_APPS = [
     "mozilla_django_oidc",
     "mozilla_django_oidc_db",
     "digid_eherkenning.oidc",
+    "tests.oidc_project",
 ]
 
 INSTALLED_APPS = [
@@ -179,9 +180,6 @@ DIGID_MOCK_APP_TITLE = "DigiD Mock Test App"
 # DIGID_MOCK_RETURN_URL = '/'
 # DIGID_MOCK_CANCEL_URL = '/'
 
-# These settings are evaluated at import-time of the urlconf in mozilla_django_oidc.urls.
-# Changing them via @override_settings (or the pytest-django settings fixture) has no
-# effect.
 OIDC_AUTHENTICATE_CLASS = "mozilla_django_oidc_db.views.OIDCAuthenticationRequestView"
 OIDC_CALLBACK_CLASS = "mozilla_django_oidc_db.views.OIDCCallbackView"
 LOGIN_REDIRECT_URL = reverse_lazy("admin:index")

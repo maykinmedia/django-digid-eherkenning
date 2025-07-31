@@ -6,7 +6,6 @@ import mozilla_django_oidc_db.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         (
             "digid_eherkenning_oidc_generics",

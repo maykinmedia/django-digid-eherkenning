@@ -8,7 +8,6 @@ import digid_eherkenning.oidc.models.base
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         (
             "digid_eherkenning_oidc_generics",

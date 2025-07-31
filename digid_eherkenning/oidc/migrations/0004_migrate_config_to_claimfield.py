@@ -17,7 +17,6 @@ def flush_cache():
 
 
 def operation_factory(model: str, mappings: dict[str, str]) -> migrations.RunPython:
-
     def _action_factory(transformer: Callable[[Any], None]):
         def _run_python_action(apps, _) -> None:
             ConfigModel = apps.get_model("digid_eherkenning_oidc_generics", model)
@@ -50,7 +49,6 @@ def operation_factory(model: str, mappings: dict[str, str]) -> migrations.RunPyt
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         (
             "digid_eherkenning_oidc_generics",
