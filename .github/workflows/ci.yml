@@ -17,8 +17,11 @@ jobs:
     strategy:
       matrix:
         python: ['3.10', '3.11', '3.12']
-        django: ['4.2']
+        django: ['4.2', '5.2']
         oidc_enabled: ['no', 'yes']
+        include:
+          python: '3.13'
+          django: '5.2'
 
     services:
       postgres:
