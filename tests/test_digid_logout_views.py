@@ -507,7 +507,7 @@ class DigidSloLogoutSOAPRequestTests(TestCase):
     def test_logout_signature_incorrect_ref(self):
         root_element = etree.fromstring(self.logout_request_soap)
         signature_ref = root_element.find(
-            ".//{%s}Reference" % OneLogin_Saml2_Constants.NS_DS
+            f".//{{{OneLogin_Saml2_Constants.NS_DS}}}Reference"
         )
         signature_ref.set("URI", "12345")
 

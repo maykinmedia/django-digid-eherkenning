@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal, TypedDict, Union
+from typing import Literal, TypedDict
 
 from django.db.models.fields.files import FieldFile
 
@@ -84,7 +84,7 @@ class SecuritySAMLConfig(TypedDict):
     wantNameId: bool
     wantNameIdEncrypted: bool
     wantAttributeStatement: bool
-    requestedAuthnContext: Union[bool, list[str]]
+    requestedAuthnContext: bool | list[str]
     requestedAuthnContextComparison: str
     failOnAuthnContextMismatch: bool
     metadataValidUntil: str | None

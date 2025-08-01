@@ -6,7 +6,6 @@ import digid_eherkenning.choices
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         (
             "digid_eherkenning",

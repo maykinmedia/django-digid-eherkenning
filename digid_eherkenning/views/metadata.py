@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Type
+from collections.abc import Callable
 
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class MetadataView(View):
-    config_model: Type[BaseConfiguration] = BaseConfiguration
+    config_model: type[BaseConfiguration] = BaseConfiguration
     metadata_generator: Callable[[], bytes] = lambda: b""
     filename: str = "metadata.xml"
 

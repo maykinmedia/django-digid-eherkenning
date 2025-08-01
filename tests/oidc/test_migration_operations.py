@@ -140,9 +140,9 @@ def test_migrate_forward(migrator: Migrator):
 
     assert new_digid_config.oidc_provider.oidc_op_discovery_endpoint == f"{BASE}/oidc/"
     assert new_digid_config.oidc_provider.oidc_op_jwks_endpoint == f"{BASE}/oidc/jwks"
-    assert (
-        new_digid_config.oidc_provider.oidc_op_authorization_endpoint
-    ), f"{BASE}/oidc/auth"
+    assert new_digid_config.oidc_provider.oidc_op_authorization_endpoint, (
+        f"{BASE}/oidc/auth"
+    )
     assert new_digid_config.oidc_provider.oidc_op_token_endpoint == f"{BASE}/oidc/token"
     assert new_digid_config.oidc_provider.oidc_op_user_endpoint == f"{BASE}/oidc/user"
 
@@ -373,9 +373,9 @@ def test_migrate_backwards(migrator: Migrator):
     assert old_digid_config.oidc_nonce_size == 32
     assert old_digid_config.oidc_state_size == 32
     assert old_digid_config.oidc_keycloak_idp_hint == ""
-    assert (
-        old_digid_config.userinfo_claims_source
-    ), UserInformationClaimsSources.userinfo_endpoint
+    assert old_digid_config.userinfo_claims_source, (
+        UserInformationClaimsSources.userinfo_endpoint
+    )
     assert old_digid_config.loa_claim == ["loa"]
     assert old_digid_config.default_loa == "urn:etoegang:core:assurance-class:loa3"
     assert old_digid_config.loa_value_mapping == ["loa_value"]
@@ -403,10 +403,10 @@ def test_migrate_backwards(migrator: Migrator):
 
     old_config = EHerkenningConfig.objects.get(pk=DEFAULT_SINGLETON_INSTANCE_ID)
 
-    old_config.identifier_type_claim == ["identifier_type"]
-    old_config.legal_subject_claim == ["legal_subject"]
-    old_config.acting_subject_claim == ["acting_subject"]
-    old_config.branch_number_claim == ["branch_number"]
+    assert old_config.identifier_type_claim == ["identifier_type"]
+    assert old_config.legal_subject_claim == ["legal_subject"]
+    assert old_config.acting_subject_claim == ["acting_subject"]
+    assert old_config.branch_number_claim == ["branch_number"]
 
     #
     # Test Eherkenning Bewindvoering outcome

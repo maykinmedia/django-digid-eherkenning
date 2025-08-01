@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("digid_eherkenning", "0003_alter_mockdigiduser_options"),
     ]

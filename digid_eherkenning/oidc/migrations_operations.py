@@ -46,7 +46,6 @@ def migrate_config_forward(config_old, identifier, options, apps):
 
 class MoveDigiDEherkenningDataBaseOperation(migrations.RunPython):
     def __init__(self, identifier, atomic=None, hints=None, elidable=False):
-
         forward_operation = partial(self.forward_operation, identifier)
         backward_operation = partial(self.backward_operation, identifier)
 

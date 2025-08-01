@@ -6,7 +6,6 @@ import digid_eherkenning.models.eherkenning
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("digid_eherkenning", "0006_digidconfiguration_metadata_file_source_and_more"),
     ]

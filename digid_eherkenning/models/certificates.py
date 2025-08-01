@@ -172,7 +172,7 @@ class ConfigCertificate(models.Model):
 
         # Try loading it with cryptography
         try:
-            _certificate.certificate
+            _certificate.certificate  # noqa: B018
             valid_pair = _certificate.is_valid_key_pair()
         except (FileNotFoundError, ValueError) as exc:
             logger.info(

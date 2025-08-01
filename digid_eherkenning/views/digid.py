@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from django.conf import settings
 from django.contrib import auth, messages
@@ -152,7 +151,7 @@ class DigiDLogoutView(LogoutView):
         return HttpResponseRedirect(logout_url)
 
     @staticmethod
-    def get_name_id(request) -> Optional[str]:
+    def get_name_id(request) -> str | None:
         """this method constructs 'name_id' using 'User.bsn' attribute"""
         # TODO perhaps it's better to use django session to store and retrieve name_id?
         bsn = getattr(request.user, "bsn", None)

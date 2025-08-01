@@ -129,6 +129,9 @@ extend-select = [
     "PERF",# perflint
     "B",   # flake8-bugbear
 ]
+extend-ignore = [
+    "E501",
+]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

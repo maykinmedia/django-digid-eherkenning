@@ -5,7 +5,6 @@ import pytest
 from digid_eherkenning.models import (
     DigidConfiguration,
     EherkenningConfiguration,
-    eherkenning,
 )
 
 pytestmark = pytest.mark.django_db
