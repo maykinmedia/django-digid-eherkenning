@@ -63,7 +63,3 @@ the user details are retrieved. You should provide a customized backend to deter
 what needs to be done with this user information, e.g. create a django user or store
 the information in the django session.
 """
-
-import warnings
-
-warnings.warn("The 'oidc' module is deprecated.", DeprecationWarning, stacklevel=2)
