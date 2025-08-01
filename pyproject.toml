@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0.0"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -54,6 +54,7 @@ oidc = [
 tests = [
     "django-test-migrations",
     "pytest",
+    "pytest-cov",
     "pytest-django",
     "pytest-mock",
     "responses",
@@ -63,17 +64,14 @@ tests = [
     "black",
     "flake8",
 ]
-coverage = [
-    "pytest-cov",
-]
 docs = [
     "sphinx",
     "sphinx-rtd-theme",
-    "psycopg2",
+    "psycopg",
 ]
 release = [
     "bump-my-version",
-    "twine",
+    "build",
 ]
 
 [tool.setuptools.packages.find]
