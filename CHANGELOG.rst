@@ -2,6 +2,24 @@
 Changelog
 =========
 
+0.23.0 (2025-08-01)
+===================
+
+💥⚠️ Breaking changes release for the OIDC rework.
+
+The ``oidc`` extra (``django-digid-eherkenning[oidc]``) now depends on
+``mozilla-django-oidc-db>=0.24`` which has seen a big rework in how the OpenID Connect
+providers and clients are configured. The (base) models in django-digid-eherkenning for
+this have been removed, and we provide migration operations to facilitate migrating in
+your project.
+
+If you only use the SAML flows, then you are not affected.
+
+Other than that:
+
+* Support for Django 5.2 is confirmed.
+* Support for Python 3.13 is confirmed.
+
 0.22.1 (2025-07-21)
 ===================
 
