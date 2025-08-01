@@ -10,12 +10,14 @@ authors = [
     {name = "Maykin Media", email = "support@maykinmedia.nl"}
 ]
 readme = "README.rst"
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["django", "authentication", "digid", "eherkenning", "eidas", "dutch", "nl", "netherlands"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Framework :: Django",
     "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.2",
     "Intended Audience :: Developers",
     "Operating System :: Unix",
     "Operating System :: MacOS",
@@ -23,6 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 requires-python = ">=3.10"
