@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, TypeAlias
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -53,6 +54,7 @@ class ConfigCertificateQuerySet(models.QuerySet["ConfigCertificate"]):
 
         * discard candidates that are not valid yet
         * discard candiates that are not valid anymore
+        * discard candidates that are not yet 'activated'
 
         If no candidate matches, we raise a DoesNotExist exception.
 
@@ -134,6 +136,15 @@ class ConfigCertificate(models.Model):
             "matching candidate will automatically be selected by the configuration."
         ),
     )
+    activation_date = models.DateTimeField(
+        verbose_name=_("activation date"),
+        help_text=_(
+            "The date on which the certificate becomes active. This is required in "
+            "order to synchronize the switching of certificates with the IdP."
+        ),
+        null=True,
+        blank=True,
+    )
 
     objects = ConfigCertificateManager()
 
@@ -147,7 +158,7 @@ class ConfigCertificate(models.Model):
                 violation_error_message=_(
                     "This configuration and certificate combination already exists."
                 ),
-            ),
+            )
         ]
 
     def __str__(self):
@@ -155,6 +166,18 @@ class ConfigCertificate(models.Model):
         _cert = self.certificate if self.certificate_id else None  # type: ignore
         certificate = str(_cert) if _cert else _("(no certificate selected)")
         return f"{config_type}: {certificate}"
+
+    def clean(self):
+        super().clean()
+
+        if self.activation_date and not (
+            self.certificate.valid_from
+            < self.activation_date
+            <= self.certificate.expiry_date
+        ):
+            raise ValidationError(
+                "The activation date must fall within the period defined by 'valid_from' and 'expiry_date'."
+            )
 
     def _meets_requirements_to_be_used_for_saml(self) -> bool:
         try:
@@ -200,6 +223,9 @@ class ConfigCertificate(models.Model):
 
         now = timezone.now()
         if not (valid_from <= now <= expiry_date):
+            return False
+
+        if self.activation_date and not (now >= self.activation_date):
             return False
 
         return True
