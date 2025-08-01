@@ -240,7 +240,7 @@ def create_service_definition(
                 )
 
             ra_args = []
-            if not "purpose_statements" in requested_attribute:
+            if "purpose_statements" not in requested_attribute:
                 ra_args += create_language_elements("PurposeStatement", service_name)
             else:
                 ra_args += create_language_elements(
@@ -297,10 +297,8 @@ def create_service_instance(
 
 
 def create_classifiers_element(classifiers: list) -> ElementMaker:
-    classifiers_elements = []
-    for classifier in classifiers:
-        classifiers_elements.append(ESC("Classifier", classifier))
-    return ESC("Classifiers", *classifiers_elements)
+    elements = (ESC("Classifier", classifier) for classifier in classifiers)
+    return ESC("Classifiers", *elements)
 
 
 def create_key_descriptor(x509_certificate_content: bytes) -> ElementMaker:

@@ -20,7 +20,7 @@ def test_saml2_get_request_creation(rf):
 
 def test_saml2_post_request_creation(rf):
     django_request = rf.post("/irrelevant", data={"some_query": "string"})
-    django_request.body
+    django_request.body  # noqa: B018
     base_url = "http://example.com/foo"
 
     saml_request = create_saml2_request(base_url, django_request)

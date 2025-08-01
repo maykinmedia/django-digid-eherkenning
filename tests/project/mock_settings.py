@@ -1,4 +1,4 @@
-from .settings import *
+from .settings import *  # noqa: F403
 
 ROOT_URLCONF = "tests.project.mock_urls"
 

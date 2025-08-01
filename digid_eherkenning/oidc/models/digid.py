@@ -7,7 +7,7 @@ from typing_extensions import deprecated
     "Left here so that proxy models that in the migrations have "
     'bases=("digid_eherkenning_oidc_generics.digidconfig",) can still run their migrations.'
 )
-class DigiDConfig(models.Model):
+class DigiDConfig(models.Model):  # noqa: DJ008
     class Meta:
         managed = False
 
@@ -16,6 +16,6 @@ class DigiDConfig(models.Model):
     "Left here so that proxy models that in the migrations have "
     'bases=("digid_eherkenning_oidc_generics.digidmachtigenconfig",) can still run their migrations.'
 )
-class DigiDMachtigenConfig(models.Model):
+class DigiDMachtigenConfig(models.Model):  # noqa: DJ008
     class Meta:
         managed = False

@@ -1,5 +1,3 @@
-from typing import Literal, Optional, Union
-
 from django.conf import settings
 from django.contrib import auth, messages
 from django.http import HttpResponseRedirect
@@ -7,7 +5,6 @@ from django.shortcuts import resolve_url
 from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView, View
 
-from ..choices import AssuranceLevels
 from ..exceptions import SAML2Error, eHerkenningNoRSINError
 from ..forms import SAML2Form
 from ..saml2.eherkenning import eHerkenningClient
@@ -26,7 +23,7 @@ class eHerkenningLoginView(TemplateView):
         redirect_to = self.request.GET.get("next", "")
         return get_redirect_url(self.request, redirect_to)
 
-    def get_attribute_consuming_service_index(self) -> Optional[str]:
+    def get_attribute_consuming_service_index(self) -> str | None:
         attribute_consuming_service_index = self.request.GET.get(
             "attr_consuming_service_index"
         )

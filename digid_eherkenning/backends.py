@@ -105,7 +105,7 @@ class DigiDBackend(BSNBackendMixin, BaseSaml2Backend):
         },
     )
 
-    def authenticate(self, request, digid=None, saml_art=None, errors=[]):
+    def authenticate(self, request, digid=None, saml_art=None, errors=[]):  # noqa: B006
         # Note: the fucntion has side-effect: it modifies 'errors' parameter
         # It's a workaround to access auth errors outside the Backend
         errors.clear()

@@ -655,13 +655,13 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
             body=self.artifact_response_soap,
             status=200,
         )
-
         url = (
             reverse("digid:acs")
             + "?"
             + urllib.parse.urlencode({"SAMLart": self.artifact})
         )
-        response = self.client.get(url)
+
+        self.client.get(url)
 
         self.assertEqual(self.client.session.get_expiry_age(), 900)
 

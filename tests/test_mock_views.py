@@ -156,7 +156,6 @@ class LoginViewTests(DigidMockTestCase):
 @override_settings(**OVERRIDE_SETTINGS)
 @modify_settings(**MODIFY_SETTINGS)
 class MockBsnLoginViewTests(DigidMockTestCase):
-
     @classmethod
     def setUpTestData(cls):
         cls.mock_user = MockDigidUser.objects.create(bsn="296648875", name="Henk")
@@ -210,11 +209,10 @@ class MockBsnLoginViewTests(DigidMockTestCase):
         response = self.client.get(response["Location"], follow=False)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Je bent ingelogged als gebruiker")
-        self.assertContains(response, "<code>{}</code>".format(str(user)))
+        self.assertContains(response, f"<code>{str(user)}</code>")
         self.assertContains(response, f"<code>{self.mock_user.bsn}</code>")
 
     def test_post_redirects_and_authenticates_with_free_input(self):
-
         # Remove mock users so that a new BSN should
         #  be passed rather than a mock user with a BSN
         MockDigidUser.objects.all().delete()
@@ -248,11 +246,10 @@ class MockBsnLoginViewTests(DigidMockTestCase):
         response = self.client.get(response["Location"], follow=False)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Je bent ingelogged als gebruiker")
-        self.assertContains(response, "<code>{}</code>".format(str(user)))
+        self.assertContains(response, f"<code>{str(user)}</code>")
         self.assertContains(response, f"<code>{self.mock_user.bsn}</code>")
 
     def test_post_redirects_and_authenticates_with_leading_zero(self):
-
         # Remove mock users so that a new BSN should
         #  be passed rather than a mock user with a BSN
         MockDigidUser.objects.all().delete()
@@ -288,7 +285,7 @@ class MockBsnLoginViewTests(DigidMockTestCase):
         response = self.client.get(response["Location"], follow=False)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Je bent ingelogged als gebruiker")
-        self.assertContains(response, "<code>{}</code>".format(str(user)))
+        self.assertContains(response, f"<code>{str(user)}</code>")
         self.assertContains(response, f"<code>{leading_zero_bsn}</code>")
 
     def test_post_redirect_retains_acs_querystring_params(self):

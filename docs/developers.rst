@@ -15,7 +15,7 @@ matter of installing the package with all extras:
 
 .. code-block:: bash
 
-    pip install -e .[tests,coverage,docs,release,oidc]
+    pip install -e .[tests,docs,release,oidc]
 
 .. note::
 
@@ -52,12 +52,3 @@ Background information
 
 Information that was at some point relevant and may document certain choices can
 be found in ``information.md`` in the root of the repository.
-
-Bitbucket mirror
-================
-
-This project was originally on Bitbucket and closed source. The Bitbucket project still
-exists, but only as a mirror of the Github repository. All future development must
-happen on Github.
-
-Bitbucket mirror: https://bitbucket.org/maykinmedia/django-digid-eherkenning/

@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, List
+from collections.abc import Callable
 
 from django.conf import settings
 from django.core.cache import cache
@@ -61,7 +61,7 @@ def get_service_description(conf: dict) -> str:
     )
 
 
-def get_requested_attributes(conf: dict) -> List[dict]:
+def get_requested_attributes(conf: dict) -> list[dict]:
     # There needs to be a RequestedAttribute element where the name is the ServiceID
     # https://afsprakenstelsel.etoegang.nl/display/as/DV+metadata+for+HM
     requested_attributes = []
@@ -239,9 +239,9 @@ class BaseSaml2Client:
             certificate = cert_file.read()
             privkey = key_file.read()
 
-        assert not conf["base_url"].endswith(
-            "/"
-        ), "Base URL must not end with a trailing slash"
+        assert not conf["base_url"].endswith("/"), (
+            "Base URL must not end with a trailing slash"
+        )
         acs_url = furl(conf["base_url"]) / conf["acs_path"]
         setting_dict = {
             "strict": True,

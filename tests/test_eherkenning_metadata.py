@@ -440,7 +440,6 @@ class EHerkenningMetadataTests(TestCase):
         no_eidas=True,
     )
     def test_no_eidas_service(self):
-
         eherkenning_metadata = generate_eherkenning_metadata()
 
         entity_descriptor_node = etree.XML(eherkenning_metadata)

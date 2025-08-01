@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("digid_eherkenning", "0002_mockdigiduser"),
     ]
