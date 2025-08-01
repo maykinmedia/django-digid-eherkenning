@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-29 12:05+0000\n"
+"POT-Creation-Date: 2025-08-01 06:34+0000\n"
 "PO-Revision-Date: 2020-06-23 16:55+0200\n"
 "Last-Translator: Sergei Maertens <sergei@maykinmedia.nl>\n"
 "Language-Team: Maykin Media <info@maykinmedia.nl>\n"
@@ -146,8 +146,6 @@ msgid "DigiD mock gebruiker"
 msgstr ""
 
 #: mock/idp/forms.py:23
-#, fuzzy
-#| msgid "service name"
 msgid "Burgerservicenummer"
 msgstr ""
 
@@ -619,8 +617,6 @@ msgid "DigiD & eHerkenning via OpenID Connect"
 msgstr "DigiD & eHerkenning met OpenID Connect"
 
 #: oidc/schemas.py:9
-#, fuzzy
-#| msgid "loa mapping"
 msgid "LoA mapping schema"
 msgstr "LoA-vertalingen"
 
@@ -643,37 +639,26 @@ msgid "Number value"
 msgstr "Numerieke waarde"
 
 #: oidc/schemas.py:48
-#, fuzzy
-#| msgid "Digid configuration"
 msgid "OIDC DigiD Configuration options."
-msgstr "OIDC DigiD-configuratie opties."
+msgstr "OIDC DigiD-configuratieopties."
 
 #: oidc/schemas.py:53 oidc/schemas.py:114 oidc/schemas.py:215
 #: oidc/schemas.py:302
-#, fuzzy
-#| msgid "Common settings"
 msgid "LoA settings"
-msgstr "Betrouwbaarheidsniveau (LoA) instellingen"
+msgstr "Betrouwbaarheidsniveau (LoA)-instellingen"
 
 #: oidc/schemas.py:54 oidc/schemas.py:115 oidc/schemas.py:216
 #: oidc/schemas.py:303
-#, fuzzy
-#| msgid "Level of Assurance (LoA) to use for the eHerkenning service."
 msgid "Level of Assurance related settings."
-msgstr "Betrouwbaarheidsniveau (LoA) voor de eHerkenningservice."
+msgstr "Instellingen met betrekking op betrouwbaarheidsniveau (LoA)"
 
 #: oidc/schemas.py:58 oidc/schemas.py:119 oidc/schemas.py:220
 #: oidc/schemas.py:307
 msgid "Claim path"
-msgstr "Claim naam"
+msgstr "Claimnaam"
 
 #: oidc/schemas.py:60 oidc/schemas.py:121 oidc/schemas.py:222
 #: oidc/schemas.py:309
-#, fuzzy
-#| msgid ""
-#| "Name of the claim holding the level of assurance. If left empty, it is "
-#| "assumed there is no LOA claim and the configured fallback value will be "
-#| "used."
 msgid ""
 "Path to the claim value holding the level of assurance. If left empty, it is "
 "assumed there is no LOA claim and the configured fallback value will be used."
@@ -684,10 +669,8 @@ msgstr ""
 
 #: oidc/schemas.py:70 oidc/schemas.py:131 oidc/schemas.py:232
 #: oidc/schemas.py:319
-#, fuzzy
-#| msgid "default LOA"
 msgid "Default"
-msgstr "standaardbetrouwbaarheidsniveau"
+msgstr "Standaardwaarde"
 
 #: oidc/schemas.py:72 oidc/schemas.py:133 oidc/schemas.py:234
 #: oidc/schemas.py:321
@@ -698,10 +681,8 @@ msgstr ""
 
 #: oidc/schemas.py:85 oidc/schemas.py:145 oidc/schemas.py:246
 #: oidc/schemas.py:333
-#, fuzzy
-#| msgid "Advanced settings"
 msgid "Identity settings"
-msgstr "Identiteitsinstellingen"
+msgstr "Identificatieinstellingen"
 
 #: oidc/schemas.py:86
 msgid "DigiD settings about the user."
@@ -712,55 +693,38 @@ msgid "BSN claim path"
 msgstr "BSN-claim"
 
 #: oidc/schemas.py:93
-#, fuzzy
-#| msgid "Name of the claim holding the authenticated user's BSN."
 msgid "Path to the claim holding the authenticated user's BSN."
 msgstr "Naam van de claim die het BSN bevat van de ingelogde gebruiker."
 
 #: oidc/schemas.py:109
-#, fuzzy
-#| msgid "Eherkenning/eIDAS configuration"
 msgid "OIDC eHerkenning Configuration options."
-msgstr "OIDC eHerkenning/eIDAS-configuratie opties."
+msgstr "OIDC eHerkenning/eIDAS-configuratie-opties."
 
 #: oidc/schemas.py:146
-#, fuzzy
-#| msgid "eHerkenning"
 msgid "eHerkenning settings."
-msgstr "eHerkenning instellingen."
+msgstr "eHerkenning-instellingen."
 
 #: oidc/schemas.py:153 oidc/schemas.py:347
-#, fuzzy
-#| msgid "identifier type claim"
 msgid "Identifier-type claim path"
-msgstr "soort identificatie-claim"
+msgstr "Claimnaam identificatietype"
 
 #: oidc/schemas.py:155 oidc/schemas.py:349
-#, fuzzy
-#| msgid ""
-#| "Claim that specifies how the legal subject claim must be interpreted. The "
-#| "expected claim value is one of: "
-#| "'urn:etoegang:1.9:EntityConcernedID:KvKnr' or "
-#| "'urn:etoegang:1.9:EntityConcernedID:RSIN'."
 msgid ""
 "Path to the claim value that specifies how the legal subject claim must be "
 "interpreted. The expected claim value is one of: "
 "'urn:etoegang:1.9:EntityConcernedID:KvKnr' or "
 "'urn:etoegang:1.9:EntityConcernedID:RSIN'."
 msgstr ""
-"Claim die aangeeft hoe de bedrijfsidentificatiewaarde dient geïnterpreteerd "
-"te worden. Verwachtte waarden voor deze claim zijn: "
+"Claim die aangeeft hoe de 'legal subject' dient geïnterpreteerd "
+"te worden. De verwachtte waarde voor deze claim is: "
 "'urn:etoegang:1.9:EntityConcernedID:KvKnr' of "
 "'urn:etoegang:1.9:EntityConcernedID:RSIN'."
 
 #: oidc/schemas.py:167 oidc/schemas.py:362
 msgid "Legal subject claim path"
-msgstr "identificatie juridisch verantwoordelijke persoon-claim"
+msgstr "Claimnaam juridisch verantwoordelijke"
 
 #: oidc/schemas.py:170 oidc/schemas.py:364
-#, fuzzy
-#| msgid ""
-#| "Name of the claim holding the identifier of the authenticated company."
 msgid ""
 "Path to the claim value holding the identifier of the authenticated company."
 msgstr ""
@@ -768,16 +732,10 @@ msgstr ""
 "bedrijf bevat."
 
 #: oidc/schemas.py:179 oidc/schemas.py:373
-#, fuzzy
-#| msgid "acting subject identifier claim"
 msgid "Acting subject claim path"
-msgstr "identificatie handelende persoon-claim"
+msgstr "Claimnaam handelende persoon"
 
 #: oidc/schemas.py:181 oidc/schemas.py:375
-#, fuzzy
-#| msgid ""
-#| "Name of the claim holding the (opaque) identifier of the user "
-#| "representing the authenticated company.."
 msgid ""
 "Path to the claim value holding the (opaque) identifier of the user "
 "representing the authenticated company.."
@@ -786,10 +744,8 @@ msgstr ""
 "ingelogde bedrijf bevat."
 
 #: oidc/schemas.py:191 oidc/schemas.py:385
-#, fuzzy
-#| msgid "branch number claim"
 msgid "Branch number claim path"
-msgstr "vestigingsnummer-claim"
+msgstr "Claimnaam vestigingsnummer"
 
 #: oidc/schemas.py:193 oidc/schemas.py:387
 msgid ""
@@ -808,40 +764,26 @@ msgid "DigiD Machtigen settings."
 msgstr "DigiD Machtigen instellingen."
 
 #: oidc/schemas.py:256
-#, fuzzy
-#| msgid "representee bsn claim"
 msgid "Representee BSN claim path"
-msgstr "BSN vertegenwoordigde-claim"
+msgstr "Claimnaam BSN vertegenwoordigde"
 
 #: oidc/schemas.py:258
-#, fuzzy
-#| msgid "Name of the claim holding the BSN of the represented user."
 msgid "Path to the claim value holding the BSN of the represented user."
 msgstr "Naam van de claim die het BSN bevat van de vertegenwoordigde persoon."
 
 #: oidc/schemas.py:267
-#, fuzzy
-#| msgid "authorizee bsn claim"
 msgid "Authorizee BSN claim path"
-msgstr "BSN vertegenwoordiger-claim"
+msgstr "Claimnaam BSN vertegenwoordiger"
 
 #: oidc/schemas.py:269
-#, fuzzy
-#| msgid "Name of the claim holding the BSN of the authorized user."
 msgid "Path to the claim value holding the BSN of the authorised user."
 msgstr "Naam van de claim die het BSN bevat van de vertegenwoordiger."
 
 #: oidc/schemas.py:278 oidc/schemas.py:411
-#, fuzzy
-#| msgid "service ID claim"
 msgid "Mandate service ID claim path"
-msgstr "service ID-claim"
+msgstr "Claimnaam machtiging-service ID"
 
 #: oidc/schemas.py:280
-#, fuzzy
-#| msgid ""
-#| "Name of the claim holding the service UUID for which the acting subject "
-#| "is authorized."
 msgid ""
 "Path to the claim value holding the service UUID for which the acting "
 "subject is authorized."
@@ -851,29 +793,21 @@ msgstr ""
 
 #: oidc/schemas.py:297
 msgid "OIDC eHerkenning Bewindvoering Configuration options."
-msgstr "OIDC eHerkenning Bewindvoering-configuratie opties."
+msgstr "OIDC eHerkenning Bewindvoering-configuratie-opties."
 
 #: oidc/schemas.py:334
 msgid "eHerkenning Bewindvoering settings."
-msgstr "eHerkenning Bewindvoering instellingen."
+msgstr "eHerkenning Bewindvoering-instellingen."
 
 #: oidc/schemas.py:399
-#, fuzzy
-#| msgid "representee bsn claim"
 msgid "Representee claim path"
-msgstr "BSN vertegenwoordigde-claim"
+msgstr "Claimnaam BSN vertegenwoordigde"
 
 #: oidc/schemas.py:401
-#, fuzzy
-#| msgid "Name of the claim holding the BSN of the represented person."
 msgid "Path to the claim value holding the BSN of the represented person."
 msgstr "Naam van de claim die het BSN bevat van de vertegenwoordigde persoon."
 
 #: oidc/schemas.py:413
-#, fuzzy
-#| msgid ""
-#| "Name of the claim holding the service ID for which the company is "
-#| "authorized."
 msgid ""
 "Path to the claim value holding the service ID for which the company is "
 "authorized."
@@ -882,16 +816,10 @@ msgstr ""
 "gemachtigd is."
 
 #: oidc/schemas.py:423
-#, fuzzy
-#| msgid "service UUID claim"
 msgid "Mandate service UUID claim path"
-msgstr "service UUID-claim"
+msgstr "Claimnaam machtiging-service UUID"
 
 #: oidc/schemas.py:425
-#, fuzzy
-#| msgid ""
-#| "Name of the claim holding the service UUID for which the company is "
-#| "authorized."
 msgid ""
 "Path to the claim value holding the service UUID for which the company is "
 "authorized."
@@ -951,45 +879,3 @@ msgstr ""
 "Er ging iets fout bij het genereren van de metadata. Neem a.u.b. contact op "
 "met uw technisch contactpersoon en informeer hen dat de configuratie "
 "ongeldig is."
-
-#~ msgid "Attributes to extract from claims"
-#~ msgstr "Attributen om uit de claims te halen"
-
-#~ msgid "Activation"
-#~ msgstr "Activering"
-
-#~ msgid "Endpoints"
-#~ msgstr "Endpoints"
-
-#~ msgid "Keycloak specific settings"
-#~ msgstr "Keycloak-specifieke instellingen"
-
-#~ msgid "LoA claim"
-#~ msgstr "Betrouwbaarheidsniveau-claim"
-
-#~ msgid "bsn claim"
-#~ msgstr "BSN-claim"
-
-#~ msgid "OpenID Connect scopes"
-#~ msgstr "OpenID Connect scopes"
-
-#~ msgid "OpenID Connect scope"
-#~ msgstr "OpenID Connect scope"
-
-#~ msgid "OpenID Connect configuration for DigiD"
-#~ msgstr "OpenID Connect-configuratie voor DigiD"
-
-#~ msgid "OpenID Connect configuration for DigiD Machtigen"
-#~ msgstr "OpenID Connect-configuratie voor DigiD Machtigen"
-
-#~ msgid "company identifier claim"
-#~ msgstr "bedrijfsidenticatie-claim"
-
-#~ msgid "OpenID Connect configuration for eHerkenning"
-#~ msgstr "OpenID Connect-configuratie voor eHerkenning"
-
-#~ msgid "representee identifier claim"
-#~ msgstr "identificatie vertegenwoordigde-claim"
-
-#~ msgid "OpenID Connect configuration for eHerkenning Bewindvoering"
-#~ msgstr "OpenID Connect-configuratie voor eHerkenning Bewindvoering"
