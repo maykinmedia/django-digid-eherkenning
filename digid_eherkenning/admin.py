@@ -179,6 +179,7 @@ class ConfigCertificateAdmin(admin.ModelAdmin):
         "config_type",
         "certificate",
         "valid_from",
+        "activate_on",
         "expiry_date",
         "is_ready",
     )

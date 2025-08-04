@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from io import BytesIO
 
+from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.utils import timezone
 
@@ -30,9 +31,36 @@ def test_valid_certificate(temp_private_root, digid_certificate):
     config_certificate = ConfigCertificate(
         config_type=ConfigTypes.digid,
         certificate=digid_certificate,
+        activate_on=None,  # fall back to certificate valid_from/expiry_date
     )
 
     assert config_certificate.is_ready_for_authn_requests
+
+
+def test_valid_certificate_with_activation_date_is_ready(
+    temp_private_root, digid_certificate
+):
+    # note that this test will start failing once the certificates expire IRL (!)
+    config_certificate = ConfigCertificate(
+        config_type=ConfigTypes.digid,
+        certificate=digid_certificate,
+        activate_on=timezone.now(),
+    )
+
+    assert config_certificate.is_ready_for_authn_requests
+
+
+def test_valid_certificate_with_activation_date_in_future_is_not_ready(
+    temp_private_root, digid_certificate
+):
+    # note that this test will start failing once the certificates expire IRL (!)
+    config_certificate = ConfigCertificate(
+        config_type=ConfigTypes.digid,
+        certificate=digid_certificate,
+        activate_on=timezone.now() + timedelta(hours=1),
+    )
+
+    assert config_certificate.is_ready_for_authn_requests is False
 
 
 @freeze_time("2099-01-01")
@@ -119,7 +147,9 @@ def _generate_config_certificate(
     request: pytest.FixtureRequest,
     config_type: ConfigTypes,
     valid_from: datetime,
+    activate_on: datetime | None = None,
 ) -> Certificate:
+    # Certificates are valid for one day
     request.getfixturevalue("temp_private_root")
     subject = x509.Name(
         [
@@ -135,6 +165,7 @@ def _generate_config_certificate(
     key = gen_key()
     # hack to work around the hardcoded timezone.now() usage in the mkcert helper
     assert valid_from.tzinfo is not None, "Thou shall not use naive datetimes"
+
     with freeze_time(valid_from):
         cert = mkcert(
             subject=subject,
@@ -151,8 +182,53 @@ def _generate_config_certificate(
         public_certificate=File(BytesIO(cert_pem), name="public_certificate.pem"),
         private_key=File(BytesIO(key_pem), name="private_key.pem"),
     )
-    ConfigCertificate.objects.create(config_type=config_type, certificate=certificate)
+    ConfigCertificate.objects.create(
+        config_type=config_type,
+        certificate=certificate,
+        activate_on=activate_on,
+    )
     return certificate
+
+
+@pytest.mark.parametrize("model", (DigidConfiguration, EherkenningConfiguration))
+def test_activate_on_must_fall_between_certificate_period(
+    request: pytest.FixtureRequest,
+    model: type[DigidConfiguration] | type[EherkenningConfiguration],
+    digid_certificate,
+):
+    config = model.get_solo()
+    config_type = config._as_config_type()
+    configCert = ConfigCertificate(
+        config_type=config_type,
+        certificate=digid_certificate,
+        activate_on=timezone.now() + timedelta(days=20000),
+    )
+
+    with pytest.raises(ValidationError) as exc_context:
+        configCert.full_clean()
+
+    assert "activate_on" in exc_context.value.error_dict
+
+
+@pytest.mark.parametrize("model", (DigidConfiguration, EherkenningConfiguration))
+def test_if_no_activate_on_then_skip_certificate_period_check(
+    request: pytest.FixtureRequest,
+    model: type[DigidConfiguration] | type[EherkenningConfiguration],
+    digid_certificate,
+):
+    config = model.get_solo()
+    config_type = config._as_config_type()
+    config_cert = ConfigCertificate(
+        config_type=config_type, certificate=digid_certificate, activate_on=None
+    )
+
+    try:
+        config_cert.full_clean()
+    except ValidationError:
+        pytest.fail(
+            "ConfigCertificate should not check if the activation date falls between"
+            " the valid_from - expiry_date period if no activate_on was given."
+        )
 
 
 @pytest.mark.parametrize("model", (DigidConfiguration, EherkenningConfiguration))
@@ -192,12 +268,17 @@ def test_certificate_selection_picks_correct_2(
     config_type = config._as_config_type()
     # expired
     _generate_config_certificate(
-        request, config_type, valid_from=timezone.now() - timedelta(days=5)
+        request,
+        config_type,
+        valid_from=timezone.now() - timedelta(days=5),
     )
     # currently valid
     _old_current = _generate_config_certificate(
-        request, config_type, valid_from=timezone.now()
+        request,
+        config_type,
+        valid_from=timezone.now(),
     )
+
     # valid tomorrow
     _new_current = _generate_config_certificate(
         request,
@@ -207,11 +288,75 @@ def test_certificate_selection_picks_correct_2(
 
     # "current" has now expired
     with freeze_time(timezone.now() + timedelta(days=1, hours=1)):
-        assert timezone.now() > _old_current.expiry_date
         current_cert, next_cert = config.select_certificates()
 
     assert current_cert == _new_current
     assert next_cert is None
+
+
+@pytest.mark.parametrize("model", (DigidConfiguration, EherkenningConfiguration))
+def test_certificate_selection_favours_certificate_with_activate_on_in_the_past(
+    request: pytest.FixtureRequest,
+    model: type[DigidConfiguration] | type[EherkenningConfiguration],
+):
+    """
+    Favour a certificate with activate_on (when it's valid) over certificates without.
+    """
+    config = model.get_solo()
+    config_type = config._as_config_type()
+    now = timezone.now()
+    # valid but no activate_on
+    _without_activate_on = _generate_config_certificate(
+        request,
+        config_type,
+        valid_from=now,
+        activate_on=None,
+    )
+    # valid and with activate_on in the past
+    _with_activate_on = _generate_config_certificate(
+        request,
+        config_type,
+        valid_from=now,
+        activate_on=now,
+    )
+
+    with freeze_time(timezone.now() + timedelta(seconds=5)):
+        current_cert, next_cert = config.select_certificates()
+
+    assert current_cert == _with_activate_on
+    assert next_cert == _without_activate_on
+
+
+@pytest.mark.parametrize("model", (DigidConfiguration, EherkenningConfiguration))
+def test_certificate_selection_favours_certificate_with_activate_on_in_the_future(
+    request: pytest.FixtureRequest,
+    model: type[DigidConfiguration] | type[EherkenningConfiguration],
+):
+    """
+    Favour a certificate with activate_on (when it's valid) over certificates without.
+    """
+    config = model.get_solo()
+    config_type = config._as_config_type()
+    now = timezone.now()
+    # valid but no activate_on
+    _without_activate_on = _generate_config_certificate(
+        request,
+        config_type,
+        valid_from=now,
+        activate_on=None,
+    )
+    # valid and with activate_on in the past
+    _with_activate_on = _generate_config_certificate(
+        request,
+        config_type,
+        valid_from=now,
+        activate_on=now + timedelta(hours=4),
+    )
+
+    current_cert, next_cert = config.select_certificates()
+
+    assert current_cert == _without_activate_on
+    assert next_cert == _with_activate_on
 
 
 @pytest.mark.parametrize("model", (DigidConfiguration, EherkenningConfiguration))
