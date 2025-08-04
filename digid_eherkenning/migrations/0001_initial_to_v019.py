@@ -14,43 +14,6 @@ import digid_eherkenning.models.digid
 
 
 class Migration(migrations.Migration):
-    replaces = [
-        ("digid_eherkenning", "0001_initial"),
-        ("digid_eherkenning", "0002_auto_20221102_1046"),
-        ("digid_eherkenning", "0003_digidconfiguration_artifact_resolve_content_type"),
-        ("digid_eherkenning", "0004_alter_eherkenningconfiguration_loa"),
-        (
-            "digid_eherkenning",
-            "0005_alter_eherkenningconfiguration_eh_service_instance_uuid_and_more",
-        ),
-        ("digid_eherkenning", "0006_digidconfiguration_metadata_file_source_and_more"),
-        ("digid_eherkenning", "0007_eherkenningconfiguration_service_description_url"),
-        ("digid_eherkenning", "0008_update_loa_fields"),
-        ("digid_eherkenning", "0009_decrypt_private_keys"),
-        ("digid_eherkenning", "0010_remove_digidconfiguration_key_passphrase_and_more"),
-        (
-            "digid_eherkenning",
-            "0011_configcertificate_configcertificate_uniq_config_cert",
-        ),
-        ("digid_eherkenning", "0012_move_config_certificate"),
-        (
-            "digid_eherkenning",
-            "0013_alter_eherkenningconfiguration_eh_requested_attributes_and_more",
-        ),
-        (
-            "digid_eherkenning",
-            "0014_alter_eherkenningconfiguration_digest_algorithm_and_more",
-        ),
-        (
-            "digid_eherkenning",
-            "0015_digidconfiguration_administrative_contact_person_email_and_more",
-        ),
-        (
-            "digid_eherkenning",
-            "0016_eherkenningconfiguration_eidas_service_description",
-        ),
-    ]
-
     dependencies = [
         ("simple_certmanager", "0001_initial"),
         ("simple_certmanager", "0002_alter_certificate_private_key_and_more"),
