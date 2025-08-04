@@ -2,6 +2,23 @@
 Changelog
 =========
 
+0.24.0 (2025-08-04)
+===================
+
+Feature release for the SAML flows.
+
+Certificates to be used for DigiD/eHerkenning/eIDAS now have an optional activation date
+to make it easier to coordinates certificate swaps with the broker/identity provider.
+
+The certificate selection logic is:
+
+- use the certificate with the oldest activation date if the date is in the past
+- otherwise, use the certificate with the oldest "valid from" property that does not
+  have an activation date set at all
+
+The "valid from" and "expiry date" properties of certificates are always respected and
+the activation date must lie between these lower and upper bounds.
+
 0.23.0 (2025-08-01)
 ===================
 
