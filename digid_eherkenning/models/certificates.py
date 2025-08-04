@@ -209,7 +209,7 @@ class ConfigCertificate(models.Model):
         ):
             error_message = _(
                 "The activation date cannot be before the certificate becomes valid "
-                "({valid_from}) or after its expirty ({expiry_date})."
+                "({valid_from}) or after its expiry ({expiry_date})."
             ).format(
                 valid_from=localize(timezone.localtime(valid_from)),
                 expiry_date=localize(timezone.localtime(expiry_date)),

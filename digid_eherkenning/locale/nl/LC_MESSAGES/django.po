@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-01 06:34+0000\n"
+"POT-Creation-Date: 2025-08-04 13:54+0000\n"
 "PO-Revision-Date: 2020-06-23 16:55+0200\n"
 "Last-Translator: Sergei Maertens <sergei@maykinmedia.nl>\n"
 "Language-Team: Maykin Media <info@maykinmedia.nl>\n"
@@ -49,15 +49,15 @@ msgstr "eHerkenning"
 msgid "eIDAS"
 msgstr "eIDAS"
 
-#: admin.py:189
+#: admin.py:190
 msgid "valid from"
 msgstr "geldig vanaf"
 
-#: admin.py:193
+#: admin.py:194
 msgid "expires on"
 msgstr "vervalt op"
 
-#: admin.py:197
+#: admin.py:198
 msgid "valid candidate?"
 msgstr "geschikt?"
 
@@ -149,7 +149,7 @@ msgstr ""
 msgid "Burgerservicenummer"
 msgstr ""
 
-#: mock/views/digid.py:92 views/digid.py:88
+#: mock/views/digid.py:92 views/digid.py:87
 msgid ""
 "An error occurred in the communication with DigiD. Please try again later. "
 "If this error persists, please check the website https://www.digid.nl for "
@@ -389,15 +389,15 @@ msgstr ""
 msgid "You must prepare at least one certificate for the {verbose_name}."
 msgstr "Je moet minstens één certificaat instellen voor de {verbose_name}."
 
-#: models/certificates.py:120
+#: models/certificates.py:154
 msgid "config type"
 msgstr "configuratietype"
 
-#: models/certificates.py:131
+#: models/certificates.py:165
 msgid "certificate"
 msgstr "certificaat"
 
-#: models/certificates.py:133
+#: models/certificates.py:167
 msgid ""
 "Certificate that may be used by the specified configuration. The best "
 "matching candidate will automatically be selected by the configuration."
@@ -406,21 +406,44 @@ msgstr ""
 "configuratie. De best geschikte optie wordt automatisch geselecteerd op "
 "basis van geldigheid."
 
-#: models/certificates.py:141
+#: models/certificates.py:172
+msgid "activation date"
+msgstr "activeren op"
+
+#: models/certificates.py:174
+msgid ""
+"The date on which the certificate becomes active. This is required in order "
+"to synchronize the switching of certificates with the IdP."
+msgstr ""
+"Het moment waarop dit certificaat in gebruik genomen wordt. Stem dit moment af met "
+"de identity provider/broker zodat de certificaatwissel op hetzelfde tijdstip "
+"plaatsvindt. Indien niet ingesteld, dan wordt het actieve certificaat bepaalt op "
+"basis van de geldig van/tot-parameters in het certificaat zelf."
+
+#: models/certificates.py:184
 msgid "DigiD/eHerkenning certificate"
 msgstr "DigiD/eHerkenning certificaat"
 
-#: models/certificates.py:142
+#: models/certificates.py:185
 msgid "DigiD/eHerkenning certificates"
 msgstr "DigiD/eHerkenning certificaten"
 
-#: models/certificates.py:148
+#: models/certificates.py:191
 msgid "This configuration and certificate combination already exists."
 msgstr "Dit certificaat bestaat al voor de geselecteerde configuratie."
 
-#: models/certificates.py:156
+#: models/certificates.py:199
 msgid "(no certificate selected)"
 msgstr "(geen certificaat geselecteerd)"
+
+#: models/certificates.py:211
+#, python-brace-format
+msgid ""
+"The activation date cannot be before the certificate becomes valid "
+"({valid_from}) or after its expiry ({expiry_date})."
+msgstr ""
+"Het activeringsmoment kan niet voor de geldigheids- ({valid_from}) of na de "
+"vervaldatum ({expiry_date}) van het certificaat liggen."
 
 #: models/digid.py:19 models/digid.py:22
 msgid "Attribute consuming service index"
@@ -715,8 +738,8 @@ msgid ""
 "'urn:etoegang:1.9:EntityConcernedID:KvKnr' or "
 "'urn:etoegang:1.9:EntityConcernedID:RSIN'."
 msgstr ""
-"Claim die aangeeft hoe de 'legal subject' dient geïnterpreteerd "
-"te worden. De verwachtte waarde voor deze claim is: "
+"Claim die aangeeft hoe de 'legal subject' dient geïnterpreteerd te worden. "
+"De verwachtte waarde voor deze claim is: "
 "'urn:etoegang:1.9:EntityConcernedID:KvKnr' of "
 "'urn:etoegang:1.9:EntityConcernedID:RSIN'."
 
@@ -853,21 +876,21 @@ msgstr "Een BSN bestaat uit %(size)i getallen."
 msgid "Invalid BSN."
 msgstr "Ongeldig BSN."
 
-#: views/digid.py:92
+#: views/digid.py:91
 msgid "You have cancelled logging in with DigiD."
 msgstr "U heeft het inloggen met DigiD geannuleerd."
 
-#: views/digid.py:144
+#: views/digid.py:143
 msgid "You are not authenticated with Digid"
 msgstr "U bent niet ingelogd met DigiD."
 
-#: views/eherkenning.py:94
+#: views/eherkenning.py:91
 msgid "No RSIN returned by eHerkenning. Login to eHerkenning did not succeed."
 msgstr ""
 "eHerkenning gaf geen RSIN terug. Het inloggen moet eHerkenning is niet "
 "gelukt."
 
-#: views/eherkenning.py:99 views/eherkenning.py:104
+#: views/eherkenning.py:96 views/eherkenning.py:101
 msgid "Login to eHerkenning did not succeed. Please try again."
 msgstr "eHerkenning-login mislukt. Probeer het nogmaals"
 
