@@ -83,10 +83,14 @@ class DigiDAssertionConsumerServiceView(View):
 
     login_url = None
     error_messages = {
-        "default": _(
-            "An error occurred in the communication with DigiD. "
-            "Please try again later. If this error persists, please "
-            "check the website https://www.digid.nl for the latest information."
+        # The Logius guidelines expressly mandate the following literal error message
+        # upon a failure to login, which is why the string is untranslated. See:
+        # https://www.logius.nl/onze-dienstverlening/toegang/digid/documentatie/checklist-aansluiten-op-digid-en-digid-machtigen
+        "default": (
+            "Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog een"
+            " keer. Lukt het nog steeds niet? Log in bij Mijn DigiD. Zo controleert u"
+            " of uw DigiD goed werkt. Mogelijk is er een storing bij de organisatie"
+            " waar u inlogt."
         ),
         "cancelled": _("You have cancelled logging in with DigiD."),
     }
