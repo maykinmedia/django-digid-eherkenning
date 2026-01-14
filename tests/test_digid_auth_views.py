@@ -410,10 +410,11 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
         self.assertEqual(
             list(response.context["messages"])[0].message,
-            _(
-                "An error occurred in the communication with DigiD. "
-                "Please try again later. If this error persists, please "
-                "check the website https://www.digid.nl for the latest information."
+            (
+                "Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog"
+                " een keer. Lukt het nog steeds niet? Log in bij Mijn DigiD. Zo"
+                " controleert u of uw DigiD goed werkt. Mogelijk is er een storing bij"
+                " de organisatie waar u inlogt."
             ),
         )
 
@@ -452,10 +453,11 @@ class DigidAssertionConsumerServiceViewTests(TestCase):
         self.assertEqual(response.redirect_chain, [("/admin/login/", 302)])
         self.assertEqual(
             list(response.context["messages"])[0].message,
-            _(
-                "An error occurred in the communication with DigiD. "
-                "Please try again later. If this error persists, please "
-                "check the website https://www.digid.nl for the latest information."
+            (
+                "Inloggen bij deze organisatie is niet gelukt. Probeert u het later nog"
+                " een keer. Lukt het nog steeds niet? Log in bij Mijn DigiD. Zo"
+                " controleert u of uw DigiD goed werkt. Mogelijk is er een storing bij"
+                " de organisatie waar u inlogt."
             ),
         )
 

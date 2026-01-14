@@ -238,6 +238,30 @@ class PasswordLoginViewTests(DigidMockTestCase):
             response, str(expected_redirect), fetch_redirect_response=False
         )
 
+    def test_authentication_failure_shows_compliant_error_message(self):
+        """Test that authentication failure shows Logius-compliant error message."""
+        # Call the ACS without a BSN parameter to trigger authentication failure
+        # When bsn is None, the backend returns None and authentication fails
+        url = reverse("digid:acs") + "?next=" + reverse("test-success")
+
+        response = self.client.get(url, follow=True)
+
+        # Should redirect to LOGIN_URL (/) since authentication failed
+        # The redirect is an absolute URL, so we need to use the full URL
+        self.assertRedirects(response, "http://testserver/")
+
+        # Should show the Logius-compliant error message in messages
+        messages_list = list(response.context.get("messages", []))
+        self.assertEqual(len(messages_list), 1)
+
+        expected_message = (
+            "Inloggen bij deze organisatie is niet gelukt. Probeert u het later"
+            " nog een keer. Lukt het nog steeds niet? Log in bij Mijn DigiD. Zo"
+            " controleert u of uw DigiD goed werkt. Mogelijk is er een storing"
+            " bij de organisatie waar u inlogt."
+        )
+        self.assertEqual(str(messages_list[0]), expected_message)
+
 
 @override_settings(**OVERRIDE_SETTINGS)
 @modify_settings(**MODIFY_SETTINGS)

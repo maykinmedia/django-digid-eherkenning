@@ -7,7 +7,6 @@ from django.contrib.auth.views import LogoutView
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import RedirectView
 
@@ -88,10 +87,11 @@ class DigiDAssertionConsumerServiceMockView(View):
     def get(self, request):
         user = auth.authenticate(request=request, bsn=request.GET.get("bsn"))
         if user is None:
-            message = _(
-                "An error occurred in the communication with DigiD. "
-                "Please try again later. If this error persists, please "
-                "check the website https://www.digid.nl for the latest information."
+            message = (
+                "Inloggen bij deze organisatie is niet gelukt. Probeert u het later"
+                " nog een keer. Lukt het nog steeds niet? Log in bij Mijn DigiD. Zo"
+                " controleert u of uw DigiD goed werkt. Mogelijk is er een storing"
+                " bij de organisatie waar u inlogt."
             )
             messages.error(request, message)
             login_url = self.get_login_url()
