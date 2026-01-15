@@ -2,6 +2,13 @@
 Changelog
 =========
 
+0.19.3 (2026-01-15)
+===================
+
+Backported a small (but important) fix.
+
+* [#104] Make DigiD SAML error message comply with Logius requirements
+
 0.19.2 (2025-01-09)
 ===================
 
