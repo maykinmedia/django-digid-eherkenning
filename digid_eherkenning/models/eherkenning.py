@@ -172,7 +172,7 @@ class EherkenningConfiguration(BaseConfiguration):
         constraints = [
             models.constraints.CheckConstraint(
                 name="valid_loa",
-                check=models.Q(
+                condition=models.Q(
                     models.Q(eh_loa__in=AssuranceLevels)
                     & models.Q(eidas_loa__in=AssuranceLevels)
                 ),

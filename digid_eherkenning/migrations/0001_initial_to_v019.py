@@ -640,7 +640,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="eherkenningconfiguration",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     models.Q(
                         ("eh_loa__in", digid_eherkenning.choices.AssuranceLevels),
                         ("eidas_loa__in", digid_eherkenning.choices.AssuranceLevels),
