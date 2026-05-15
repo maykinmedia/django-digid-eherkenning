@@ -2,6 +2,36 @@
 Changelog
 =========
 
+0.25.0 (2026-05-15)
+===================
+
+Maintenance release, with breaking changes.
+
+**💥⚠️ Breaking changes**
+
+* The squashed migrations have been deleted. You may need to replace migration
+  references in your own migrations to point to ``0001_initial_to_v019``.
+* django-simple-certmanager 3.0+ is now the minimum required version, which had some
+  breaking changes itself.
+* Dropped support for Python versions older than 3.12.
+* Dropped support for Django 4.2.
+
+**New features**
+
+* Added support for Django 6.0.
+* Confirmed support for Python 3.14.
+* Added support for django-privates 4.0+.
+
+**Bugfixes**
+
+* Fixed the DigiD SAML error messages to be compliant again with Logius' requirements.
+
+**Other changes**
+
+* Hardened the Github Actions workflows by restricting permissions and pinning the used
+  actions to commit hashes.
+* Added zizmor for static security analysis for the Github workflow files.
+
 0.24.0 (2025-08-04)
 ===================
 
