@@ -16,12 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ['3.12', '3.13']
-        django: ['4.2', '5.2']
+        python: ['3.12', '3.13', '3.14']
+        django: ['5.2', '6.0']
         oidc_enabled: ['no', 'yes']
-        exclude:
-          - python: '3.13'
-            django: '4.2'
 
     services:
       postgres:

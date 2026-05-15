@@ -16,20 +16,21 @@ keywords = ["django", "authentication", "digid", "eherkenning", "eidas", "dutch"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Framework :: Django",
-    "Framework :: Django :: 4.2",
     "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
     "Intended Audience :: Developers",
     "Operating System :: Unix",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "cryptography>=40.0.0",
-    "django>=4.2.0,<6.0.0",
+    "django>=5.2.0",
     "django-sessionprofile",
     "django-simple-certmanager>=3.0.0",
     "django-solo",
