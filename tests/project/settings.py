@@ -155,15 +155,29 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+    "privates": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": os.path.join(BASE_DIR, "private_media"),
+            "base_url": "/protected/",
+        },
+    },
+}
+
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
-PRIVATE_MEDIA_ROOT = os.path.join(BASE_DIR, "private_media")
-PRIVATE_MEDIA_URL = "/protected/"
-SENDFILE_ROOT = PRIVATE_MEDIA_ROOT
+SENDFILE_ROOT = os.path.join(BASE_DIR, "private_media")
 SENDFILE_BACKEND = "django_sendfile.backends.development"
 
 AUTHENTICATION_BACKENDS = [

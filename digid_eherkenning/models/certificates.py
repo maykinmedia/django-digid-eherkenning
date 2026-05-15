@@ -46,12 +46,12 @@ class ConfigCertificateQuerySet(models.QuerySet["ConfigCertificate"]):
 
         We look for the current certificate and the next with the following algorithm:
 
-        * order candidates by valid_from, so we favour existing/the oldest keypairs
-        * order candidates by expiry date, so if they have an identical valid_from, we
+        * order candidates by not_valid_before, so we favour existing/the oldest keypairs
+        * order candidates by expiry date, so if they have an identical not_valid_before, we
           favour the one that will expiry first (the other one(s) automatically become
           the next certificate
         * discard any candidates that do not meet our key pair requirements, ignoring
-          valid_from/until
+          not_valid_before/until
 
         To determine the current certificate:
 
@@ -63,11 +63,11 @@ class ConfigCertificateQuerySet(models.QuerySet["ConfigCertificate"]):
 
         If a candidate is found, we select the next certificate according to:
 
-        * must be valid_from >= current_certificate.valid_from
+        * must be not_valid_before >= current_certificate.not_valid_before
         * must not be expired
         """
         # XXX: check if this has a big performance impact because we extract the
-        # valid_from/until by loading the certificate files!
+        # not_valid_before/until by loading the certificate files!
         qs = self.filter(certificate__type=CertificateTypes.key_pair).iterator()
         # first pass - filter out anything that is not usable for SAML flows (
         # discarding broken/invalid configurations)
@@ -102,14 +102,15 @@ class ConfigCertificateQuerySet(models.QuerySet["ConfigCertificate"]):
                     assert_never(activate_on)
 
             return (
-                # certificate valid_from is always the lower bound for the activation timestamp
-                candidate.certificate.valid_from,
+                # certificate not_valid_before is always the lower bound for the
+                # activation timestamp
+                candidate.certificate.not_valid_before,
                 (activation_sort_key, activate_on or max_datetime),
                 # certificate expiry_date is always the upper bound for the activation timestamp
-                candidate.certificate.expiry_date,
+                candidate.certificate.not_valid_after,
             )
 
-        # sort them - we now know that we can safely access the valid_from and
+        # sort them - we now know that we can safely access the not_valid_before and
         # expiry_date attributes
         candidates = sorted(candidates, key=_candidate_sort_key)
 
@@ -125,7 +126,9 @@ class ConfigCertificateQuerySet(models.QuerySet["ConfigCertificate"]):
                 case (None, None) if candidate.is_ready_for_authn_requests:
                     current_cert = certificate
                     continue  # the same candidate cannot both be current and next
-                case (Certificate(), None) if certificate.expiry_date > timezone.now():
+                case (Certificate(), None) if (
+                    certificate.not_valid_after > timezone.now()
+                ):
                     next_cert = certificate
                     break  # we found both current and next
         else:
@@ -203,16 +206,16 @@ class ConfigCertificate(models.Model):
         super().clean()
 
         if self.activate_on and not (
-            (valid_from := self.certificate.valid_from)
+            (not_valid_before := self.certificate.not_valid_before)
             < self.activate_on
-            <= (expiry_date := self.certificate.expiry_date)
+            <= (not_valid_after := self.certificate.not_valid_after)
         ):
             error_message = _(
                 "The activation date cannot be before the certificate becomes valid "
                 "({valid_from}) or after its expiry ({expiry_date})."
             ).format(
-                valid_from=localize(timezone.localtime(valid_from)),
-                expiry_date=localize(timezone.localtime(expiry_date)),
+                valid_from=localize(timezone.localtime(not_valid_before)),
+                expiry_date=localize(timezone.localtime(not_valid_after)),
             )
             raise ValidationError({"activate_on": error_message})
 
@@ -256,10 +259,13 @@ class ConfigCertificate(models.Model):
             return False
 
         _certificate: Certificate = self.certificate
-        valid_from, expiry_date = _certificate.valid_from, _certificate.expiry_date
+        not_valid_before, not_valid_after = (
+            _certificate.not_valid_before,
+            _certificate.not_valid_after,
+        )
 
         now = timezone.now()
-        if not (valid_from <= now <= expiry_date):
+        if not (not_valid_before <= now <= not_valid_after):
             return False
 
         if self.activate_on and (now < self.activate_on):

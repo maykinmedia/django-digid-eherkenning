@@ -1,8 +1,11 @@
 import logging
+import tempfile
 from collections.abc import Callable
 
 from django.conf import settings
 from django.core.cache import cache
+from django.core.files.storage import FileSystemStorage, InMemoryStorage
+from django.db.models.fields.files import FieldFile
 from django.utils import timezone
 
 from furl import furl
@@ -77,6 +80,24 @@ def get_requested_attributes(conf: dict) -> list[dict]:
             )
 
     return requested_attributes
+
+
+def _ensure_file_exists_on_disk(field: FieldFile) -> str:
+    match field.storage:
+        case FileSystemStorage():
+            return field.path
+        case InMemoryStorage():  # pragma: no cover - only relevant in tests
+            # TODO: figure out a solution to get these files/directories cleaned up once
+            # tests complete. Maybe setting up a signal dispatch?
+            tmp_input_file = tempfile.NamedTemporaryFile(mode="wb", delete=False)
+            field.open("rb")
+            field.seek(0)
+            for chunk in field.chunks():
+                tmp_input_file.write(chunk)
+            tmp_input_file.flush()
+            return tmp_input_file.name
+        case _:  # pragma: no cover
+            raise NotImplementedError()
 
 
 class BaseSaml2Client:
@@ -239,6 +260,11 @@ class BaseSaml2Client:
             certificate = cert_file.read()
             privkey = key_file.read()
 
+        # testing support - ensure the certificate files exist *on-disk*, as these are
+        # passed as file-system paths to the underlying SSL libraries
+        key_file_path = _ensure_file_exists_on_disk(conf["key_file"])
+        cert_file_path = _ensure_file_exists_on_disk(conf["cert_file"])
+
         assert not conf["base_url"].endswith("/"), (
             "Base URL must not end with a trailing slash"
         )
@@ -252,8 +278,8 @@ class BaseSaml2Client:
                 "logoutResponseSigned": True,
                 "wantAssertionsEncrypted": conf.get("want_assertions_encrypted", False),
                 "wantAssertionsSigned": conf.get("want_assertions_signed", False),
-                "soapClientKey": conf["key_file"].path,
-                "soapClientCert": conf["cert_file"].path,
+                "soapClientKey": key_file_path,
+                "soapClientCert": cert_file_path,
                 # algorithm for requests with HTTP-redirect binding.
                 # AuthnRequest with HTTP-POST uses RSA_SHA256, which is hardcoded in OneLogin_Saml2_Auth.login_post
                 "signatureAlgorithm": conf.get(

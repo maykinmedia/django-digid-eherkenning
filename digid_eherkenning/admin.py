@@ -178,9 +178,9 @@ class ConfigCertificateAdmin(admin.ModelAdmin):
     list_display = (
         "config_type",
         "certificate",
-        "valid_from",
+        "not_valid_before",
         "activate_on",
-        "expiry_date",
+        "not_valid_after",
         "is_ready",
     )
     list_filter = ("config_type",)
@@ -188,12 +188,12 @@ class ConfigCertificateAdmin(admin.ModelAdmin):
     raw_id_fields = ("certificate",)
 
     @admin.display(description=_("valid from"))
-    def valid_from(self, obj: ConfigCertificate) -> datetime:
-        return obj.certificate.valid_from
+    def not_valid_before(self, obj: ConfigCertificate) -> datetime:
+        return obj.certificate.not_valid_before
 
     @admin.display(description=_("expires on"))
-    def expiry_date(self, obj: ConfigCertificate) -> datetime:
-        return obj.certificate.expiry_date
+    def not_valid_after(self, obj: ConfigCertificate) -> datetime:
+        return obj.certificate.not_valid_after
 
     @admin.display(description=_("valid candidate?"), boolean=True)
     def is_ready(self, obj: ConfigCertificate) -> bool:
