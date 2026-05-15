@@ -2,6 +2,16 @@
 Changelog
 =========
 
+0.25.1 (2026-05-15)
+===================
+
+Bugfix release.
+
+* Fixed missing migration files following the django-privates v4 update.
+
+  - This implies a minimum required version of django-simple-certmanager 4.0, for the
+    same reasons.
+
 0.25.0 (2026-05-15)
 ===================
 
