@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-digid-eherkenning"
-version = "0.24.0"
+version = "0.25.0"
 description = "A Django app for DigiD/eHerkenning authentication flows"
 authors = [
     {name = "Maykin Media", email = "support@maykinmedia.nl"}
@@ -48,7 +48,7 @@ Changelog = "https://github.com/maykinmedia/django-digid-eherkenning/blob/master
 
 [project.optional-dependencies]
 oidc = [
-    "mozilla-django-oidc-db>=0.24.0",
+    "mozilla-django-oidc-db>=0.25.0",
 ]
 tests = [
     "django-test-migrations",
@@ -85,7 +85,7 @@ markers = [
 ]
 
 [tool.bumpversion]
-current_version = "0.24.0"
+current_version = "0.25.0"
 files = [
     {filename = "pyproject.toml"},
     {filename = "README.rst"},
