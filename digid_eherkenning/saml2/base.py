@@ -86,7 +86,7 @@ def _ensure_file_exists_on_disk(field: FieldFile) -> str:
     match field.storage:
         case FileSystemStorage():
             return field.path
-        case InMemoryStorage():
+        case InMemoryStorage():  # pragma: no cover - only relevant in tests
             # TODO: figure out a solution to get these files/directories cleaned up once
             # tests complete. Maybe setting up a signal dispatch?
             tmp_input_file = tempfile.NamedTemporaryFile(mode="wb", delete=False)
