@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import TYPE_CHECKING, Literal, assert_never
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -16,7 +16,6 @@ from django.utils.translation import gettext_lazy as _
 
 from simple_certmanager.constants import CertificateTypes
 from simple_certmanager.models import Certificate
-from typing_extensions import assert_never
 
 from ..choices import ConfigTypes
 
@@ -26,8 +25,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_AnyDigiD: TypeAlias = "type[DigidConfiguration] | DigidConfiguration"
-_AnyEH: TypeAlias = "type[EherkenningConfiguration] | EherkenningConfiguration"
+type _AnyDigiD = type[DigidConfiguration] | DigidConfiguration
+type _AnyEH = type[EherkenningConfiguration] | EherkenningConfiguration
 
 
 class ConfigCertificateQuerySet(models.QuerySet["ConfigCertificate"]):
