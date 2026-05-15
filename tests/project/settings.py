@@ -178,6 +178,7 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 SENDFILE_ROOT = os.path.join(BASE_DIR, "private_media")
+SENDFILE_URL = "/protected/"
 SENDFILE_BACKEND = "django_sendfile.backends.development"
 
 AUTHENTICATION_BACKENDS = [
