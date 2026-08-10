@@ -235,6 +235,12 @@ class EHerkenningMetadataTests(TestCase):
             self.assertEqual(
                 "true", sspo_descriptor_node.attrib["WantAssertionsSigned"]
             )
+            self.assertIsNone(
+                sspo_descriptor_node.find(
+                    "md:NameIDFormat",
+                    namespaces=NAME_SPACES,
+                )
+            )
 
         with self.subTest("key descriptors"):
             key_descriptor_nodes = sspo_descriptor_node.findall(
