@@ -10,7 +10,7 @@ from django.utils import timezone
 from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import load_pem_x509_certificate
 from lxml.builder import ElementMaker
-from lxml.etree import Element, tostring
+from lxml.etree import Element, fromstring, tostring
 from onelogin.saml2.metadata import OneLogin_Saml2_Metadata
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 
@@ -465,6 +465,32 @@ class CustomOneLogin_Saml2_Metadata(OneLogin_Saml2_Metadata):
     Modify the generated metadata to comply with AfsprakenStelsel 1.24a
     """
 
+    @classmethod
+    def builder(cls, *args, **kwargs):
+        """
+        Remove elements that python3-saml emits but AfsprakenStelsel does not allow.
+
+        NameIDFormat may not be included for eHerkenning/EIDAS since AS1.24a, see:
+        https://afsprakenstelsel.etoegang.nl/Startpagina/v3/dv-metadata-for-hm
+
+           ... Elements not listed in this table MUST NOT be included in the metadata.
+
+        The python3-saml settings object restores a default NameIDFormat if it is
+        missing from the SP config, so removing it from the config dict is not enough.
+        This runs before the metadata is signed.
+        """
+        metadata = super().builder(*args, **kwargs)
+        metadata_tree = fromstring(metadata.encode("utf-8"))
+
+        name_id_format_nodes = metadata_tree.xpath(
+            "./md:SPSSODescriptor/md:NameIDFormat",
+            namespaces=namespaces,
+        )
+        for name_id_format_node in name_id_format_nodes:
+            name_id_format_node.getparent().remove(name_id_format_node)
+
+        return tostring(metadata_tree, encoding="unicode")
+
     @staticmethod
     def make_attribute_consuming_services(service_provider: dict):
         """
@@ -533,12 +559,6 @@ class eHerkenningClient(BaseSaml2Client):
         config_dict: EHerkenningSAMLConfig = super().create_config_dict(conf)
 
         sp_config = config_dict["sp"]
-        # may not be included for eHerkenning/EIDAS since AS1.24a, see:
-        # https://afsprakenstelsel.etoegang.nl/Startpagina/v3/dv-metadata-for-hm
-        #
-        #    ... Elements not listed in this table MUST NOT be included in the metadata.
-        del sp_config["NameIDFormat"]
-
         # we have multiple services, so delete the config for the "single service" variant
         attribute_consuming_services = create_attribute_consuming_services(conf)
         del sp_config["attributeConsumingService"]
